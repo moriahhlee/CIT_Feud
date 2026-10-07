@@ -1,252 +1,26 @@
 /* =============================================================
    CIT FEUD
-   COMPLETE GAME ENGINE
+   MAIN GAME ENGINE
+
+   Question packs are loaded separately from:
+   GamePacks/*.js
+
+   Game audio originates ONLY from the projector page.
    ============================================================= */
 
 
 /* =============================================================
-   QUESTION PACK LIBRARY
-
-   ANSWER FORMAT:
-   ['Answer Text', Point Value]
+   GAME PACKS
    ============================================================= */
 
-const QUESTION_PACKS = [
-
-    {
-        id: 'safety',
-
-        title: 'Suicide Safety Planning',
-
-        description:
-            'Build a practical, collaborative safety plan from warning signs through environmental safety.',
-
-        tags: [
-            'Suicide',
-            'Safety Planning',
-            'CIT'
-        ],
-
-        questions: [
-
-            {
-                id: 'warn',
-
-                title: 'Warning Signs',
-
-                prompt:
-                    "Name a warning sign that someone's mental health crisis may be getting worse.",
-
-                tags: [
-                    'Warning Signs',
-                    'Assessment',
-                    'Suicide'
-                ],
-
-                note:
-                    'A safety plan starts with the patient’s own warning signs, not only what responders observe.',
-
-                answers: [
-                    ['Talking about suicide or death', 30],
-                    ['Isolation / withdrawal', 25],
-                    ['Increased substance use', 20],
-                    ['Major mood or behavior change', 15],
-                    ['Giving things away / saying goodbye', 12],
-                    ['Sleep changes', 10],
-                    ['Agitation / anger', 8],
-                    ['Stopping normal routines', 5]
-                ]
-            },
-
-            {
-                id: 'cope',
-
-                title: 'Internal Coping',
-
-                prompt:
-                    'Name something someone could do by themselves to get through a difficult moment.',
-
-                tags: [
-                    'Coping',
-                    'Safety Plan',
-                    'Skills'
-                ],
-
-                note:
-                    'Internal coping creates an immediate layer before the person needs to involve someone else.',
-
-                answers: [
-                    ['Listen to music', 25],
-                    ['Walk / exercise', 20],
-                    ['Watch a show or movie', 15],
-                    ['Breathing / grounding', 15],
-                    ['Spend time with a pet', 10],
-                    ['Game / puzzle', 8],
-                    ['Shower / self-care', 5],
-                    ['Art / journal / hobby', 5]
-                ]
-            },
-
-            {
-                id: 'distract',
-
-                title: 'People & Places',
-
-                prompt:
-                    'Name a person or place that could provide distraction from a crisis.',
-
-                tags: [
-                    'Social Support',
-                    'Distraction',
-                    'Safety Plan'
-                ],
-
-                note:
-                    'Social distraction does not always require disclosing suicidal thoughts. Sometimes the goal is simply not being alone.',
-
-                answers: [
-                    ['Friend', 25],
-                    ['Family member', 20],
-                    ['Coffee shop / restaurant', 15],
-                    ['Gym / recreation', 12],
-                    ['Park / public space', 10],
-                    ['Work / school', 8],
-                    ['Faith / community space', 6],
-                    ['Neighbor', 4]
-                ]
-            },
-
-            {
-                id: 'help',
-
-                title: 'People Who Can Help',
-
-                prompt:
-                    "Name someone you could actually tell, 'I'm not safe right now.'",
-
-                tags: [
-                    'Help Seeking',
-                    'Support',
-                    'Safety Plan'
-                ],
-
-                note:
-                    'Someone who is good company is not automatically someone the patient trusts with a crisis disclosure.',
-
-                answers: [
-                    ['Spouse / partner', 25],
-                    ['Close friend', 22],
-                    ['Parent', 18],
-                    ['Sibling / family', 15],
-                    ['Coworker / supervisor', 8],
-                    ['Peer', 5],
-                    ['Teacher / coach', 4],
-                    ['Neighbor', 3]
-                ]
-            },
-
-            {
-                id: 'professional',
-
-                title: 'Professional Resources',
-
-                prompt:
-                    'Name a professional or service someone could contact during a mental health crisis.',
-
-                tags: [
-                    'Resources',
-                    'Crisis',
-                    'Professional'
-                ],
-
-                note:
-                    'Match the resource to the need and urgency rather than treating every crisis identically.',
-
-                answers: [
-                    ['988', 25],
-                    ['Therapist / counselor', 20],
-                    ['911', 18],
-                    ['Emergency department', 15],
-                    ['Psychiatrist', 10],
-                    ['Crisis response team', 8],
-                    ['Primary care provider', 5],
-                    ['Peer / recovery specialist', 4]
-                ]
-            },
-
-            {
-                id: 'safer',
-
-                title: 'Safer Environment',
-
-                prompt:
-                    "Name something we could change to make someone's environment safer tonight.",
-
-                tags: [
-                    'Means Safety',
-                    'Environment',
-                    'Suicide'
-                ],
-
-                note:
-                    'Environmental safety creates time and distance between a suicidal impulse and access to a lethal method.',
-
-                answers: [
-                    ['Firearm access', 30],
-                    ['Medication access', 22],
-                    ['Alcohol / drugs', 16],
-                    ['Knives / sharps', 10],
-                    ['Being alone', 8],
-                    ['Vehicle / keys', 6],
-                    ['Dangerous locations', 5],
-                    ['Other identified means', 3]
-                ]
-            }
-
-        ]
-    },
-
-
-    {
-        id: 'assessment',
-
-        title: 'Crisis Assessment',
-
-        description:
-            'Placeholder pack for future CIT assessment questions.',
-
-        tags: [
-            'Assessment',
-            'CIT',
-            'Behavioral Health'
-        ],
-
-        questions: []
-    },
-
-
-    {
-        id: 'substance',
-
-        title: 'Substance Use',
-
-        description:
-            'Placeholder pack for future substance-use and co-response questions.',
-
-        tags: [
-            'SUD',
-            'Harm Reduction',
-            'Co-Response'
-        ],
-
-        questions: []
-    }
-
-];
+const QUESTION_PACKS =
+    Array.isArray(window.CIT_FEUD_PACKS)
+        ? window.CIT_FEUD_PACKS
+        : [];
 
 
 /* =============================================================
-   STORAGE
+   STORAGE / COMMUNICATION
    ============================================================= */
 
 const KEY = 'citFeudSlotsV4';
@@ -265,24 +39,51 @@ const bc =
 /* =============================================================
    SOUND FILES
 
-   Put these in the same GitHub folder:
-   Answer.mp3
-   Correct.mp3
-   Incorrect.mp3
+   These files live in:
+
+   Sounds/
+       Answer.mp3
+       Correct.mp3
+       Incorrect.mp3
+
+   IMPORTANT:
+   Only the PROJECTOR plays audio.
    ============================================================= */
 
 const SOUNDS = {
 
     answer:
-        'Answer.mp3',
+        'Sounds/Answer.mp3',
 
     correct:
-        'Correct.mp3',
+        'Sounds/Correct.mp3',
 
     incorrect:
-        'Incorrect.mp3'
+        'Sounds/Incorrect.mp3'
 
 };
+
+
+/* =============================================================
+   PAGE TYPE
+   ============================================================= */
+
+function isHost() {
+
+    return document.body
+        .classList
+        .contains('host');
+
+}
+
+
+function isProjector() {
+
+    return document.body
+        .classList
+        .contains('projector');
+
+}
 
 
 /* =============================================================
@@ -339,26 +140,47 @@ function toggleFullscreen() {
 
 
 /* =============================================================
-   SOUND
+   PROJECTOR AUDIO
+
+   This function intentionally refuses to play audio
+   from the host page.
    ============================================================= */
 
-function playSound(name) {
+function playProjectorSound(name) {
+
+    if (!isProjector()) {
+        return;
+    }
+
 
     const file =
         SOUNDS[name];
+
 
     if (!file) {
         return;
     }
 
+
     const audio =
         new Audio(file);
+
 
     audio.volume =
         1;
 
+
     audio.play()
-        .catch(() => {});
+        .catch(
+            error => {
+
+                console.warn(
+                    'CIT Feud audio was blocked by the browser.',
+                    error
+                );
+
+            }
+        );
 
 }
 
@@ -371,27 +193,47 @@ function slots() {
 
     try {
 
-        return (
+        const stored =
             JSON.parse(
                 localStorage.getItem(KEY)
-            )
-            ||
-            [
-                null,
-                null,
-                null
-            ]
+            );
+
+
+        if (
+            Array.isArray(stored)
+        ) {
+
+            while (
+                stored.length < 3
+            ) {
+
+                stored.push(null);
+
+            }
+
+
+            return stored.slice(
+                0,
+                3
+            );
+
+        }
+
+    } catch (error) {
+
+        console.warn(
+            'Unable to read CIT Feud save slots.',
+            error
         );
 
-    } catch {
-
-        return [
-            null,
-            null,
-            null
-        ];
-
     }
+
+
+    return [
+        null,
+        null,
+        null
+    ];
 
 }
 
@@ -407,7 +249,7 @@ function writeSlots(value) {
 
 
 /* =============================================================
-   LIVE STATE
+   LIVE GAME STATE
    ============================================================= */
 
 function live() {
@@ -428,7 +270,7 @@ function live() {
 
 
 /* =============================================================
-   BROADCAST
+   BROADCAST STATE
    ============================================================= */
 
 function broadcast(game) {
@@ -438,11 +280,16 @@ function broadcast(game) {
         JSON.stringify(game)
     );
 
+
     if (bc) {
 
         bc.postMessage({
-            type: 'state',
+
+            type:
+                'state',
+
             game
+
         });
 
     }
@@ -451,7 +298,16 @@ function broadcast(game) {
 
 
 /* =============================================================
-   EFFECT BROADCAST
+   BROADCAST TRANSIENT EFFECT
+
+   Effects are sent separately from persistent game state.
+
+   Examples:
+   buzzer
+   correct
+   wrong
+
+   The PROJECTOR receives these and handles animation + audio.
    ============================================================= */
 
 function broadcastEffect(
@@ -459,22 +315,30 @@ function broadcastEffect(
     data = {}
 ) {
 
-    if (bc) {
-
-        bc.postMessage({
-            type: 'effect',
-            effect,
-            data,
-            stamp: Date.now()
-        });
-
+    if (!bc) {
+        return;
     }
+
+
+    bc.postMessage({
+
+        type:
+            'effect',
+
+        effect,
+
+        data,
+
+        stamp:
+            Date.now()
+
+    });
 
 }
 
 
 /* =============================================================
-   SAVE
+   SAVE GAME
    ============================================================= */
 
 function save(game) {
@@ -482,13 +346,16 @@ function save(game) {
     const savedSlots =
         slots();
 
+
     savedSlots[
         game.slot
     ] = game;
 
+
     writeSlots(
         savedSlots
     );
+
 
     broadcast(
         game
@@ -498,7 +365,7 @@ function save(game) {
 
 
 /* =============================================================
-   CREATE GAME
+   CREATE NEW GAME
    ============================================================= */
 
 function fresh(
@@ -523,8 +390,15 @@ function fresh(
                 pack =>
                     pack.questions.map(
                         question => ({
+
                             ...question,
-                            pack: pack.title
+
+                            pack:
+                                pack.title,
+
+                            packId:
+                                pack.id
+
                         })
                     )
             );
@@ -532,7 +406,8 @@ function fresh(
 
     return {
 
-        version: 4,
+        version:
+            4,
 
         slot,
 
@@ -554,28 +429,37 @@ function fresh(
                         ||
                         `Team ${index + 1}`,
 
-                    score: 0
+                    score:
+                        0
 
                 })
             ),
 
         questions,
 
-        current: 0,
+        current:
+            0,
 
-        round: 1,
+        round:
+            1,
 
-        phase: 'round',
+        phase:
+            'round',
 
-        revealed: [],
+        revealed:
+            [],
 
-        strikes: 0,
+        strikes:
+            0,
 
-        bank: 0,
+        bank:
+            0,
 
-        activeTeam: null,
+        activeTeam:
+            null,
 
-        attemptLog: [],
+        attemptLog:
+            [],
 
         started:
             new Date()
@@ -591,7 +475,9 @@ function fresh(
 
 
 /* =============================================================
-   NORMALIZE GAME
+   NORMALIZE EXISTING GAME
+
+   Helps older save data continue to work.
    ============================================================= */
 
 function normalizeGame(game) {
@@ -623,6 +509,30 @@ function normalizeGame(game) {
     }
 
 
+    if (
+        !Array.isArray(
+            game.revealed
+        )
+    ) {
+
+        game.revealed =
+            [];
+
+    }
+
+
+    if (
+        !Array.isArray(
+            game.teams
+        )
+    ) {
+
+        game.teams =
+            [];
+
+    }
+
+
     if (!game.phase) {
 
         game.phase =
@@ -648,9 +558,7 @@ function normalizeGame(game) {
    MUTATE GAME
    ============================================================= */
 
-function mutate(
-    callback
-) {
+function mutate(callback) {
 
     let game =
         normalizeGame(
@@ -674,11 +582,7 @@ function mutate(
     save(game);
 
 
-    if (
-        document.body
-            .classList
-            .contains('host')
-    ) {
+    if (isHost()) {
 
         renderHostGame();
 
@@ -688,7 +592,7 @@ function mutate(
 
 
 /* =============================================================
-   TAGS
+   TAG DISPLAY
    ============================================================= */
 
 function tags(
@@ -717,7 +621,7 @@ function tags(
 
 
 /* =============================================================
-   CROSS WINDOW SYNC
+   CROSS-WINDOW COMMUNICATION
    ============================================================= */
 
 if (bc) {
@@ -729,19 +633,14 @@ if (bc) {
                 event.data;
 
 
-            if (
-                !document.body
-                    .classList
-                    .contains('projector')
-            ) {
-
+            if (!isProjector()) {
                 return;
-
             }
 
 
             if (
-                message?.type === 'state'
+                message?.type ===
+                'state'
             ) {
 
                 renderProjector(
@@ -752,7 +651,8 @@ if (bc) {
 
 
             if (
-                message?.type === 'effect'
+                message?.type ===
+                'effect'
             ) {
 
                 runProjectorEffect(
@@ -767,6 +667,13 @@ if (bc) {
 }
 
 
+/* =============================================================
+   STORAGE FALLBACK
+
+   This keeps persistent state synchronized even if
+   BroadcastChannel is unavailable.
+   ============================================================= */
+
 window.addEventListener(
     'storage',
     event => {
@@ -774,9 +681,7 @@ window.addEventListener(
         if (
             event.key === LIVE
             &&
-            document.body
-                .classList
-                .contains('projector')
+            isProjector()
         ) {
 
             renderProjector(
@@ -797,6 +702,12 @@ function renderHostHome() {
 
     const root =
         $('#hostApp');
+
+
+    if (!root) {
+        return;
+    }
+
 
     const savedSlots =
         slots();
@@ -882,15 +793,27 @@ function renderHostHome() {
 
                                                         ·
 
-                                                        ${game.teams.length}
+                                                        ${
+                                                            Array.isArray(
+                                                                game.teams
+                                                            )
+                                                                ? game.teams.length
+                                                                : 0
+                                                        }
                                                         teams
 
                                                         ·
 
                                                         Question
-                                                        ${game.current + 1}
+                                                        ${(game.current || 0) + 1}
                                                         /
-                                                        ${game.questions.length}
+                                                        ${
+                                                            Array.isArray(
+                                                                game.questions
+                                                            )
+                                                                ? game.questions.length
+                                                                : 0
+                                                        }
 
                                                     </p>
 
@@ -948,6 +871,7 @@ function renderHostHome() {
 
                                             </div>
 
+
                                             <button
                                                 data-new="${index}"
                                             >
@@ -988,11 +912,11 @@ function renderHostHome() {
                         </li>
 
                         <li>
-                            Use fullscreen on either screen whenever needed.
+                            Click once on the projector page so the browser can allow game audio.
                         </li>
 
                         <li>
-                            Game state syncs automatically.
+                            Use fullscreen on either screen whenever needed.
                         </li>
 
                     </ol>
@@ -1033,7 +957,11 @@ function renderHostHome() {
                                 ]
                             );
 
-                        broadcast(game);
+
+                        broadcast(
+                            game
+                        );
+
 
                         renderHostGame();
 
@@ -1078,9 +1006,11 @@ function renderHostHome() {
                                 index
                             ] = null;
 
+
                             writeSlots(
                                 savedSlots
                             );
+
 
                             renderHostHome();
 
@@ -1102,6 +1032,11 @@ function renderSetup(slot) {
 
     const root =
         $('#hostApp');
+
+
+    if (!root) {
+        return;
+    }
 
 
     root.innerHTML = `
@@ -1192,48 +1127,77 @@ function renderSetup(slot) {
                 <div class="packgrid">
 
                     ${
-                        QUESTION_PACKS.map(
-                            (
-                                pack,
-                                index
-                            ) => `
+                        QUESTION_PACKS.length
 
-                                <label class="packcard">
+                            ? QUESTION_PACKS
+                                .map(
+                                    (
+                                        pack,
+                                        index
+                                    ) => `
 
-                                    <input
-                                        type="checkbox"
-                                        name="pack"
-                                        value="${pack.id}"
-                                        ${
-                                            index === 0
-                                                ? 'checked'
-                                                : ''
-                                        }
-                                    >
+                                        <label class="packcard">
 
-                                    <div>
+                                            <input
+                                                type="checkbox"
+                                                name="pack"
+                                                value="${esc(pack.id)}"
+                                                ${
+                                                    index === 0
+                                                        ? 'checked'
+                                                        : ''
+                                                }
+                                            >
 
-                                        <h3>
-                                            ${esc(pack.title)}
-                                        </h3>
+                                            <div>
 
-                                        <p>
-                                            ${esc(pack.description)}
-                                        </p>
+                                                <h3>
+                                                    ${esc(pack.title)}
+                                                </h3>
 
-                                        ${tags(pack.tags)}
+                                                <p>
+                                                    ${esc(pack.description)}
+                                                </p>
 
-                                        <small>
-                                            ${pack.questions.length}
-                                            questions
-                                        </small>
+                                                ${tags(pack.tags)}
 
-                                    </div>
+                                                <small>
 
-                                </label>
+                                                    ${
+                                                        Array.isArray(
+                                                            pack.questions
+                                                        )
+                                                            ? pack.questions.length
+                                                            : 0
+                                                    }
+
+                                                    questions
+
+                                                </small>
+
+                                            </div>
+
+                                        </label>
+
+                                    `
+                                )
+                                .join('')
+
+                            : `
+
+                                <div class="packcard">
+
+                                    <h3>
+                                        No Game Packs Found
+                                    </h3>
+
+                                    <p>
+                                        Check that the GamePacks files are loaded before script.js.
+                                    </p>
+
+                                </div>
 
                             `
-                        ).join('')
                     }
 
                 </div>
@@ -1322,6 +1286,16 @@ function renderSetup(slot) {
             +teamCount.value;
 
 
+        const existing =
+            $$(
+                'input[name=teamName]'
+            )
+            .map(
+                input =>
+                    input.value
+            );
+
+
         $('#teamNames').innerHTML = `
 
             <div class="teaminputs">
@@ -1329,7 +1303,8 @@ function renderSetup(slot) {
                 ${
                     Array.from(
                         {
-                            length: count
+                            length:
+                                count
                         },
                         (
                             _,
@@ -1342,7 +1317,11 @@ function renderSetup(slot) {
 
                                 <input
                                     name="teamName"
-                                    value="Team ${index + 1}"
+                                    value="${esc(
+                                        existing[index]
+                                        ||
+                                        `Team ${index + 1}`
+                                    )}"
                                     maxlength="24"
                                 >
 
@@ -1422,7 +1401,10 @@ function renderSetup(slot) {
             }
 
 
-            save(game);
+            save(
+                game
+            );
+
 
             renderHostGame();
 
@@ -1435,25 +1417,32 @@ function renderSetup(slot) {
    PRESENTATION PHASE LABEL
    ============================================================= */
 
-function phaseLabel(
-    phase
-) {
+function phaseLabel(phase) {
 
     switch (phase) {
 
         case 'round':
+
             return 'Round Intro';
 
+
         case 'top':
+
             return 'Top Answers';
 
+
         case 'board':
+
             return 'Hidden Board';
 
+
         case 'question':
+
             return 'Question Revealed';
 
+
         default:
+
             return 'Gameplay';
 
     }
@@ -1463,6 +1452,16 @@ function phaseLabel(
 
 /* =============================================================
    NEXT PRESENTATION PHASE
+
+   Sequence:
+
+   ROUND
+   ↓
+   TOP _ ANSWERS ON THE BOARD
+   ↓
+   HIDDEN ANSWER BOARD
+   ↓
+   QUESTION REVEALED
    ============================================================= */
 
 function nextPresentationPhase() {
@@ -1471,21 +1470,24 @@ function nextPresentationPhase() {
         game => {
 
             if (
-                game.phase === 'round'
+                game.phase ===
+                'round'
             ) {
 
                 game.phase =
                     'top';
 
             } else if (
-                game.phase === 'top'
+                game.phase ===
+                'top'
             ) {
 
                 game.phase =
                     'board';
 
             } else if (
-                game.phase === 'board'
+                game.phase ===
+                'board'
             ) {
 
                 game.phase =
@@ -1520,14 +1522,48 @@ function renderHostGame() {
     }
 
 
+    if (
+        !Array.isArray(
+            game.questions
+        )
+        ||
+        !game.questions.length
+    ) {
+
+        alert(
+            'This saved game does not contain any questions.'
+        );
+
+
+        renderHostHome();
+
+        return;
+
+    }
+
+
     const question =
         game.questions[
             game.current
         ];
 
 
+    if (!question) {
+
+        renderHostHome();
+
+        return;
+
+    }
+
+
     const root =
         $('#hostApp');
+
+
+    if (!root) {
+        return;
+    }
 
 
     root.innerHTML = `
@@ -1608,7 +1644,8 @@ function renderHostGame() {
                     <button
                         id="showRound"
                         class="${
-                            game.phase === 'round'
+                            game.phase ===
+                            'round'
                                 ? ''
                                 : 'ghost'
                         }"
@@ -1616,10 +1653,12 @@ function renderHostGame() {
                         Round
                     </button>
 
+
                     <button
                         id="showTop"
                         class="${
-                            game.phase === 'top'
+                            game.phase ===
+                            'top'
                                 ? ''
                                 : 'ghost'
                         }"
@@ -1627,10 +1666,12 @@ function renderHostGame() {
                         Top ${question.answers.length}
                     </button>
 
+
                     <button
                         id="showBoard"
                         class="${
-                            game.phase === 'board'
+                            game.phase ===
+                            'board'
                                 ? ''
                                 : 'ghost'
                         }"
@@ -1638,10 +1679,12 @@ function renderHostGame() {
                         Board
                     </button>
 
+
                     <button
                         id="showQuestion"
                         class="${
-                            game.phase === 'question'
+                            game.phase ===
+                            'question'
                                 ? ''
                                 : 'ghost'
                         }"
@@ -1649,8 +1692,10 @@ function renderHostGame() {
                         Question
                     </button>
 
+
                     ${
-                        game.phase !== 'question'
+                        game.phase !==
+                        'question'
 
                             ? `
 
@@ -1711,7 +1756,10 @@ function renderHostGame() {
                             style="
                                 grid-template-columns:
                                 repeat(
-                                    ${Math.min(game.teams.length, 3)},
+                                    ${Math.min(
+                                        game.teams.length,
+                                        3
+                                    )},
                                     minmax(0,1fr)
                                 );
                             "
@@ -1847,12 +1895,14 @@ function renderHostGame() {
                             ← Previous
                         </button>
 
+
                         <button
                             id="resetRound"
                             class="ghost"
                         >
                             Reset Question
                         </button>
+
 
                         <button
                             id="nextQ"
@@ -1956,6 +2006,7 @@ function renderHostGame() {
                             Strikes
                         </span>
 
+
                         <div class="xs">
 
                             ${
@@ -1966,7 +2017,10 @@ function renderHostGame() {
 
                             ${
                                 '○'.repeat(
-                                    3 - game.strikes
+                                    Math.max(
+                                        0,
+                                        3 - game.strikes
+                                    )
                                 )
                             }
 
@@ -1978,6 +2032,7 @@ function renderHostGame() {
                         >
                             Manual Strike
                         </button>
+
 
                         <button
                             id="clearStrike"
@@ -2108,7 +2163,10 @@ function renderHostGame() {
         () =>
             mutate(
                 game => {
-                    game.phase = 'round';
+
+                    game.phase =
+                        'round';
+
                 }
             );
 
@@ -2117,7 +2175,10 @@ function renderHostGame() {
         () =>
             mutate(
                 game => {
-                    game.phase = 'top';
+
+                    game.phase =
+                        'top';
+
                 }
             );
 
@@ -2126,7 +2187,10 @@ function renderHostGame() {
         () =>
             mutate(
                 game => {
-                    game.phase = 'board';
+
+                    game.phase =
+                        'board';
+
                 }
             );
 
@@ -2135,7 +2199,10 @@ function renderHostGame() {
         () =>
             mutate(
                 game => {
-                    game.phase = 'question';
+
+                    game.phase =
+                        'question';
+
                 }
             );
 
@@ -2154,6 +2221,9 @@ function renderHostGame() {
 
     /* =========================================================
        ANSWERING TEAM / BUZZER
+
+       Host sends an effect.
+       Host DOES NOT play audio.
        ========================================================= */
 
     $$('[data-buzz]')
@@ -2167,11 +2237,21 @@ function renderHostGame() {
                             +button.dataset.buzz;
 
 
+                        const currentGame =
+                            live();
+
+
+                        const selectingTeam =
+                            currentGame?.activeTeam !==
+                            index;
+
+
                         mutate(
                             game => {
 
                                 game.activeTeam =
-                                    game.activeTeam === index
+                                    game.activeTeam ===
+                                    index
                                         ? null
                                         : index;
 
@@ -2180,17 +2260,14 @@ function renderHostGame() {
 
 
                         if (
-                            live()?.activeTeam === index
+                            selectingTeam
                         ) {
-
-                            playSound(
-                                'answer'
-                            );
 
                             broadcastEffect(
                                 'buzzer',
                                 {
-                                    team: index
+                                    team:
+                                        index
                                 }
                             );
 
@@ -2204,6 +2281,8 @@ function renderHostGame() {
 
     /* =========================================================
        CORRECT ANSWER
+
+       Host updates state and broadcasts the visual/audio effect.
        ========================================================= */
 
     $$('[data-correct]')
@@ -2216,8 +2295,20 @@ function renderHostGame() {
                         const index =
                             +button.dataset.correct;
 
-                        let newlyRevealed =
-                            false;
+
+                        const currentGame =
+                            live();
+
+
+                        if (
+                            currentGame?.revealed?.includes(
+                                index
+                            )
+                        ) {
+
+                            return;
+
+                        }
 
 
                         mutate(
@@ -2229,46 +2320,37 @@ function renderHostGame() {
                                     ];
 
 
-                                if (
-                                    !game.revealed.includes(
-                                        index
-                                    )
-                                ) {
-
-                                    newlyRevealed =
-                                        true;
-
-                                    game.revealed.push(
-                                        index
-                                    );
+                                game.revealed.push(
+                                    index
+                                );
 
 
-                                    game.bank =
-                                        game.revealed.reduce(
+                                game.bank =
+                                    game.revealed.reduce(
+                                        (
+                                            total,
+                                            answerIndex
+                                        ) =>
+                                            total +
                                             (
-                                                total,
-                                                answerIndex
-                                            ) =>
-                                                total +
-                                                (
-                                                    question.answers[
-                                                        answerIndex
-                                                    ]?.[1]
-                                                    ||
-                                                    0
-                                                ),
-                                            0
-                                        );
-
-                                }
+                                                question.answers[
+                                                    answerIndex
+                                                ]?.[1]
+                                                ||
+                                                0
+                                            ),
+                                        0
+                                    );
 
 
                                 game.attemptLog.push({
 
-                                    ok: true,
+                                    ok:
+                                        true,
 
                                     team:
-                                        game.activeTeam !== null
+                                        game.activeTeam !==
+                                        null
 
                                             ? game.teams[
                                                 game.activeTeam
@@ -2290,23 +2372,13 @@ function renderHostGame() {
                         );
 
 
-                        if (
-                            newlyRevealed
-                        ) {
-
-                            playSound(
-                                'correct'
-                            );
-
-                            broadcastEffect(
-                                'correct',
-                                {
-                                    answerIndex:
-                                        index
-                                }
-                            );
-
-                        }
+                        broadcastEffect(
+                            'correct',
+                            {
+                                answerIndex:
+                                    index
+                            }
+                        );
 
                     };
 
@@ -2316,6 +2388,9 @@ function renderHostGame() {
 
     /* =========================================================
        WRONG ANSWER
+
+       Host updates strike state.
+       Projector handles X animation + Incorrect.mp3.
        ========================================================= */
 
     $$('[data-wrong]')
@@ -2337,10 +2412,12 @@ function renderHostGame() {
 
                                 game.attemptLog.push({
 
-                                    ok: false,
+                                    ok:
+                                        false,
 
                                     team:
-                                        game.activeTeam !== null
+                                        game.activeTeam !==
+                                        null
 
                                             ? game.teams[
                                                 game.activeTeam
@@ -2354,11 +2431,6 @@ function renderHostGame() {
                                 });
 
                             }
-                        );
-
-
-                        playSound(
-                            'incorrect'
                         );
 
 
@@ -2398,7 +2470,7 @@ function renderHostGame() {
 
 
     /* =========================================================
-       SCORE ADJUSTMENTS
+       MANUAL SCORE ADJUSTMENTS
        ========================================================= */
 
     $$('[data-adjust]')
@@ -2482,10 +2554,12 @@ function renderHostGame() {
 
                     game.attemptLog.push({
 
-                        ok: false,
+                        ok:
+                            false,
 
                         team:
-                            game.activeTeam !== null
+                            game.activeTeam !==
+                            null
 
                                 ? game.teams[
                                     game.activeTeam
@@ -2499,11 +2573,6 @@ function renderHostGame() {
                     });
 
                 }
-            );
-
-
-            playSound(
-                'incorrect'
             );
 
 
@@ -2585,30 +2654,41 @@ function renderHostGame() {
                 game => {
 
                     if (
-                        game.current <= 0
+                        game.current <=
+                        0
                     ) {
+
                         return;
+
                     }
 
+
                     game.current--;
+
 
                     game.round =
                         game.current + 1;
 
+
                     game.phase =
                         'round';
+
 
                     game.revealed =
                         [];
 
+
                     game.strikes =
                         0;
+
 
                     game.bank =
                         0;
 
+
                     game.activeTeam =
                         null;
+
 
                     game.attemptLog =
                         [];
@@ -2630,28 +2710,38 @@ function renderHostGame() {
                         game.current >=
                         game.questions.length - 1
                     ) {
+
                         return;
+
                     }
 
+
                     game.current++;
+
 
                     game.round =
                         game.current + 1;
 
+
                     game.phase =
                         'round';
+
 
                     game.revealed =
                         [];
 
+
                     game.strikes =
                         0;
+
 
                     game.bank =
                         0;
 
+
                     game.activeTeam =
                         null;
+
 
                     game.attemptLog =
                         [];
@@ -2673,20 +2763,24 @@ function renderHostGame() {
 
 
     /* =========================================================
-       HOME
+       SAVED GAMES
        ========================================================= */
 
     $('#homeBtn').onclick =
         renderHostHome;
 
 
-    broadcast(game);
+    broadcast(
+        game
+    );
 
 }
 
 
 /* =============================================================
    PROJECTOR EFFECTS
+
+   THIS IS THE ONLY SECTION THAT PLAYS GAME AUDIO.
    ============================================================= */
 
 function runProjectorEffect(
@@ -2694,13 +2788,36 @@ function runProjectorEffect(
     data = {}
 ) {
 
+    if (!isProjector()) {
+        return;
+    }
+
+
+    /* =========================================================
+       WRONG
+       ========================================================= */
+
     if (
-        effect === 'wrong'
+        effect ===
+        'wrong'
     ) {
 
-        playSound(
+        playProjectorSound(
             'incorrect'
         );
+
+
+        const existing =
+            document.querySelector(
+                '.wrongOverlay'
+            );
+
+
+        if (existing) {
+
+            existing.remove();
+
+        }
 
 
         const overlay =
@@ -2736,11 +2853,16 @@ function runProjectorEffect(
     }
 
 
+    /* =========================================================
+       CORRECT
+       ========================================================= */
+
     if (
-        effect === 'correct'
+        effect ===
+        'correct'
     ) {
 
-        playSound(
+        playProjectorSound(
             'correct'
         );
 
@@ -2752,6 +2874,14 @@ function runProjectorEffect(
 
 
         if (tile) {
+
+            tile.classList.remove(
+                'correctFlash'
+            );
+
+
+            void tile.offsetWidth;
+
 
             tile.classList.add(
                 'correctFlash'
@@ -2771,11 +2901,16 @@ function runProjectorEffect(
     }
 
 
+    /* =========================================================
+       BUZZER / ANSWERING TEAM
+       ========================================================= */
+
     if (
-        effect === 'buzzer'
+        effect ===
+        'buzzer'
     ) {
 
-        playSound(
+        playProjectorSound(
             'answer'
         );
 
@@ -2787,6 +2922,14 @@ function runProjectorEffect(
 
 
         if (team) {
+
+            team.classList.remove(
+                'buzzerFlash'
+            );
+
+
+            void team.offsetWidth;
+
 
             team.classList.add(
                 'buzzerFlash'
@@ -2820,6 +2963,11 @@ function renderProjector(
         $('#projectorApp');
 
 
+    if (!root) {
+        return;
+    }
+
+
     game =
         normalizeGame(
             game
@@ -2827,7 +2975,7 @@ function renderProjector(
 
 
     /* =========================================================
-       WAITING
+       WAITING SCREEN
        ========================================================= */
 
     if (!game) {
@@ -2852,6 +3000,41 @@ function renderProjector(
 
         `;
 
+
+        return;
+
+    }
+
+
+    if (
+        !Array.isArray(
+            game.questions
+        )
+        ||
+        !game.questions.length
+    ) {
+
+        root.innerHTML = `
+
+            <section class="waiting">
+
+                <div class="eyebrow">
+                    CRISIS INTERVENTION TRAINING
+                </div>
+
+                <h1>
+                    CIT <b>FEUD</b>
+                </h1>
+
+                <p>
+                    This game does not contain any questions.
+                </p>
+
+            </section>
+
+        `;
+
+
         return;
 
     }
@@ -2863,12 +3046,18 @@ function renderProjector(
         ];
 
 
+    if (!question) {
+        return;
+    }
+
+
     /* =========================================================
        ROUND INTRO
        ========================================================= */
 
     if (
-        game.phase === 'round'
+        game.phase ===
+        'round'
     ) {
 
         root.innerHTML = `
@@ -2897,17 +3086,19 @@ function renderProjector(
 
         `;
 
+
         return;
 
     }
 
 
     /* =========================================================
-       TOP ANSWERS ANNOUNCEMENT
+       TOP ANSWERS INTRO
        ========================================================= */
 
     if (
-        game.phase === 'top'
+        game.phase ===
+        'top'
     ) {
 
         root.innerHTML = `
@@ -2919,10 +3110,13 @@ function renderProjector(
                 </div>
 
                 <div class="topCount">
+
                     TOP
+
                     <strong>
                         ${question.answers.length}
                     </strong>
+
                 </div>
 
                 <div class="topAnswersText">
@@ -2932,6 +3126,7 @@ function renderProjector(
             </section>
 
         `;
+
 
         return;
 
@@ -2943,7 +3138,8 @@ function renderProjector(
        ========================================================= */
 
     const showQuestion =
-        game.phase === 'question';
+        game.phase ===
+        'question';
 
 
     root.innerHTML = `
@@ -2971,18 +3167,24 @@ function renderProjector(
                 </div>
 
 
+                <!-- ===========================================
+                     STRIKES AT TOP OF PROJECTOR
+                     =========================================== -->
+
                 <div class="topStrikeArea">
 
                     <span class="strikeLabel">
                         STRIKES
                     </span>
 
+
                     <div class="topStrikes">
 
                         ${
                             Array.from(
                                 {
-                                    length: 3
+                                    length:
+                                        3
                                 },
                                 (
                                     _,
@@ -3043,9 +3245,11 @@ function renderProjector(
 
                 ${
                     showQuestion
+
                         ? esc(
                             question.prompt
                         )
+
                         : '&nbsp;'
                 }
 
@@ -3089,9 +3293,11 @@ function renderProjector(
                                         game.revealed.includes(
                                             index
                                         )
+
                                             ? esc(
                                                 answer[0]
                                             )
+
                                             : ''
                                     }
 
@@ -3103,7 +3309,9 @@ function renderProjector(
                                         game.revealed.includes(
                                             index
                                         )
+
                                             ? answer[1]
+
                                             : ''
                                     }
 
@@ -3136,7 +3344,9 @@ function renderProjector(
 
 
             <!-- ===============================================
-                 TEAMS
+                 DYNAMIC TEAM LIST
+                 2–6 TEAMS
+                 NAME LEFT / SCORE RIGHT
                  =============================================== -->
 
             <footer
@@ -3162,7 +3372,8 @@ function renderProjector(
                                 class="
                                     projectorTeam
                                     ${
-                                        game.activeTeam === index
+                                        game.activeTeam ===
+                                        index
                                             ? 'activeAnswerer'
                                             : ''
                                     }
@@ -3195,19 +3406,20 @@ function renderProjector(
 
 
 /* =============================================================
-   PROJECTOR ADMIN + FULLSCREEN CONTROLS
+   PROJECTOR UTILITY CONTROLS
+
+   Bottom-left:
+   Admin button
+   Fullscreen button
+
+   These stay available on the waiting screen,
+   round screen, board, and gameplay.
    ============================================================= */
 
 function createProjectorUtilities() {
 
-    if (
-        !document.body
-            .classList
-            .contains('projector')
-    ) {
-
+    if (!isProjector()) {
         return;
-
     }
 
 
@@ -3291,21 +3503,123 @@ function createProjectorUtilities() {
 
 
 /* =============================================================
+   PROJECTOR AUDIO UNLOCK
+
+   Modern browsers can block sound until the user has interacted
+   with the page.
+
+   The projector listens for the first click/touch/key press and
+   silently primes each audio file.
+
+   No game sound is intentionally heard during this process.
+   ============================================================= */
+
+function prepareProjectorAudio() {
+
+    if (!isProjector()) {
+        return;
+    }
+
+
+    let prepared =
+        false;
+
+
+    const prepare =
+        () => {
+
+            if (prepared) {
+                return;
+            }
+
+
+            prepared =
+                true;
+
+
+            Object.values(
+                SOUNDS
+            )
+            .forEach(
+                file => {
+
+                    const audio =
+                        new Audio(file);
+
+
+                    audio.volume =
+                        0;
+
+
+                    audio.play()
+                        .then(
+                            () => {
+
+                                audio.pause();
+
+                                audio.currentTime =
+                                    0;
+
+                            }
+                        )
+                        .catch(
+                            () => {}
+                        );
+
+                }
+            );
+
+
+            window.removeEventListener(
+                'pointerdown',
+                prepare
+            );
+
+
+            window.removeEventListener(
+                'keydown',
+                prepare
+            );
+
+        };
+
+
+    window.addEventListener(
+        'pointerdown',
+        prepare,
+        {
+            once:
+                true
+        }
+    );
+
+
+    window.addEventListener(
+        'keydown',
+        prepare,
+        {
+            once:
+                true
+        }
+    );
+
+}
+
+
+/* =============================================================
    STARTUP
    ============================================================= */
 
-if (
-    document.body
-        .classList
-        .contains('host')
-) {
+if (isHost()) {
 
     renderHostHome();
 
-} else {
+} else if (isProjector()) {
 
     renderProjector();
 
     createProjectorUtilities();
+
+    prepareProjectorAudio();
 
 }
