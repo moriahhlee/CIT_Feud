@@ -4,6 +4,69 @@
 
 const QUESTION_PACKS = window.CIT_FEUD_PACKS || [];
 
+
+/* =============================================================
+   DYNAMIC GAME PACK LOADER
+   ============================================================= */
+
+async function loadGamePacks() {
+
+    const files =
+        Array.isArray(window.CIT_FEUD_PACK_FILES)
+            ? window.CIT_FEUD_PACK_FILES
+            : [];
+
+
+    if (!files.length) {
+        return;
+    }
+
+
+    const alreadyLoaded =
+        new Set(
+            QUESTION_PACKS
+                .map(pack => pack?.sourceFile)
+                .filter(Boolean)
+        );
+
+
+    for (const file of files) {
+
+        if (alreadyLoaded.has(file)) {
+            continue;
+        }
+
+
+        await new Promise(
+            (resolve, reject) => {
+
+                const script =
+                    document.createElement('script');
+
+
+                script.src =
+                    file.startsWith('Gamepacks/')
+                        ? file
+                        : `Gamepacks/${file}`;
+
+
+                script.onload = resolve;
+
+
+                script.onerror = () =>
+                    reject(
+                        new Error(
+                            `Could not load game pack: ${file}`
+                        )
+                    );
+
+
+                document.head.appendChild(script);
+            }
+        );
+    }
+}
+
 const KEY = 'citFeudSlotsV4';
 const LIVE = 'citFeudLiveV4';
 const CHANNEL = 'cit-feud-v4';
@@ -3529,16 +3592,29 @@ window.addEventListener(
    START
    ============================================================= */
 
-if (
-    document.body.classList
-        .contains('host')
-) {
+async function startCitFeud() {
 
-    renderHostHome();
+    try {
+        await loadGamePacks();
+    } catch (error) {
+        console.error(error);
+    }
 
-} else {
 
-    prepareProjectorAudio();
+    if (
+        document.body.classList
+            .contains('host')
+    ) {
 
-    renderProjector();
+        renderHostHome();
+
+    } else {
+
+        prepareProjectorAudio();
+
+        renderProjector();
+    }
 }
+
+
+startCitFeud();
