@@ -7,7 +7,6 @@
     --gold: #f3bd3f;
     --gold-light: #ffd96a;
 
-    --cream: #f7f1df;
     --white: #ffffff;
 
     --red: #d7373f;
@@ -123,7 +122,8 @@ button.ghost,
 
 
 button.danger {
-    color: #ffb8bc;
+    color:
+        #ffb8bc;
 }
 
 
@@ -144,16 +144,20 @@ select {
 
     color: white;
 
-    padding: 10px 12px;
+    padding:
+        10px 12px;
 }
 
 
 label {
-    font-size: .78rem;
+    font-size:
+        .78rem;
 
-    font-weight: 800;
+    font-weight:
+        800;
 
-    letter-spacing: .04em;
+    letter-spacing:
+        .04em;
 }
 
 
@@ -169,11 +173,14 @@ p {
     color:
         var(--gold-light);
 
-    letter-spacing: .18em;
+    letter-spacing:
+        .18em;
 
-    font-size: .7rem;
+    font-size:
+        .7rem;
 
-    font-weight: 900;
+    font-weight:
+        900;
 }
 
 
@@ -185,9 +192,11 @@ p {
         1px solid
         var(--line);
 
-    border-radius: 18px;
+    border-radius:
+        18px;
 
-    padding: 22px;
+    padding:
+        22px;
 
     box-shadow:
         var(--shadow);
@@ -198,20 +207,26 @@ p {
 
 
 .actions {
-    display: flex;
+    display:
+        flex;
 
-    gap: 8px;
+    gap:
+        8px;
 
-    flex-wrap: wrap;
+    flex-wrap:
+        wrap;
 }
 
 
 .tags {
-    display: flex;
+    display:
+        flex;
 
-    flex-wrap: wrap;
+    flex-wrap:
+        wrap;
 
-    gap: 6px;
+    gap:
+        6px;
 
     margin:
         8px 0 12px;
@@ -243,8 +258,76 @@ p {
 }
 
 
+.buttonlike {
+    display:
+        inline-block;
+
+    text-decoration:
+        none;
+}
+
+
 /* =========================================================
-   STARTUP / SAVE SCREEN
+   FULLSCREEN / UTILITY BUTTONS
+   ========================================================= */
+
+.hostUtilityBar {
+    display:
+        flex;
+
+    justify-content:
+        flex-end;
+
+    margin-bottom:
+        10px;
+}
+
+
+.controlTopActions {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        10px;
+}
+
+
+.iconUtility {
+    width:
+        42px;
+
+    height:
+        42px;
+
+    padding:
+        0;
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+    border:
+        1px solid
+        var(--line);
+
+    background:
+        rgba(255,255,255,.08);
+
+    color:
+        white;
+
+    font-size:
+        1.25rem;
+}
+
+
+/* =========================================================
+   STARTUP
    ========================================================= */
 
 .startup {
@@ -258,7 +341,7 @@ p {
         0 auto;
 
     padding:
-        45px 0 70px;
+        35px 0 70px;
 }
 
 
@@ -411,17 +494,8 @@ p {
 }
 
 
-.buttonlike {
-    display:
-        inline-block;
-
-    text-decoration:
-        none;
-}
-
-
 /* =========================================================
-   NEW GAME SETUP
+   SETUP
    ========================================================= */
 
 .setup {
@@ -534,7 +608,7 @@ p {
 
 
 /* =========================================================
-   HOST CONTROL ROOM
+   HOST
    ========================================================= */
 
 .control {
@@ -626,6 +700,77 @@ p {
 }
 
 
+/* =========================================================
+   PRESENTATION CONTROL
+   ========================================================= */
+
+.presentationControl {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        20px;
+
+    margin-bottom:
+        18px;
+
+    padding:
+        14px 18px;
+}
+
+
+.presentationControl strong {
+    color:
+        var(--gold-light);
+
+    font-size:
+        1.2rem;
+}
+
+
+.presentationButtons {
+    display:
+        flex;
+
+    gap:
+        7px;
+
+    flex-wrap:
+        wrap;
+
+    justify-content:
+        flex-end;
+}
+
+
+.presentationButtons button {
+    padding:
+        8px 12px;
+
+    font-size:
+        .76rem;
+}
+
+
+.presentationButtons .presentationNext {
+    padding-left:
+        20px;
+
+    padding-right:
+        20px;
+}
+
+
+/* =========================================================
+   HOST QUESTION
+   ========================================================= */
+
 .qmeta {
     display:
         flex;
@@ -669,8 +814,26 @@ p {
 }
 
 
+.sectionlabel {
+    font-size:
+        .72rem;
+
+    letter-spacing:
+        .16em;
+
+    font-weight:
+        900;
+
+    opacity:
+        .7;
+
+    margin-bottom:
+        10px;
+}
+
+
 /* =========================================================
-   WHO IS ANSWERING
+   BUZZER
    ========================================================= */
 
 .buzzsection {
@@ -692,33 +855,9 @@ p {
 }
 
 
-.sectionlabel {
-    font-size:
-        .72rem;
-
-    letter-spacing:
-        .16em;
-
-    font-weight:
-        900;
-
-    opacity:
-        .7;
-
-    margin-bottom:
-        10px;
-}
-
-
 .buzzteams {
     display:
         grid;
-
-    grid-template-columns:
-        repeat(
-            2,
-            minmax(0,1fr)
-        );
 
     gap:
         9px;
@@ -777,9 +916,6 @@ p {
         rgba(255,212,90,.12),
         0 0 20px
         rgba(255,212,90,.25);
-
-    transform:
-        translateY(-1px);
 }
 
 
@@ -796,7 +932,7 @@ p {
 
 
 /* =========================================================
-   HOST ANSWER BOARD
+   HOST ANSWERS
    ========================================================= */
 
 .answerlabel {
@@ -907,9 +1043,6 @@ p {
     font-size:
         1.15rem;
 
-    font-weight:
-        1000;
-
     border-radius:
         10px;
 }
@@ -934,7 +1067,7 @@ p {
 
 
 /* =========================================================
-   ROUND BANK
+   BANK
    ========================================================= */
 
 .bankline {
@@ -966,9 +1099,6 @@ p {
 
 
 .bankline span {
-    text-transform:
-        uppercase;
-
     font-size:
         .72rem;
 
@@ -1008,7 +1138,7 @@ p {
 
 
 /* =========================================================
-   HOST SCOREKEEPER
+   HOST TEAMS
    ========================================================= */
 
 .teamscorelist {
@@ -1042,50 +1172,63 @@ p {
         var(--gold-light);
 
     box-shadow:
-        0 0 0 4px
-        rgba(255,212,90,.09),
         0 0 18px
         rgba(255,212,90,.15);
 }
 
 
-.teamctl input {
+.hostTeamHeader {
+    display:
+        grid;
+
+    grid-template-columns:
+        1fr auto;
+
+    align-items:
+        center;
+
+    gap:
+        12px;
+}
+
+
+.hostTeamHeader input {
     margin:
-        0 0 8px;
+        0;
 
     font-weight:
         900;
 }
 
 
-.teamctl > strong {
-    display:
-        block;
-
-    font-size:
-        2rem;
-
+.hostTeamHeader strong {
     color:
         var(--gold-light);
 
-    margin-bottom:
-        8px;
+    font-size:
+        1.8rem;
+
+    min-width:
+        45px;
+
+    text-align:
+        right;
 }
 
 
-.teamctl > div {
+.teamScoreButtons {
     display:
         flex;
 
     gap:
         5px;
 
-    flex-wrap:
-        wrap;
+    margin-top:
+        8px;
 }
 
 
-.teamctl button {
+.teamScoreButtons button {
     padding:
         7px 9px;
 
@@ -1095,7 +1238,7 @@ p {
 
 
 /* =========================================================
-   STRIKES
+   HOST STRIKES
    ========================================================= */
 
 .strikectl {
@@ -1115,14 +1258,11 @@ p {
     display:
         block;
 
-    text-transform:
-        uppercase;
+    font-size:
+        .72rem;
 
     letter-spacing:
         .12em;
-
-    font-size:
-        .72rem;
 
     font-weight:
         900;
@@ -1150,20 +1290,8 @@ p {
 }
 
 
-.strikectl p {
-    font-size:
-        .78rem;
-
-    opacity:
-        .7;
-
-    margin:
-        4px 0 10px;
-}
-
-
 /* =========================================================
-   RECENT CALLS
+   RECENT CALLS / NOTES
    ========================================================= */
 
 .attempts {
@@ -1179,12 +1307,6 @@ p {
 }
 
 
-.attempts h3 {
-    margin:
-        0 0 8px;
-}
-
-
 .attempts > div {
     display:
         grid;
@@ -1194,9 +1316,6 @@ p {
 
     gap:
         7px;
-
-    align-items:
-        center;
 
     padding:
         5px 0;
@@ -1209,24 +1328,8 @@ p {
 .attempts > div small {
     opacity:
         .65;
-
-    max-width:
-        150px;
-
-    overflow:
-        hidden;
-
-    text-overflow:
-        ellipsis;
-
-    white-space:
-        nowrap;
 }
 
-
-/* =========================================================
-   FACILITATOR NOTES
-   ========================================================= */
 
 .facilitator {
     margin-top:
@@ -1244,12 +1347,6 @@ p {
     border:
         1px solid
         rgba(90,150,220,.25);
-}
-
-
-.facilitator h3 {
-    margin-bottom:
-        6px;
 }
 
 
@@ -1281,7 +1378,7 @@ p {
 
 
 /* =========================================================
-   PROJECTOR
+   PROJECTOR BASE
    ========================================================= */
 
 body.projector {
@@ -1306,6 +1403,10 @@ body.projector {
         100vh;
 }
 
+
+/* =========================================================
+   WAITING
+   ========================================================= */
 
 .waiting {
     min-height:
@@ -1353,6 +1454,205 @@ body.projector {
 }
 
 
+/* =========================================================
+   ROUND INTRO
+   ========================================================= */
+
+.roundIntro,
+.topAnswersIntro {
+    min-height:
+        100vh;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    text-align:
+        center;
+}
+
+
+.roundWord {
+    margin-top:
+        25px;
+
+    font-size:
+        clamp(
+            3rem,
+            7vw,
+            7rem
+        );
+
+    font-weight:
+        1000;
+
+    letter-spacing:
+        .12em;
+
+    color:
+        white;
+
+    animation:
+        introRise .55s ease;
+}
+
+
+.roundNumber {
+    font-size:
+        clamp(
+            8rem,
+            20vw,
+            18rem
+        );
+
+    line-height:
+        .9;
+
+    font-weight:
+        1000;
+
+    color:
+        var(--gold);
+
+    text-shadow:
+        0 10px 40px
+        rgba(0,0,0,.35);
+
+    animation:
+        roundPop .55s ease;
+}
+
+
+.roundPack {
+    margin-top:
+        25px;
+
+    font-size:
+        1rem;
+
+    letter-spacing:
+        .15em;
+
+    text-transform:
+        uppercase;
+
+    opacity:
+        .6;
+}
+
+
+.topCount {
+    font-size:
+        clamp(
+            4rem,
+            9vw,
+            9rem
+        );
+
+    font-weight:
+        1000;
+
+    letter-spacing:
+        -.05em;
+
+    animation:
+        introRise .45s ease;
+}
+
+
+.topCount strong {
+    color:
+        var(--gold);
+
+    font-size:
+        1.35em;
+}
+
+
+.topAnswersText {
+    margin-top:
+        12px;
+
+    font-size:
+        clamp(
+            1.5rem,
+            3.4vw,
+            3.2rem
+        );
+
+    letter-spacing:
+        .12em;
+
+    font-weight:
+        900;
+
+    color:
+        var(--gold-light);
+
+    animation:
+        introRise .65s ease;
+}
+
+
+@keyframes introRise {
+
+    from {
+        opacity:
+            0;
+
+        transform:
+            translateY(25px);
+    }
+
+    to {
+        opacity:
+            1;
+
+        transform:
+            translateY(0);
+    }
+
+}
+
+
+@keyframes roundPop {
+
+    0% {
+        opacity:
+            0;
+
+        transform:
+            scale(.65);
+    }
+
+    70% {
+        transform:
+            scale(1.08);
+    }
+
+    100% {
+        opacity:
+            1;
+
+        transform:
+            scale(1);
+    }
+
+}
+
+
+/* =========================================================
+   PROJECTOR GAME
+   ========================================================= */
+
 .stage {
     min-height:
         100vh;
@@ -1368,48 +1668,131 @@ body.projector {
         auto;
 
     gap:
-        14px;
+        12px;
 
     padding:
-        22px 3vw 18px;
+        18px 2.5vw 16px;
 }
 
 
-.stage header {
+/* =========================================================
+   TOP BAR / STRIKES
+   ========================================================= */
+
+.gameTopBar {
+    display:
+        grid;
+
+    grid-template-columns:
+        1fr auto 1fr;
+
+    align-items:
+        center;
+
+    gap:
+        20px;
+}
+
+
+.miniBrand strong {
+    display:
+        block;
+
+    margin-top:
+        3px;
+
+    font-size:
+        1.5rem;
+
+    letter-spacing:
+        -.04em;
+}
+
+
+.miniBrand strong b {
+    color:
+        var(--gold);
+}
+
+
+.topStrikeArea {
     display:
         flex;
 
     align-items:
         center;
 
-    justify-content:
-        space-between;
+    gap:
+        12px;
+
+    padding:
+        8px 18px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.1);
+
+    border-radius:
+        100px;
+
+    background:
+        rgba(0,0,0,.15);
 }
 
 
-.stage header h1 {
-    margin:
-        0;
-
+.strikeLabel {
     font-size:
-        clamp(
-            2.2rem,
-            4vw,
-            4rem
-        );
+        .6rem;
 
     letter-spacing:
-        -.06em;
+        .14em;
+
+    font-weight:
+        900;
+
+    opacity:
+        .45;
 }
 
 
-.stage header h1 b {
+.topStrikes {
+    display:
+        flex;
+
+    gap:
+        8px;
+}
+
+
+.topStrikes span {
     color:
-        var(--gold);
+        rgba(255,255,255,.13);
+
+    font-size:
+        1.8rem;
+
+    line-height:
+        1;
+
+    font-weight:
+        1000;
+}
+
+
+.topStrikes span.hot {
+    color:
+        #ff505b;
+
+    text-shadow:
+        0 0 12px
+        rgba(255,60,70,.7);
 }
 
 
 .roundbadge {
+    justify-self:
+        end;
+
     min-width:
         145px;
 
@@ -1455,15 +1838,31 @@ body.projector {
 }
 
 
+/* =========================================================
+   QUESTION
+   ========================================================= */
+
 .prompt {
     width:
         min(
-            1100px,
+            1200px,
             95%
         );
 
+    min-height:
+        70px;
+
     margin:
         auto;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
 
     text-align:
         center;
@@ -1483,15 +1882,48 @@ body.projector {
 }
 
 
+.questionVisible {
+    animation:
+        questionReveal .5s ease;
+}
+
+
+.questionHidden {
+    opacity:
+        0;
+}
+
+
+@keyframes questionReveal {
+
+    from {
+        opacity:
+            0;
+
+        transform:
+            translateY(-15px);
+    }
+
+    to {
+        opacity:
+            1;
+
+        transform:
+            translateY(0);
+    }
+
+}
+
+
 /* =========================================================
-   PROJECTOR ANSWERS
+   ANSWER BOARD
    ========================================================= */
 
 .projectorAnswers {
     width:
         min(
-            1100px,
-            92vw
+            1150px,
+            94vw
         );
 
     margin:
@@ -1512,14 +1944,17 @@ body.projector {
 
 
 .tile {
+    position:
+        relative;
+
     min-height:
-        64px;
+        66px;
 
     display:
         grid;
 
     grid-template-columns:
-        54px 1fr 55px;
+        54px 1fr 60px;
 
     align-items:
         center;
@@ -1616,7 +2051,7 @@ body.projector {
         var(--gold-light);
 
     animation:
-        reveal .22s ease;
+        reveal .28s ease;
 }
 
 
@@ -1624,11 +2059,11 @@ body.projector {
 
     0% {
         transform:
-            rotateX(75deg)
-            scale(.96);
+            rotateX(80deg)
+            scale(.95);
 
         opacity:
-            .25;
+            .3;
     }
 
     100% {
@@ -1644,82 +2079,285 @@ body.projector {
 
 
 /* =========================================================
-   PROJECTOR STRIKES
+   CORRECT ANSWER FLASH
    ========================================================= */
 
-.strikebar {
-    display:
-        flex;
+.tile.correctFlash {
+    z-index:
+        20;
 
-    justify-content:
-        center;
-
-    gap:
-        14px;
-
-    min-height:
-        46px;
+    animation:
+        correctFlash .85s ease;
 }
 
 
-.strikebar span {
+@keyframes correctFlash {
+
+    0% {
+        transform:
+            scale(1);
+
+        box-shadow:
+            0 0 0
+            rgba(255,217,106,0);
+    }
+
+    20% {
+        transform:
+            scale(1.06);
+
+        border-color:
+            white;
+
+        box-shadow:
+            0 0 35px
+            rgba(255,217,106,.95);
+    }
+
+    45% {
+        transform:
+            scale(1.02);
+
+        background:
+            linear-gradient(
+                180deg,
+                #39a966,
+                #19733e
+            );
+    }
+
+    100% {
+        transform:
+            scale(1);
+
+        box-shadow:
+            0 8px 16px
+            rgba(0,0,0,.28);
+    }
+
+}
+
+
+/* =========================================================
+   WRONG ANSWER OVERLAY
+   ========================================================= */
+
+.wrongOverlay {
+    position:
+        fixed;
+
+    inset:
+        0;
+
+    z-index:
+        999999;
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+    pointer-events:
+        none;
+
+    background:
+        rgba(40,0,0,.14);
+
+    animation:
+        wrongBackdrop .85s ease forwards;
+}
+
+
+.giantX {
     color:
-        rgba(255,255,255,.15);
+        #ff3643;
 
     font-size:
-        2.7rem;
+        min(
+            70vh,
+            55vw
+        );
 
     font-weight:
         1000;
 
     line-height:
-        1;
+        .75;
+
+    text-shadow:
+        0 0 15px
+        rgba(255,255,255,.9),
+        0 0 35px
+        rgba(255,40,50,.9),
+        0 0 80px
+        rgba(255,40,50,.5);
+
+    animation:
+        giantX .85s ease forwards;
 }
 
 
-.strikebar span.hot {
-    color:
-        #ff4f59;
+@keyframes giantX {
 
-    text-shadow:
-        0 0 10px
-        rgba(255,60,70,.8),
-        0 0 25px
-        rgba(255,60,70,.45);
+    0% {
+        opacity:
+            0;
+
+        transform:
+            scale(.25);
+    }
+
+    18% {
+        opacity:
+            1;
+
+        transform:
+            scale(1.15);
+    }
+
+    35% {
+        transform:
+            scale(.95);
+    }
+
+    70% {
+        opacity:
+            1;
+
+        transform:
+            scale(1);
+    }
+
+    100% {
+        opacity:
+            0;
+
+        transform:
+            scale(1.08);
+    }
+
+}
+
+
+@keyframes wrongBackdrop {
+
+    0% {
+        opacity:
+            0;
+    }
+
+    15% {
+        opacity:
+            1;
+    }
+
+    75% {
+        opacity:
+            1;
+    }
+
+    100% {
+        opacity:
+            0;
+    }
+
 }
 
 
 /* =========================================================
-   PROJECTOR TEAM SCORES
+   ROUND BANK
+   ========================================================= */
+
+.projectorBank {
+    justify-self:
+        center;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        10px;
+
+    padding:
+        5px 18px;
+
+    border-radius:
+        100px;
+
+    background:
+        rgba(0,0,0,.18);
+
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+}
+
+
+.projectorBank span {
+    font-size:
+        .58rem;
+
+    letter-spacing:
+        .12em;
+
+    font-weight:
+        900;
+
+    opacity:
+        .45;
+}
+
+
+.projectorBank strong {
+    color:
+        var(--gold-light);
+
+    font-size:
+        1.3rem;
+}
+
+
+/* =========================================================
+   PROJECTOR TEAMS
    ========================================================= */
 
 .projectorScores {
     display:
         grid;
 
-    grid-template-columns:
-        repeat(
-            auto-fit,
-            minmax(160px,1fr)
-        );
-
     gap:
-        10px;
+        8px;
+
+    width:
+        100%;
 }
 
 
-.projectorScores > div {
-    position:
-        relative;
+.projectorTeam {
+    min-width:
+        0;
 
-    text-align:
+    display:
+        flex;
+
+    align-items:
         center;
 
+    justify-content:
+        space-between;
+
+    gap:
+        10px;
+
     padding:
-        10px 12px;
+        12px 15px;
 
     border-radius:
-        12px;
+        11px;
 
     background:
         rgba(255,255,255,.06);
@@ -1735,12 +2373,25 @@ body.projector {
 }
 
 
-.projectorScores span {
-    display:
-        block;
+.projectorTeam span {
+    min-width:
+        0;
+
+    overflow:
+        hidden;
+
+    text-overflow:
+        ellipsis;
+
+    white-space:
+        nowrap;
 
     font-size:
-        .75rem;
+        clamp(
+            .65rem,
+            1vw,
+            .9rem
+        );
 
     font-weight:
         900;
@@ -1749,169 +2400,181 @@ body.projector {
         uppercase;
 
     letter-spacing:
-        .08em;
+        .05em;
 
     opacity:
-        .75;
+        .8;
 }
 
 
-.projectorScores strong {
-    display:
-        block;
-
-    margin-top:
-        2px;
+.projectorTeam strong {
+    flex:
+        0 0 auto;
 
     color:
         var(--gold-light);
 
     font-size:
-        1.75rem;
+        clamp(
+            1.2rem,
+            2vw,
+            1.8rem
+        );
 }
 
 
-.projectorScores > div.activeAnswerer {
+.projectorTeam.activeAnswerer {
     outline:
-        4px solid
+        3px solid
         var(--gold-light);
+
+    background:
+        rgba(243,189,63,.12);
 
     box-shadow:
-        0 0 28px
-        rgba(255,212,90,.55),
-        inset 0 0 18px
-        rgba(255,212,90,.07);
+        0 0 24px
+        rgba(255,212,90,.35);
 
     transform:
-        translateY(-7px);
+        translateY(-4px);
 }
 
 
-.projectorScores > div.activeAnswerer small {
-    display:
-        block;
+.projectorTeam.buzzerFlash {
+    animation:
+        buzzerFlash .6s ease;
+}
 
-    margin-top:
-        3px;
 
-    color:
-        var(--gold-light);
+@keyframes buzzerFlash {
 
-    font-size:
-        .58rem;
+    0% {
+        transform:
+            scale(1);
+    }
 
-    font-weight:
-        1000;
+    25% {
+        transform:
+            scale(1.08);
 
-    letter-spacing:
-        .14em;
+        background:
+            rgba(243,189,63,.35);
+
+        box-shadow:
+            0 0 35px
+            rgba(255,212,90,.7);
+    }
+
+    100% {
+        transform:
+            scale(1);
+    }
+
 }
 
 
 /* =========================================================
-   ADMIN / HOST ACCESS BUTTON
-
-   Small user/settings control permanently located in the
-   bottom-left corner of the projector.
-
-   It is intentionally subtle until hovered.
+   PROJECTOR UTILITY CONTROLS
    ========================================================= */
 
-.admin-corner {
+.projectorUtilities {
     position:
         fixed;
 
     left:
-        20px;
+        18px;
 
     bottom:
-        20px;
+        18px;
 
-    width:
-        48px;
-
-    height:
-        48px;
+    z-index:
+        99999;
 
     display:
         flex;
 
-    align-items:
-        center;
+    gap:
+        8px;
 
-    justify-content:
+    opacity:
+        .32;
+
+    transition:
+        opacity .15s ease;
+}
+
+
+.projectorUtilities:hover {
+    opacity:
+        1;
+}
+
+
+.projectorUtilityButton {
+    position:
+        relative;
+
+    width:
+        44px;
+
+    height:
+        44px;
+
+    padding:
+        0;
+
+    display:
+        grid;
+
+    place-items:
         center;
 
     border-radius:
         50%;
 
-    background:
-        rgba(255,255,255,.08);
-
     border:
         1px solid
-        rgba(255,255,255,.22);
+        rgba(255,255,255,.2);
+
+    background:
+        rgba(7,20,38,.8);
 
     color:
-        rgba(255,255,255,.68);
+        rgba(255,255,255,.8);
 
     text-decoration:
         none;
 
-    z-index:
-        99999;
-
-    cursor:
-        pointer;
-
-    opacity:
-        .58;
+    font-size:
+        1.2rem;
 
     box-shadow:
         0 5px 18px
         rgba(0,0,0,.25);
-
-    transition:
-        opacity .15s ease,
-        transform .15s ease,
-        background .15s ease,
-        border-color .15s ease,
-        box-shadow .15s ease;
 }
 
 
-.admin-corner:hover {
+.projectorUtilityButton:hover {
     opacity:
         1;
 
-    transform:
-        scale(1.08);
-
-    background:
-        rgba(12,33,61,.96);
+    color:
+        white;
 
     border-color:
         var(--gold);
 
-    box-shadow:
-        0 5px 22px
-        rgba(0,0,0,.4),
-        0 0 16px
-        rgba(243,189,63,.18);
-
-    color:
-        white;
+    transform:
+        scale(1.06);
 }
 
 
-/* MAIN USER SYMBOL */
-
-.admin-user-icon {
+.projectorUtilityButton svg {
     width:
-        23px;
+        21px;
 
     height:
-        23px;
+        21px;
 
     fill:
         none;
@@ -1930,9 +2593,7 @@ body.projector {
 }
 
 
-/* SMALL SETTINGS GEAR */
-
-.admin-settings-icon {
+.utilityGear {
     position:
         absolute;
 
@@ -1943,10 +2604,10 @@ body.projector {
         -3px;
 
     width:
-        21px;
+        18px;
 
     height:
-        21px;
+        18px;
 
     display:
         grid;
@@ -1968,17 +2629,7 @@ body.projector {
         var(--navy);
 
     font-size:
-        11px;
-
-    line-height:
-        1;
-
-    font-weight:
-        900;
-
-    box-shadow:
-        0 2px 5px
-        rgba(0,0,0,.4);
+        9px;
 }
 
 
@@ -1987,7 +2638,7 @@ body.projector {
    ========================================================= */
 
 @media (
-    max-width: 950px
+    max-width: 1000px
 ) {
 
     .homegrid,
@@ -2000,6 +2651,15 @@ body.projector {
     .packgrid {
         grid-template-columns:
             1fr;
+    }
+
+
+    .presentationControl {
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
     }
 
 }
@@ -2016,12 +2676,6 @@ body.projector {
     }
 
 
-    .buzzteams {
-        grid-template-columns:
-            1fr;
-    }
-
-
     .judgeRow {
         grid-template-columns:
             34px
@@ -2032,39 +2686,36 @@ body.projector {
     }
 
 
-    .judgeRow em {
-        font-size:
-            .72rem;
-    }
-
-
     .projectorAnswers {
         grid-template-columns:
             1fr;
     }
 
 
-    .savecard {
-        align-items:
-            flex-start;
-
-        flex-direction:
-            column;
+    .gameTopBar {
+        grid-template-columns:
+            1fr auto;
     }
 
 
-    .admin-corner {
-        left:
-            14px;
+    .topStrikeArea {
+        grid-row:
+            2;
 
-        bottom:
-            14px;
+        grid-column:
+            1 / -1;
 
-        width:
-            44px;
+        justify-self:
+            center;
+    }
 
-        height:
-            44px;
+
+    .savecard {
+        flex-direction:
+            column;
+
+        align-items:
+            flex-start;
     }
 
 }
