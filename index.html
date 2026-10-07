@@ -1,161 +1,61 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CIT Feud | Crisis Intervention Training</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CIT Feud | Crisis Intervention Training</title>
+
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-<div id="game">
-  <header class="game-header">
-    <section class="team-score"><span>TEAM 1</span><strong id="team1Score">0</strong></section>
-    <div class="brand"><small>CRISIS INTERVENTION TRAINING</small><h1>CIT <em>FEUD</em></h1></div>
-    <section class="team-score"><span>TEAM 2</span><strong id="team2Score">0</strong></section>
-  </header>
 
-  <main class="layout">
-    <section class="stage">
-      <div class="round-heading"><span id="roundNumber">ROUND 1</span><strong id="roundTitle">Warning Signs</strong></div>
-      <div id="question" class="question"></div>
-      <div id="answerBoard" class="answer-board"></div>
-      <div class="round-nav">
-        <button id="previousRound">◀ Previous</button>
-        <button id="resetBoard">Reset Board</button>
-        <button id="nextRound">Next Round ▶</button>
-      </div>
-    </section>
+<body class="projector">
 
-    <aside class="control-rail">
-      <div class="rail-card">
-        <h2>ROUND BANK</h2>
-        <div class="bank"><span>Revealed</span><strong id="roundBank">0</strong></div>
-        <div class="award-grid">
-          <button id="awardTeam1">Award to Team 1</button>
-          <button id="awardTeam2">Award to Team 2</button>
-        </div>
-      </div>
+    <!--
+        ============================================================
+        CIT FEUD — PROJECTOR DISPLAY
+        ============================================================
 
-      <div class="rail-card">
-        <h2>SCOREKEEPER</h2>
-        <label>Points to add/subtract</label>
-        <input id="manualPoints" type="number" value="10" min="0" step="1">
-        <div class="award-grid">
-          <button data-score-team="1" data-score-direction="1">+ Team 1</button>
-          <button data-score-team="2" data-score-direction="1">+ Team 2</button>
-          <button data-score-team="1" data-score-direction="-1">− Team 1</button>
-          <button data-score-team="2" data-score-direction="-1">− Team 2</button>
-        </div>
-      </div>
+        This is the PUBLIC game board shown on the projector.
 
-      <div class="rail-card">
-        <h2>STRIKES</h2>
-        <div id="strikes" class="strikes"><span>—</span></div>
-        <div class="award-grid">
-          <button id="addStrike" class="danger">✕ Strike</button>
-          <button id="clearStrikes">Clear</button>
-        </div>
-      </div>
+        Do not add questions or answers here.
 
-      <div class="rail-card compact">
-        <button id="facilitatorNote">Facilitator Note</button>
-        <button id="resetGame">Reset Entire Game</button>
-      </div>
-    </aside>
-  </main>
-  <footer>Keyboard: 1–8 reveal answers • X strike • ←/→ rounds • F facilitator note</footer>
-</div>
+        Questions, answers, points, tags, and facilitator notes
+        are stored in script.js.
 
-<div id="modal" class="modal" aria-hidden="true">
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <h2 id="modalTitle">Facilitator Note</h2>
-    <p id="modalText"></p>
-    <button id="closeModal">Back to Game</button>
-  </div>
-</div>
+        The host/moderator controls the game from:
 
-<!-- ============================================================
-     EDIT YOUR CIT FEUD CONTENT HERE.
+        host.html
+        ============================================================
+    -->
 
-     Copy/paste a whole { ... } round to add another round.
-     title: short round name shown above the board
-     question: the prompt you read to the class
-     note: your private facilitator/debrief note
-     answers: ["Answer shown on board", points]
+    <main id="projectorApp">
 
-     You can use fewer than 8 answers. The game builds the board
-     automatically from however many answers you enter.
-     ============================================================ -->
-<script>
-window.CIT_FEUD_ROUNDS = [
-  {
-    title: "Warning Signs",
-    question: "Name a warning sign that someone's mental health crisis may be getting worse.",
-    note: "Use the answers to distinguish warning signs we observe from warning signs the person recognizes in themselves. Safety planning should identify the patient's own indicators that a crisis is escalating.",
-    answers: [
-      ["Talking about suicide or death", 30],
-      ["Withdrawal or isolation", 20],
-      ["Mood or behavior change", 15],
-      ["Increased substance use", 12],
-      ["Giving things away / saying goodbye", 8],
-      ["Sleep changes", 6],
-      ["Agitation or anger", 5],
-      ["Stopping usual routines", 4]
-    ]
-  },
-  {
-    title: "Internal Coping",
-    question: "Name something someone could do on their own to get through a difficult moment.",
-    note: "These are internal coping strategies. The point is not that one strategy works for everyone, but that the person has realistic actions available before the crisis escalates further.",
-    answers: [
-      ["Listen to music", 22],
-      ["Walk or exercise", 18],
-      ["Watch TV or a movie", 15],
-      ["Breathing / grounding", 13],
-      ["Spend time with a pet", 11],
-      ["Play a game", 8],
-      ["Shower / self-care", 7],
-      ["Hobby, art, or journaling", 6]
-    ]
-  },
-  {
-    title: "People & Places",
-    question: "Name a person or place that could provide safe distraction during a crisis.",
-    note: "Social distraction is different from disclosing suicidal thoughts. Someone may first need a place to be around others or a person who helps interrupt the crisis without immediately discussing it.",
-    answers: [
-      ["Friend", 24], ["Family", 20], ["Partner", 16], ["Park / public place", 10],
-      ["Gym", 9], ["Coffee shop / restaurant", 8], ["Church / community", 7], ["Coworker / workplace", 6]
-    ]
-  },
-  {
-    title: "Asking for Help",
-    question: "Name someone a person could tell, 'I'm not safe right now.'",
-    note: "Compare this board with the prior round. A person who is good for distraction is not automatically someone the patient trusts with a direct request for help.",
-    answers: [
-      ["Partner / spouse", 25], ["Parent", 20], ["Friend", 18], ["Sibling", 12],
-      ["Coworker", 8], ["Supervisor", 7], ["Peer", 6], ["Teacher / neighbor", 4]
-    ]
-  },
-  {
-    title: "Professional Resources",
-    question: "Name a professional or service someone could contact during a mental health crisis.",
-    note: "Discuss matching the resource to the patient's needs and acuity. A safety plan should include specific, usable contacts rather than only 'call for help.'",
-    answers: [
-      ["988", 25], ["Therapist / counselor", 20], ["911", 15], ["Crisis team", 12],
-      ["Emergency department", 10], ["Psychiatrist", 8], ["Primary care provider", 6], ["Peer / recovery specialist", 4]
-    ]
-  },
-  {
-    title: "Safer Environment",
-    question: "Name something that could be changed to make someone's environment safer during a crisis.",
-    note: "Focus on creating time and distance between suicidal thoughts and access to lethal means. Make the conversation individualized and collaborative rather than treating means safety as a generic checklist.",
-    answers: [
-      ["Firearm access", 28], ["Medication access", 20], ["Alcohol / drugs", 14], ["Knives / sharps", 10],
-      ["Being alone", 9], ["Vehicle / keys", 7], ["Dangerous locations", 6], ["Other identified means", 6]
-    ]
-  }
-];
-</script>
-<script src="script.js"></script>
+        <!--
+            script.js automatically builds the game board here.
+        -->
+
+        <section class="waiting">
+
+            <div class="eyebrow">
+                CRISIS INTERVENTION TRAINING
+            </div>
+
+            <h1>
+                CIT <b>FEUD</b>
+            </h1>
+
+            <p>
+                Waiting for the host to start or resume a game...
+            </p>
+
+        </section>
+
+    </main>
+
+    <!-- CIT Feud game engine -->
+    <script src="script.js"></script>
+
 </body>
 </html>
