@@ -4050,3 +4050,117 @@ body.projector::after{
         min-height: unset;
     }
 }
+
+/* =============================================================
+   HOST CONTROL ROOM — COMPACT DESKTOP CONSOLE
+   Host-only overrides. Projector presentation styling untouched.
+   ============================================================= */
+
+@media (min-width: 651px) {
+    body.host .projectorControl { padding: 14px 16px; margin-bottom: 12px; }
+    body.host .projectorControl .sectionlabel { margin-bottom: 5px; }
+    body.host .projectorControl h2,
+    body.host .projectorControl h3 { margin: 0 0 10px; }
+    body.host .projectorControl .buttonRow,
+    body.host .projectorControl .projectorButtons,
+    body.host .projectorControl .phaseControls {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 7px;
+    }
+    body.host .projectorControl button,
+    body.host .projectorControl a { min-height: 38px; padding: 8px 13px; }
+
+    body.host .questionControl,
+    body.host .questionCard,
+    body.host .hostQuestion { padding-top: 14px; padding-bottom: 14px; }
+    body.host .questionControl h2,
+    body.host .questionCard h2,
+    body.host .hostQuestion h2 { margin-top: 4px; margin-bottom: 8px; line-height: 1.15; }
+
+    body.host .matchupControl { margin-top: 12px; padding-top: 14px; }
+    body.host .matchupControlHeader { align-items: center; margin-bottom: 9px; }
+    body.host .matchupControlHeader small {
+        max-width: 310px; font-size: .64rem; line-height: 1.25;
+    }
+    body.host .matchupPrimary {
+        display: grid !important;
+        grid-template-columns: minmax(0,1fr) 44px minmax(0,1fr) !important;
+        align-items: stretch;
+        gap: 9px;
+    }
+    body.host .matchupVs {
+        display: grid; place-items: center; min-width: 44px; min-height: 0; font-size: .72rem;
+    }
+    body.host .matchupTeam { min-height: 72px; padding: 9px 12px; }
+    body.host .matchupTeam,
+    body.host .matchupBenchTeam { box-sizing: border-box; }
+    body.host .matchupTeamScore,
+    body.host .teamScoreControl,
+    body.host .scoreStepper { gap: 5px; }
+    body.host .matchupTeam button,
+    body.host .matchupBenchTeam button {
+        min-width: 40px; min-height: 40px; padding: 7px 10px;
+    }
+
+    body.host .matchupBench {
+        display: grid !important;
+        grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    body.host .matchupBenchTeam { min-height: 58px; padding: 8px 11px; }
+    body.host .matchupBenchTeam button {
+        min-width: 36px; min-height: 36px; padding: 6px 9px;
+    }
+
+    body.host .hostAnswers,
+    body.host .answerControls,
+    body.host .answersControl { gap: 7px; }
+    body.host .hostAnswer,
+    body.host .answerControlRow,
+    body.host .answerJudgeRow {
+        min-height: 48px; padding-top: 6px; padding-bottom: 6px;
+    }
+    body.host .hostAnswer button,
+    body.host .answerControlRow button,
+    body.host .answerJudgeRow button { min-width: 44px; min-height: 38px; }
+
+    body.host .roundBank,
+    body.host .hostRoundBank,
+    body.host .bankControl {
+        min-height: 0; padding: 9px 14px; margin-top: 9px; margin-bottom: 9px;
+    }
+    body.host .roundBank strong,
+    body.host .hostRoundBank strong,
+    body.host .bankControl strong { font-size: 1.35rem; }
+
+    body.host .whiteboardAwards,
+    body.host .whiteboardTeams,
+    body.host .whiteboardButtons {
+        display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px;
+    }
+    body.host .whiteboardAwards button,
+    body.host .whiteboardTeams button,
+    body.host .whiteboardButtons button { min-height: 38px; padding: 7px 10px; }
+
+    body.host .roundNavigation,
+    body.host .roundNav,
+    body.host .hostNavigation { margin-top: 10px; padding-top: 10px; }
+    body.host .roundNavigation button,
+    body.host .roundNav button,
+    body.host .hostNavigation button { min-height: 42px; padding: 9px 15px; }
+}
+
+@media (min-width: 651px) and (max-width: 900px) {
+    body.host .matchupControlHeader { flex-direction: row; align-items: center; }
+    body.host .matchupControlHeader small { max-width: 280px; text-align: right; }
+    body.host .matchupBench {
+        grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    }
+}
+
+@media (max-width: 650px) {
+    body.host .matchupPrimary { grid-template-columns: 1fr !important; }
+    body.host .matchupVs { min-height: 24px; }
+    body.host .matchupBench { grid-template-columns: 1fr !important; }
+}
+
