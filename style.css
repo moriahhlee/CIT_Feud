@@ -3603,3 +3603,396 @@ body.projector::after{
     outline: none;
     transform: scale(1.05);
 }
+
+/* =============================================================
+   CURRENT PROJECTOR JS COMPATIBILITY
+   Matches the current script.js projector markup.
+   ============================================================= */
+
+.projectorGame {
+    position: relative;
+    min-height: 100vh;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: 12px;
+    padding: 18px 2.5vw 16px;
+    overflow: hidden;
+}
+
+.projectorHeader {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 20px;
+}
+
+.projectorBrand h1 {
+    margin: 3px 0 0;
+    font-size: 1.5rem;
+    letter-spacing: -.04em;
+}
+
+.projectorBrand h1 b {
+    color: var(--gold);
+}
+
+.projectorRoundInfo {
+    justify-self: end;
+    min-width: 118px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 9px 15px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid var(--line);
+}
+
+.projectorRoundInfo span {
+    font-size: .62rem;
+    font-weight: 900;
+    letter-spacing: .12em;
+    opacity: .62;
+}
+
+.projectorRoundInfo strong {
+    color: var(--gold-light);
+    font-size: 1.35rem;
+}
+
+.projectorQuestion {
+    width: min(1200px,95%);
+    min-height: 70px;
+    margin: auto;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    text-align: center;
+}
+
+.projectorQuestionPack {
+    margin-bottom: 6px;
+    color: var(--gold-light);
+    font-size: .62rem;
+    font-weight: 900;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    opacity: .75;
+}
+
+.projectorQuestion h2 {
+    margin: 0;
+    font-size: clamp(1.35rem,2.6vw,2.5rem);
+    font-weight: 900;
+    line-height: 1.18;
+}
+
+.boardOnlyQuestion {
+    min-height: 36px;
+}
+
+.projectorBoardArea {
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 10px;
+    align-content: center;
+}
+
+.answerBoard {
+    width: min(1150px,94vw);
+    margin: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-content: center;
+}
+
+.answerTile {
+    position: relative;
+    min-height: 66px;
+    perspective: 900px;
+}
+
+.answerTileInner {
+    position: relative;
+    min-height: 66px;
+    height: 100%;
+    border-radius: 10px;
+    transform-style: preserve-3d;
+}
+
+.answerFace {
+    min-height: 66px;
+    height: 100%;
+    border-radius: 10px;
+    border: 2px solid #4f78a5;
+    background: linear-gradient(180deg,#163e69,#0d2b4d);
+    box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,.05),
+        0 8px 16px rgba(0,0,0,.28);
+}
+
+.answerHidden {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    backface-visibility: hidden;
+    z-index: 2;
+}
+
+.answerHidden span {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 9px;
+    background: rgba(0,0,0,.22);
+    color: var(--gold-light);
+    font-size: 1.35rem;
+    font-weight: 1000;
+}
+
+.answerShown {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 64px;
+    align-items: center;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.answerText {
+    padding: 0 16px;
+    font-size: clamp(.9rem,1.5vw,1.35rem);
+    font-weight: 900;
+}
+
+.answerPoints {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    background: rgba(0,0,0,.18);
+    color: var(--gold-light);
+    font-size: 1.35rem;
+    font-weight: 1000;
+}
+
+.answerTile.revealed .answerHidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.answerTile.revealed .answerShown {
+    opacity: 1;
+    visibility: visible;
+    border-color: var(--gold-light);
+    background: linear-gradient(180deg,#236aa5,#174e83);
+    animation: reveal .28s ease;
+}
+
+.answerTile.flashAnswer .answerShown {
+    z-index: 20;
+    animation: currentAnswerFlash .85s ease;
+}
+
+@keyframes currentAnswerFlash {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(255,217,106,0);
+    }
+    20% {
+        transform: scale(1.06);
+        border-color: white;
+        box-shadow: 0 0 35px rgba(255,217,106,.95);
+    }
+    45% {
+        transform: scale(1.02);
+        background: linear-gradient(180deg,#39a966,#19733e);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 8px 16px rgba(0,0,0,.28);
+    }
+}
+
+.projectorTeamStrip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(150px,1fr));
+    gap: 8px;
+    width: 100%;
+}
+
+.projectorTeamScore {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 15px;
+    border-radius: 11px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid var(--line);
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease,
+        border-color .15s ease,
+        background .15s ease;
+}
+
+.projectorTeamScore span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: clamp(.65rem,1vw,.9rem);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    opacity: .8;
+}
+
+.projectorTeamScore strong {
+    flex: 0 0 auto;
+    color: var(--gold-light);
+    font-size: clamp(1.2rem,2vw,1.8rem);
+}
+
+.projectorTeamScore.inMatchup {
+    border-color: rgba(116,188,238,.3);
+    background: rgba(31,91,128,.16);
+}
+
+.projectorTeamScore.controller {
+    border-color: rgba(73,218,132,.8);
+    background: linear-gradient(180deg,rgba(40,170,98,.34),rgba(24,136,75,.18));
+    box-shadow:
+        0 0 0 2px rgba(73,218,132,.12),
+        0 0 22px rgba(73,218,132,.20);
+    transform: translateY(-3px);
+}
+
+.projectorStrikes {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    z-index: 120;
+    display: flex;
+    gap: 9px;
+    transform: translateX(-50%);
+    padding: 8px 18px;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 100px;
+    background: rgba(0,0,0,.3);
+}
+
+.projectorStrikes span {
+    color: #ff505b;
+    font-size: 1.8rem;
+    line-height: 1;
+    font-weight: 1000;
+    text-shadow: 0 0 12px rgba(255,60,70,.7);
+}
+
+.stealMode {
+    background:
+        radial-gradient(circle at 50% 22%,rgba(91,75,180,.18),transparent 38%);
+}
+
+.stealBanner {
+    width: min(760px,88vw);
+    margin: 0 auto;
+    display: grid;
+    gap: 4px;
+    padding: 8px 20px;
+    text-align: center;
+    border-radius: 100px;
+    border: 1px solid rgba(175,150,255,.42);
+    background: linear-gradient(135deg,rgba(104,72,200,.3),rgba(24,136,148,.22));
+    box-shadow: 0 0 28px rgba(105,82,200,.18);
+}
+
+.stealBannerLabel {
+    color: var(--gold-light);
+    font-size: .62rem;
+    font-weight: 1000;
+    letter-spacing: .18em;
+}
+
+.stealBannerTeams {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 13px;
+    font-size: clamp(.85rem,1.25vw,1.15rem);
+    font-weight: 900;
+}
+
+.stealAura {
+    position: fixed;
+    inset: 0;
+    z-index: 9989;
+    pointer-events: none;
+    box-shadow:
+        inset 0 0 28px rgba(255,93,143,.34),
+        inset 0 0 58px rgba(255,191,75,.20),
+        inset 0 0 90px rgba(101,217,138,.18),
+        inset 0 0 130px rgba(74,183,255,.24),
+        inset 0 0 180px rgba(154,114,255,.18);
+    animation: stealAuraBreathe 4.5s ease-in-out infinite;
+}
+
+.buzzerOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100200;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    background: rgba(0,0,0,.24);
+}
+
+.buzzerTeamName {
+    padding: 20px 34px;
+    border-radius: 18px;
+    border: 2px solid var(--gold-light);
+    background: rgba(7,20,38,.94);
+    color: var(--gold-light);
+    font-size: clamp(2rem,6vw,5.5rem);
+    font-weight: 1000;
+    text-align: center;
+    box-shadow: 0 0 45px rgba(255,212,90,.4);
+}
+
+@media (max-width: 760px) {
+    .projectorGame {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        grid-template-rows: auto auto auto auto;
+    }
+
+    .answerBoard {
+        grid-template-columns: 1fr;
+    }
+
+    .projectorTeamStrip {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .projectorHeader {
+        grid-template-columns: 1fr auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stealAura,
+    .answerTile.flashAnswer .answerShown {
+        animation: none !important;
+    }
+}
+
