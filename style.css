@@ -3568,3 +3568,38 @@ body.projector::after{
     }
 }
 
+/* =============================================================
+   RANKED SCORE OVERLAY — CLOSE CONTROL
+   ============================================================= */
+
+.scoreRankingPanel {
+    position: relative;
+}
+
+.scoreRankingClose {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.42);
+    color: #fff;
+    font: inherit;
+    font-size: 34px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    padding: 0 0 4px;
+}
+
+.scoreRankingClose:hover,
+.scoreRankingClose:focus-visible {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.72);
+    outline: none;
+    transform: scale(1.05);
+}
