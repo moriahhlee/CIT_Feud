@@ -1,31 +1,17 @@
 /* =============================================================
    CIT FEUD
-   COMPLETE JAVASCRIPT
+   COMPLETE GAME ENGINE
    ============================================================= */
 
 
 /* =============================================================
    QUESTION PACK LIBRARY
 
-   EDIT YOUR PACKS, QUESTIONS, ANSWERS, POINTS AND NOTES HERE.
-
-   PACK TAGS:
-   tags: ['Tag 1', 'Tag 2', 'Tag 3']
-
-   QUESTION TAGS:
-   tags: ['Tag 1', 'Tag 2', 'Tag 3']
-
    ANSWER FORMAT:
    ['Answer Text', Point Value]
-
    ============================================================= */
 
 const QUESTION_PACKS = [
-
-    /* =========================================================
-       PACK 1
-       SUICIDE SAFETY PLANNING
-       ========================================================= */
 
     {
         id: 'safety',
@@ -221,10 +207,6 @@ const QUESTION_PACKS = [
     },
 
 
-    /* =========================================================
-       PACK 2 PLACEHOLDER
-       ========================================================= */
-
     {
         id: 'assessment',
 
@@ -242,10 +224,6 @@ const QUESTION_PACKS = [
         questions: []
     },
 
-
-    /* =========================================================
-       PACK 3 PLACEHOLDER
-       ========================================================= */
 
     {
         id: 'substance',
@@ -268,21 +246,47 @@ const QUESTION_PACKS = [
 
 
 /* =============================================================
-   STORAGE / SYNC SETTINGS
+   STORAGE
    ============================================================= */
 
-const KEY = 'citFeudSlotsV3';
+const KEY = 'citFeudSlotsV4';
 
-const LIVE = 'citFeudLiveV3';
+const LIVE = 'citFeudLiveV4';
+
+const CHANNEL = 'cit-feud-v4';
+
 
 const bc =
     ('BroadcastChannel' in window)
-        ? new BroadcastChannel('cit-feud-v3')
+        ? new BroadcastChannel(CHANNEL)
         : null;
 
 
 /* =============================================================
-   BASIC HELPERS
+   SOUND FILES
+
+   Put these in the same GitHub folder:
+   Answer.mp3
+   Correct.mp3
+   Incorrect.mp3
+   ============================================================= */
+
+const SOUNDS = {
+
+    answer:
+        'Answer.mp3',
+
+    correct:
+        'Correct.mp3',
+
+    incorrect:
+        'Incorrect.mp3'
+
+};
+
+
+/* =============================================================
+   HELPERS
    ============================================================= */
 
 const $ = (
@@ -313,7 +317,54 @@ const esc = value =>
 
 
 /* =============================================================
-   SAVE SLOT SYSTEM
+   FULLSCREEN
+   ============================================================= */
+
+function toggleFullscreen() {
+
+    if (!document.fullscreenElement) {
+
+        document.documentElement
+            .requestFullscreen()
+            .catch(() => {});
+
+    } else {
+
+        document.exitFullscreen()
+            .catch(() => {});
+
+    }
+
+}
+
+
+/* =============================================================
+   SOUND
+   ============================================================= */
+
+function playSound(name) {
+
+    const file =
+        SOUNDS[name];
+
+    if (!file) {
+        return;
+    }
+
+    const audio =
+        new Audio(file);
+
+    audio.volume =
+        1;
+
+    audio.play()
+        .catch(() => {});
+
+}
+
+
+/* =============================================================
+   SAVE SLOTS
    ============================================================= */
 
 function slots() {
@@ -356,7 +407,7 @@ function writeSlots(value) {
 
 
 /* =============================================================
-   LIVE GAME STATE
+   LIVE STATE
    ============================================================= */
 
 function live() {
@@ -377,7 +428,7 @@ function live() {
 
 
 /* =============================================================
-   BROADCAST GAME STATE
+   BROADCAST
    ============================================================= */
 
 function broadcast(game) {
@@ -389,7 +440,10 @@ function broadcast(game) {
 
     if (bc) {
 
-        bc.postMessage(game);
+        bc.postMessage({
+            type: 'state',
+            game
+        });
 
     }
 
@@ -397,7 +451,30 @@ function broadcast(game) {
 
 
 /* =============================================================
-   SAVE CURRENT GAME
+   EFFECT BROADCAST
+   ============================================================= */
+
+function broadcastEffect(
+    effect,
+    data = {}
+) {
+
+    if (bc) {
+
+        bc.postMessage({
+            type: 'effect',
+            effect,
+            data,
+            stamp: Date.now()
+        });
+
+    }
+
+}
+
+
+/* =============================================================
+   SAVE
    ============================================================= */
 
 function save(game) {
@@ -421,7 +498,7 @@ function save(game) {
 
 
 /* =============================================================
-   CREATE NEW GAME
+   CREATE GAME
    ============================================================= */
 
 function fresh(
@@ -455,7 +532,7 @@ function fresh(
 
     return {
 
-        version: 3,
+        version: 4,
 
         slot,
 
@@ -486,6 +563,10 @@ function fresh(
 
         current: 0,
 
+        round: 1,
+
+        phase: 'round',
+
         revealed: [],
 
         strikes: 0,
@@ -510,16 +591,15 @@ function fresh(
 
 
 /* =============================================================
-   NORMALIZE SAVED GAME
+   NORMALIZE GAME
    ============================================================= */
 
 function normalizeGame(game) {
 
     if (!game) {
-
         return game;
-
     }
+
 
     if (
         game.activeTeam === undefined
@@ -529,6 +609,7 @@ function normalizeGame(game) {
             null;
 
     }
+
 
     if (
         !Array.isArray(
@@ -541,106 +622,73 @@ function normalizeGame(game) {
 
     }
 
+
+    if (!game.phase) {
+
+        game.phase =
+            'question';
+
+    }
+
+
+    if (!game.round) {
+
+        game.round =
+            game.current + 1;
+
+    }
+
+
     return game;
 
 }
 
 
 /* =============================================================
-   CHANGE GAME STATE
+   MUTATE GAME
    ============================================================= */
 
-function mutate(callback) {
+function mutate(
+    callback
+) {
 
     let game =
         normalizeGame(
             live()
         );
 
+
     if (!game) {
-
         return;
-
     }
 
+
     callback(game);
+
 
     game.updated =
         new Date()
             .toISOString();
 
+
     save(game);
 
-    renderHostGame();
 
-}
+    if (
+        document.body
+            .classList
+            .contains('host')
+    ) {
 
-
-/* =============================================================
-   BROADCAST WITHOUT CHANGING GAME
-   ============================================================= */
-
-function notify(game) {
-
-    broadcast(game);
-
-}
-
-
-/* =============================================================
-   CROSS-WINDOW SYNC
-   ============================================================= */
-
-if (bc) {
-
-    bc.onmessage =
-        event => {
-
-            if (
-                document.body
-                    .classList
-                    .contains('projector')
-            ) {
-
-                renderProjector(
-                    event.data
-                );
-
-            }
-
-        };
-
-}
-
-
-/* =============================================================
-   LOCAL STORAGE FALLBACK SYNC
-   ============================================================= */
-
-window.addEventListener(
-    'storage',
-    event => {
-
-        if (
-            event.key === LIVE
-            &&
-            document.body
-                .classList
-                .contains('projector')
-        ) {
-
-            renderProjector(
-                live()
-            );
-
-        }
+        renderHostGame();
 
     }
-);
+
+}
 
 
 /* =============================================================
-   TAG DISPLAY
+   TAGS
    ============================================================= */
 
 function tags(
@@ -669,7 +717,80 @@ function tags(
 
 
 /* =============================================================
-   HOST HOME PAGE
+   CROSS WINDOW SYNC
+   ============================================================= */
+
+if (bc) {
+
+    bc.onmessage =
+        event => {
+
+            const message =
+                event.data;
+
+
+            if (
+                !document.body
+                    .classList
+                    .contains('projector')
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                message?.type === 'state'
+            ) {
+
+                renderProjector(
+                    message.game
+                );
+
+            }
+
+
+            if (
+                message?.type === 'effect'
+            ) {
+
+                runProjectorEffect(
+                    message.effect,
+                    message.data
+                );
+
+            }
+
+        };
+
+}
+
+
+window.addEventListener(
+    'storage',
+    event => {
+
+        if (
+            event.key === LIVE
+            &&
+            document.body
+                .classList
+                .contains('projector')
+        ) {
+
+            renderProjector(
+                live()
+            );
+
+        }
+
+    }
+);
+
+
+/* =============================================================
+   HOST HOME
    ============================================================= */
 
 function renderHostHome() {
@@ -684,6 +805,20 @@ function renderHostHome() {
     root.innerHTML = `
 
         <section class="startup">
+
+
+            <div class="hostUtilityBar">
+
+                <button
+                    class="iconUtility"
+                    id="hostFullscreen"
+                    title="Fullscreen"
+                >
+                    ⛶
+                </button>
+
+            </div>
+
 
             <div class="brand">
 
@@ -824,7 +959,6 @@ function renderHostHome() {
                                     `;
 
                                 }
-
                             ).join('')
                         }
 
@@ -854,11 +988,11 @@ function renderHostHome() {
                         </li>
 
                         <li>
-                            Press F11 for fullscreen.
+                            Use fullscreen on either screen whenever needed.
                         </li>
 
                         <li>
-                            All game changes sync automatically.
+                            Game state syncs automatically.
                         </li>
 
                     </ol>
@@ -874,7 +1008,6 @@ function renderHostHome() {
 
                 </div>
 
-
             </div>
 
         </section>
@@ -882,85 +1015,81 @@ function renderHostHome() {
     `;
 
 
-    /* RESUME */
+    $('#hostFullscreen').onclick =
+        toggleFullscreen;
 
-    $$(
-        '[data-resume]'
-    ).forEach(
-        button => {
 
-            button.onclick =
-                () => {
+    $$('[data-resume]')
+        .forEach(
+            button => {
 
-                    const game =
-                        normalizeGame(
+                button.onclick =
+                    () => {
+
+                        const game =
+                            normalizeGame(
+                                savedSlots[
+                                    +button.dataset.resume
+                                ]
+                            );
+
+                        broadcast(game);
+
+                        renderHostGame();
+
+                    };
+
+            }
+        );
+
+
+    $$('[data-new]')
+        .forEach(
+            button => {
+
+                button.onclick =
+                    () =>
+                        renderSetup(
+                            +button.dataset.new
+                        );
+
+            }
+        );
+
+
+    $$('[data-delete]')
+        .forEach(
+            button => {
+
+                button.onclick =
+                    () => {
+
+                        const index =
+                            +button.dataset.delete;
+
+
+                        if (
+                            confirm(
+                                'Delete this saved game?'
+                            )
+                        ) {
+
                             savedSlots[
-                                +button.dataset.resume
-                            ]
-                        );
+                                index
+                            ] = null;
 
-                    broadcast(game);
+                            writeSlots(
+                                savedSlots
+                            );
 
-                    renderHostGame();
+                            renderHostHome();
 
-                };
+                        }
 
-        }
-    );
+                    };
 
-
-    /* NEW / REPLACE */
-
-    $$(
-        '[data-new]'
-    ).forEach(
-        button => {
-
-            button.onclick =
-                () =>
-                    renderSetup(
-                        +button.dataset.new
-                    );
-
-        }
-    );
-
-
-    /* DELETE */
-
-    $$(
-        '[data-delete]'
-    ).forEach(
-        button => {
-
-            button.onclick =
-                () => {
-
-                    const index =
-                        +button.dataset.delete;
-
-                    if (
-                        confirm(
-                            'Delete this saved game?'
-                        )
-                    ) {
-
-                        savedSlots[
-                            index
-                        ] = null;
-
-                        writeSlots(
-                            savedSlots
-                        );
-
-                        renderHostHome();
-
-                    }
-
-                };
-
-        }
-    );
+            }
+        );
 
 }
 
@@ -978,6 +1107,20 @@ function renderSetup(slot) {
     root.innerHTML = `
 
         <section class="startup">
+
+
+            <div class="hostUtilityBar">
+
+                <button
+                    class="iconUtility"
+                    id="setupFullscreen"
+                    title="Fullscreen"
+                >
+                    ⛶
+                </button>
+
+            </div>
+
 
             <div class="brand compact">
 
@@ -1090,7 +1233,6 @@ function renderSetup(slot) {
                                 </label>
 
                             `
-
                         ).join('')
                     }
 
@@ -1110,16 +1252,27 @@ function renderSetup(slot) {
 
                         <select id="teamCount">
 
-                            <option>
+                            <option value="2">
                                 2
                             </option>
 
-                            <option>
+                            <option value="3">
                                 3
                             </option>
 
-                            <option selected>
+                            <option
+                                value="4"
+                                selected
+                            >
                                 4
+                            </option>
+
+                            <option value="5">
+                                5
+                            </option>
+
+                            <option value="6">
+                                6
                             </option>
 
                         </select>
@@ -1142,9 +1295,7 @@ function renderSetup(slot) {
                         Cancel
                     </button>
 
-                    <button
-                        type="submit"
-                    >
+                    <button type="submit">
                         Start Game
                     </button>
 
@@ -1155,6 +1306,10 @@ function renderSetup(slot) {
         </section>
 
     `;
+
+
+    $('#setupFullscreen').onclick =
+        toggleFullscreen;
 
 
     const teamCount =
@@ -1224,7 +1379,8 @@ function renderSetup(slot) {
             const packs =
                 $$(
                     'input[name=pack]:checked'
-                ).map(
+                )
+                .map(
                     input =>
                         input.value
                 );
@@ -1233,7 +1389,8 @@ function renderSetup(slot) {
             const teamNames =
                 $$(
                     'input[name=teamName]'
-                ).map(
+                )
+                .map(
                     input =>
                         input.value.trim()
                 );
@@ -1275,7 +1432,75 @@ function renderSetup(slot) {
 
 
 /* =============================================================
-   HOST MODERATOR CONSOLE
+   PRESENTATION PHASE LABEL
+   ============================================================= */
+
+function phaseLabel(
+    phase
+) {
+
+    switch (phase) {
+
+        case 'round':
+            return 'Round Intro';
+
+        case 'top':
+            return 'Top Answers';
+
+        case 'board':
+            return 'Hidden Board';
+
+        case 'question':
+            return 'Question Revealed';
+
+        default:
+            return 'Gameplay';
+
+    }
+
+}
+
+
+/* =============================================================
+   NEXT PRESENTATION PHASE
+   ============================================================= */
+
+function nextPresentationPhase() {
+
+    mutate(
+        game => {
+
+            if (
+                game.phase === 'round'
+            ) {
+
+                game.phase =
+                    'top';
+
+            } else if (
+                game.phase === 'top'
+            ) {
+
+                game.phase =
+                    'board';
+
+            } else if (
+                game.phase === 'board'
+            ) {
+
+                game.phase =
+                    'question';
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =============================================================
+   HOST GAME
    ============================================================= */
 
 function renderHostGame() {
@@ -1324,15 +1549,13 @@ function renderHostGame() {
 
                     <p>
 
-                        ${esc(game.date)}
+                        Round ${game.round}
 
                         ·
 
                         Question
                         ${game.current + 1}
-
                         of
-
                         ${game.questions.length}
 
                         ·
@@ -1346,11 +1569,106 @@ function renderHostGame() {
                 </div>
 
 
-                <div class="saveok">
-                    ✓ Autosaved
+                <div class="controlTopActions">
+
+                    <div class="saveok">
+                        ✓ Autosaved
+                    </div>
+
+                    <button
+                        class="iconUtility"
+                        id="gameFullscreen"
+                        title="Fullscreen"
+                    >
+                        ⛶
+                    </button>
+
                 </div>
 
             </header>
+
+
+            <div class="presentationControl panel">
+
+                <div>
+
+                    <div class="sectionlabel">
+                        PROJECTOR PRESENTATION
+                    </div>
+
+                    <strong>
+                        ${phaseLabel(game.phase)}
+                    </strong>
+
+                </div>
+
+
+                <div class="presentationButtons">
+
+                    <button
+                        id="showRound"
+                        class="${
+                            game.phase === 'round'
+                                ? ''
+                                : 'ghost'
+                        }"
+                    >
+                        Round
+                    </button>
+
+                    <button
+                        id="showTop"
+                        class="${
+                            game.phase === 'top'
+                                ? ''
+                                : 'ghost'
+                        }"
+                    >
+                        Top ${question.answers.length}
+                    </button>
+
+                    <button
+                        id="showBoard"
+                        class="${
+                            game.phase === 'board'
+                                ? ''
+                                : 'ghost'
+                        }"
+                    >
+                        Board
+                    </button>
+
+                    <button
+                        id="showQuestion"
+                        class="${
+                            game.phase === 'question'
+                                ? ''
+                                : 'ghost'
+                        }"
+                    >
+                        Question
+                    </button>
+
+                    ${
+                        game.phase !== 'question'
+
+                            ? `
+
+                                <button
+                                    id="nextPhase"
+                                    class="presentationNext"
+                                >
+                                    Next Reveal →
+                                </button>
+
+                            `
+
+                            : ''
+                    }
+
+                </div>
+
+            </div>
 
 
             <div class="controlgrid">
@@ -1381,8 +1699,6 @@ function renderHostGame() {
                     </h2>
 
 
-                    <!-- WHO IS ANSWERING -->
-
                     <div class="buzzsection">
 
                         <div class="sectionlabel">
@@ -1390,7 +1706,16 @@ function renderHostGame() {
                         </div>
 
 
-                        <div class="buzzteams">
+                        <div
+                            class="buzzteams"
+                            style="
+                                grid-template-columns:
+                                repeat(
+                                    ${Math.min(game.teams.length, 3)},
+                                    minmax(0,1fr)
+                                );
+                            "
+                        >
 
                             ${
                                 game.teams.map(
@@ -1422,25 +1747,13 @@ function renderHostGame() {
                                         </button>
 
                                     `
-
                                 ).join('')
                             }
 
                         </div>
 
-
-                        <p class="microcopy">
-
-                            Select the team that raised their hand first.
-
-                            The selected team will highlight on the projector.
-
-                        </p>
-
                     </div>
 
-
-                    <!-- ANSWER BOARD -->
 
                     <div class="sectionlabel answerlabel">
                         ANSWER BOARD · HOST VIEW
@@ -1486,7 +1799,7 @@ function renderHostGame() {
                                         <button
                                             class="judge yes"
                                             data-correct="${index}"
-                                            title="Correct answer"
+                                            title="Correct"
                                         >
                                             ✓
                                         </button>
@@ -1494,7 +1807,7 @@ function renderHostGame() {
                                         <button
                                             class="judge no"
                                             data-wrong="${index}"
-                                            title="Incorrect answer"
+                                            title="Incorrect"
                                         >
                                             ✕
                                         </button>
@@ -1502,14 +1815,11 @@ function renderHostGame() {
                                     </div>
 
                                 `
-
                             ).join('')
                         }
 
                     </div>
 
-
-                    <!-- BANK -->
 
                     <div class="bankline">
 
@@ -1523,8 +1833,6 @@ function renderHostGame() {
 
                     </div>
 
-
-                    <!-- NAVIGATION -->
 
                     <div class="roundnav">
 
@@ -1563,12 +1871,10 @@ function renderHostGame() {
                 </section>
 
 
-                <!-- GAME CONTROL -->
-
                 <aside class="panel scorepanel">
 
                     <h2>
-                        Game Control
+                        Teams
                     </h2>
 
 
@@ -1592,19 +1898,24 @@ function renderHostGame() {
                                         "
                                     >
 
-                                        <input
-                                            value="${esc(
-                                                team.name
-                                            )}"
-                                            data-teamname="${index}"
-                                            maxlength="24"
-                                        >
+                                        <div class="hostTeamHeader">
 
-                                        <strong>
-                                            ${team.score}
-                                        </strong>
+                                            <input
+                                                value="${esc(
+                                                    team.name
+                                                )}"
+                                                data-teamname="${index}"
+                                                maxlength="24"
+                                            >
 
-                                        <div>
+                                            <strong>
+                                                ${team.score}
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div class="teamScoreButtons">
 
                                             <button
                                                 data-award="${index}"
@@ -1633,21 +1944,17 @@ function renderHostGame() {
                                     </div>
 
                                 `
-
                             ).join('')
                         }
 
                     </div>
 
 
-                    <!-- STRIKES -->
-
                     <div class="strikectl">
 
                         <span>
-                            Strike Board
+                            Strikes
                         </span>
-
 
                         <div class="xs">
 
@@ -1659,29 +1966,11 @@ function renderHostGame() {
 
                             ${
                                 '○'.repeat(
-                                    3 -
-                                    game.strikes
+                                    3 - game.strikes
                                 )
                             }
 
                         </div>
-
-
-                        <p>
-
-                            ${
-                                game.activeTeam !== null
-
-                                    ? `${esc(
-                                        game.teams[
-                                            game.activeTeam
-                                        ].name
-                                    )} is answering`
-
-                                    : 'Select an answering team'
-                            }
-
-                        </p>
 
 
                         <button
@@ -1690,18 +1979,15 @@ function renderHostGame() {
                             Manual Strike
                         </button>
 
-
                         <button
                             id="clearStrike"
                             class="ghost"
                         >
-                            Clear Strikes
+                            Clear
                         </button>
 
                     </div>
 
-
-                    <!-- RECENT CALLS -->
 
                     <div class="attempts">
 
@@ -1714,11 +2000,8 @@ function renderHostGame() {
                             game.attemptLog.length
 
                                 ? game.attemptLog
-
                                     .slice(-5)
-
                                     .reverse()
-
                                     .map(
                                         attempt => `
 
@@ -1753,8 +2036,8 @@ function renderHostGame() {
                                             </div>
 
                                         `
-
-                                    ).join('')
+                                    )
+                                    .join('')
 
                                 : `
 
@@ -1767,8 +2050,6 @@ function renderHostGame() {
 
                     </div>
 
-
-                    <!-- FACILITATOR NOTE -->
 
                     <div class="facilitator">
 
@@ -1804,7 +2085,6 @@ function renderHostGame() {
 
                 </aside>
 
-
             </div>
 
         </section>
@@ -1813,254 +2093,374 @@ function renderHostGame() {
 
 
     /* =========================================================
-       SELECT ANSWERING TEAM
+       FULLSCREEN
        ========================================================= */
 
-    $$(
-        '[data-buzz]'
-    ).forEach(
-        button => {
+    $('#gameFullscreen').onclick =
+        toggleFullscreen;
 
-            button.onclick =
-                () =>
-                    mutate(
-                        game => {
 
-                            const index =
-                                +button.dataset.buzz;
+    /* =========================================================
+       PRESENTATION CONTROLS
+       ========================================================= */
 
-                            game.activeTeam =
-                                game.activeTeam === index
-                                    ? null
-                                    : index;
+    $('#showRound').onclick =
+        () =>
+            mutate(
+                game => {
+                    game.phase = 'round';
+                }
+            );
+
+
+    $('#showTop').onclick =
+        () =>
+            mutate(
+                game => {
+                    game.phase = 'top';
+                }
+            );
+
+
+    $('#showBoard').onclick =
+        () =>
+            mutate(
+                game => {
+                    game.phase = 'board';
+                }
+            );
+
+
+    $('#showQuestion').onclick =
+        () =>
+            mutate(
+                game => {
+                    game.phase = 'question';
+                }
+            );
+
+
+    const nextPhase =
+        $('#nextPhase');
+
+
+    if (nextPhase) {
+
+        nextPhase.onclick =
+            nextPresentationPhase;
+
+    }
+
+
+    /* =========================================================
+       ANSWERING TEAM / BUZZER
+       ========================================================= */
+
+    $$('[data-buzz]')
+        .forEach(
+            button => {
+
+                button.onclick =
+                    () => {
+
+                        const index =
+                            +button.dataset.buzz;
+
+
+                        mutate(
+                            game => {
+
+                                game.activeTeam =
+                                    game.activeTeam === index
+                                        ? null
+                                        : index;
+
+                            }
+                        );
+
+
+                        if (
+                            live()?.activeTeam === index
+                        ) {
+
+                            playSound(
+                                'answer'
+                            );
+
+                            broadcastEffect(
+                                'buzzer',
+                                {
+                                    team: index
+                                }
+                            );
 
                         }
-                    );
 
-        }
-    );
+                    };
+
+            }
+        );
 
 
     /* =========================================================
        CORRECT ANSWER
        ========================================================= */
 
-    $$(
-        '[data-correct]'
-    ).forEach(
-        button => {
+    $$('[data-correct]')
+        .forEach(
+            button => {
 
-            button.onclick =
-                () =>
-                    mutate(
-                        game => {
+                button.onclick =
+                    () => {
 
-                            const index =
-                                +button.dataset.correct;
+                        const index =
+                            +button.dataset.correct;
 
-                            const question =
-                                game.questions[
-                                    game.current
-                                ];
+                        let newlyRevealed =
+                            false;
 
 
-                            if (
-                                !game.revealed.includes(
-                                    index
-                                )
-                            ) {
+                        mutate(
+                            game => {
 
-                                game.revealed.push(
-                                    index
-                                );
+                                const question =
+                                    game.questions[
+                                        game.current
+                                    ];
 
 
-                                game.bank =
-                                    game.revealed.reduce(
-                                        (
-                                            total,
-                                            answerIndex
-                                        ) =>
-                                            total +
-                                            (
-                                                question.answers[
-                                                    answerIndex
-                                                ]?.[1]
-                                                ||
-                                                0
-                                            ),
-                                        0
+                                if (
+                                    !game.revealed.includes(
+                                        index
+                                    )
+                                ) {
+
+                                    newlyRevealed =
+                                        true;
+
+                                    game.revealed.push(
+                                        index
                                     );
 
+
+                                    game.bank =
+                                        game.revealed.reduce(
+                                            (
+                                                total,
+                                                answerIndex
+                                            ) =>
+                                                total +
+                                                (
+                                                    question.answers[
+                                                        answerIndex
+                                                    ]?.[1]
+                                                    ||
+                                                    0
+                                                ),
+                                            0
+                                        );
+
+                                }
+
+
+                                game.attemptLog.push({
+
+                                    ok: true,
+
+                                    team:
+                                        game.activeTeam !== null
+
+                                            ? game.teams[
+                                                game.activeTeam
+                                            ].name
+
+                                            : 'Unassigned',
+
+                                    answer:
+                                        question.answers[
+                                            index
+                                        ][0],
+
+                                    time:
+                                        Date.now()
+
+                                });
+
                             }
+                        );
 
 
-                            game.attemptLog.push({
+                        if (
+                            newlyRevealed
+                        ) {
 
-                                ok: true,
+                            playSound(
+                                'correct'
+                            );
 
-                                team:
-                                    game.activeTeam !== null
-
-                                        ? game.teams[
-                                            game.activeTeam
-                                        ].name
-
-                                        : 'Unassigned',
-
-                                answer:
-                                    question.answers[
+                            broadcastEffect(
+                                'correct',
+                                {
+                                    answerIndex:
                                         index
-                                    ][0],
-
-                                time:
-                                    Date.now()
-
-                            });
+                                }
+                            );
 
                         }
-                    );
 
-        }
-    );
+                    };
+
+            }
+        );
 
 
     /* =========================================================
        WRONG ANSWER
        ========================================================= */
 
-    $$(
-        '[data-wrong]'
-    ).forEach(
-        button => {
+    $$('[data-wrong]')
+        .forEach(
+            button => {
 
-            button.onclick =
-                () =>
-                    mutate(
-                        game => {
+                button.onclick =
+                    () => {
 
-                            game.strikes =
-                                Math.min(
-                                    3,
-                                    game.strikes + 1
-                                );
+                        mutate(
+                            game => {
+
+                                game.strikes =
+                                    Math.min(
+                                        3,
+                                        game.strikes + 1
+                                    );
 
 
-                            game.attemptLog.push({
+                                game.attemptLog.push({
 
-                                ok: false,
+                                    ok: false,
 
-                                team:
-                                    game.activeTeam !== null
+                                    team:
+                                        game.activeTeam !== null
 
-                                        ? game.teams[
-                                            game.activeTeam
-                                        ].name
+                                            ? game.teams[
+                                                game.activeTeam
+                                            ].name
 
-                                        : 'Unassigned',
+                                            : 'Unassigned',
 
-                                time:
-                                    Date.now()
+                                    time:
+                                        Date.now()
 
-                            });
+                                });
 
-                        }
-                    );
+                            }
+                        );
 
-        }
-    );
+
+                        playSound(
+                            'incorrect'
+                        );
+
+
+                        broadcastEffect(
+                            'wrong'
+                        );
+
+                    };
+
+            }
+        );
 
 
     /* =========================================================
        AWARD BANK
        ========================================================= */
 
-    $$(
-        '[data-award]'
-    ).forEach(
-        button => {
+    $$('[data-award]')
+        .forEach(
+            button => {
 
-            button.onclick =
-                () =>
-                    mutate(
-                        game => {
+                button.onclick =
+                    () =>
+                        mutate(
+                            game => {
 
-                            game.teams[
-                                +button.dataset.award
-                            ].score +=
-                                game.bank;
-
-                        }
-                    );
-
-        }
-    );
-
-
-    /* =========================================================
-       SCORE ADJUSTMENT
-       ========================================================= */
-
-    $$(
-        '[data-adjust]'
-    ).forEach(
-        button => {
-
-            button.onclick =
-                () =>
-                    mutate(
-                        game => {
-
-                            const team =
                                 game.teams[
-                                    +button.dataset.adjust
-                                ];
+                                    +button.dataset.award
+                                ].score +=
+                                    game.bank;
 
-                            team.score =
-                                Math.max(
-                                    0,
-                                    team.score +
-                                    (
-                                        +button.dataset.delta
-                                    )
-                                );
+                            }
+                        );
 
-                        }
-                    );
-
-        }
-    );
+            }
+        );
 
 
     /* =========================================================
-       TEAM NAME
+       SCORE ADJUSTMENTS
        ========================================================= */
 
-    $$(
-        '[data-teamname]'
-    ).forEach(
-        input => {
+    $$('[data-adjust]')
+        .forEach(
+            button => {
 
-            input.onchange =
-                () =>
-                    mutate(
-                        game => {
+                button.onclick =
+                    () =>
+                        mutate(
+                            game => {
 
-                            const index =
-                                +input.dataset.teamname;
+                                const team =
+                                    game.teams[
+                                        +button.dataset.adjust
+                                    ];
 
-                            game.teams[
-                                index
-                            ].name =
-                                input.value.trim()
-                                ||
-                                `Team ${index + 1}`;
 
-                        }
-                    );
+                                team.score =
+                                    Math.max(
+                                        0,
+                                        team.score +
+                                        (
+                                            +button.dataset.delta
+                                        )
+                                    );
 
-        }
-    );
+                            }
+                        );
+
+            }
+        );
+
+
+    /* =========================================================
+       TEAM NAMES
+       ========================================================= */
+
+    $$('[data-teamname]')
+        .forEach(
+            input => {
+
+                input.onchange =
+                    () =>
+                        mutate(
+                            game => {
+
+                                const index =
+                                    +input.dataset.teamname;
+
+
+                                game.teams[
+                                    index
+                                ].name =
+                                    input.value.trim()
+                                    ||
+                                    `Team ${index + 1}`;
+
+                            }
+                        );
+
+            }
+        );
 
 
     /* =========================================================
@@ -2068,7 +2468,8 @@ function renderHostGame() {
        ========================================================= */
 
     $('#addStrike').onclick =
-        () =>
+        () => {
+
             mutate(
                 game => {
 
@@ -2101,6 +2502,18 @@ function renderHostGame() {
             );
 
 
+            playSound(
+                'incorrect'
+            );
+
+
+            broadcastEffect(
+                'wrong'
+            );
+
+        };
+
+
     /* =========================================================
        CLEAR STRIKES
        ========================================================= */
@@ -2110,7 +2523,8 @@ function renderHostGame() {
             mutate(
                 game => {
 
-                    game.strikes = 0;
+                    game.strikes =
+                        0;
 
                 }
             );
@@ -2125,7 +2539,7 @@ function renderHostGame() {
 
             if (
                 !confirm(
-                    'Reset this question? Revealed answers and strikes will be cleared.'
+                    'Reset this question? Revealed answers, strikes and the round presentation will reset.'
                 )
             ) {
 
@@ -2137,15 +2551,23 @@ function renderHostGame() {
             mutate(
                 game => {
 
-                    game.revealed = [];
+                    game.phase =
+                        'round';
 
-                    game.strikes = 0;
+                    game.revealed =
+                        [];
 
-                    game.bank = 0;
+                    game.strikes =
+                        0;
 
-                    game.activeTeam = null;
+                    game.bank =
+                        0;
 
-                    game.attemptLog = [];
+                    game.activeTeam =
+                        null;
+
+                    game.attemptLog =
+                        [];
 
                 }
             );
@@ -2162,17 +2584,34 @@ function renderHostGame() {
             mutate(
                 game => {
 
+                    if (
+                        game.current <= 0
+                    ) {
+                        return;
+                    }
+
                     game.current--;
 
-                    game.revealed = [];
+                    game.round =
+                        game.current + 1;
 
-                    game.strikes = 0;
+                    game.phase =
+                        'round';
 
-                    game.bank = 0;
+                    game.revealed =
+                        [];
 
-                    game.activeTeam = null;
+                    game.strikes =
+                        0;
 
-                    game.attemptLog = [];
+                    game.bank =
+                        0;
+
+                    game.activeTeam =
+                        null;
+
+                    game.attemptLog =
+                        [];
 
                 }
             );
@@ -2187,17 +2626,35 @@ function renderHostGame() {
             mutate(
                 game => {
 
+                    if (
+                        game.current >=
+                        game.questions.length - 1
+                    ) {
+                        return;
+                    }
+
                     game.current++;
 
-                    game.revealed = [];
+                    game.round =
+                        game.current + 1;
 
-                    game.strikes = 0;
+                    game.phase =
+                        'round';
 
-                    game.bank = 0;
+                    game.revealed =
+                        [];
 
-                    game.activeTeam = null;
+                    game.strikes =
+                        0;
 
-                    game.attemptLog = [];
+                    game.bank =
+                        0;
+
+                    game.activeTeam =
+                        null;
+
+                    game.attemptLog =
+                        [];
 
                 }
             );
@@ -2223,13 +2680,136 @@ function renderHostGame() {
         renderHostHome;
 
 
-    notify(game);
+    broadcast(game);
 
 }
 
 
 /* =============================================================
-   PROJECTOR DISPLAY
+   PROJECTOR EFFECTS
+   ============================================================= */
+
+function runProjectorEffect(
+    effect,
+    data = {}
+) {
+
+    if (
+        effect === 'wrong'
+    ) {
+
+        playSound(
+            'incorrect'
+        );
+
+
+        const overlay =
+            document.createElement(
+                'div'
+            );
+
+
+        overlay.className =
+            'wrongOverlay';
+
+
+        overlay.innerHTML = `
+
+            <div class="giantX">
+                ✕
+            </div>
+
+        `;
+
+
+        document.body.appendChild(
+            overlay
+        );
+
+
+        setTimeout(
+            () =>
+                overlay.remove(),
+            900
+        );
+
+    }
+
+
+    if (
+        effect === 'correct'
+    ) {
+
+        playSound(
+            'correct'
+        );
+
+
+        const tile =
+            document.querySelector(
+                `[data-projector-answer="${data.answerIndex}"]`
+            );
+
+
+        if (tile) {
+
+            tile.classList.add(
+                'correctFlash'
+            );
+
+
+            setTimeout(
+                () =>
+                    tile.classList.remove(
+                        'correctFlash'
+                    ),
+                1000
+            );
+
+        }
+
+    }
+
+
+    if (
+        effect === 'buzzer'
+    ) {
+
+        playSound(
+            'answer'
+        );
+
+
+        const team =
+            document.querySelector(
+                `[data-projector-team="${data.team}"]`
+            );
+
+
+        if (team) {
+
+            team.classList.add(
+                'buzzerFlash'
+            );
+
+
+            setTimeout(
+                () =>
+                    team.classList.remove(
+                        'buzzerFlash'
+                    ),
+                650
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =============================================================
+   PROJECTOR
    ============================================================= */
 
 function renderProjector(
@@ -2247,7 +2827,7 @@ function renderProjector(
 
 
     /* =========================================================
-       WAITING SCREEN
+       WAITING
        ========================================================= */
 
     if (!game) {
@@ -2277,14 +2857,93 @@ function renderProjector(
     }
 
 
-    /* =========================================================
-       ACTIVE QUESTION
-       ========================================================= */
-
     const question =
         game.questions[
             game.current
         ];
+
+
+    /* =========================================================
+       ROUND INTRO
+       ========================================================= */
+
+    if (
+        game.phase === 'round'
+    ) {
+
+        root.innerHTML = `
+
+            <section class="roundIntro">
+
+                <div class="eyebrow">
+                    CRISIS INTERVENTION TRAINING
+                </div>
+
+                <div class="roundWord">
+                    ROUND
+                </div>
+
+                <div class="roundNumber">
+                    ${game.round}
+                </div>
+
+                <div class="roundPack">
+                    ${esc(
+                        question.pack || ''
+                    )}
+                </div>
+
+            </section>
+
+        `;
+
+        return;
+
+    }
+
+
+    /* =========================================================
+       TOP ANSWERS ANNOUNCEMENT
+       ========================================================= */
+
+    if (
+        game.phase === 'top'
+    ) {
+
+        root.innerHTML = `
+
+            <section class="topAnswersIntro">
+
+                <div class="eyebrow">
+                    ROUND ${game.round}
+                </div>
+
+                <div class="topCount">
+                    TOP
+                    <strong>
+                        ${question.answers.length}
+                    </strong>
+                </div>
+
+                <div class="topAnswersText">
+                    ANSWERS ON THE BOARD
+                </div>
+
+            </section>
+
+        `;
+
+        return;
+
+    }
+
+
+    /* =========================================================
+       BOARD / QUESTION
+       ========================================================= */
+
+    const showQuestion =
+        game.phase === 'question';
 
 
     root.innerHTML = `
@@ -2292,25 +2951,69 @@ function renderProjector(
         <section class="stage">
 
 
-            <header>
+            <!-- ===============================================
+                 TOP BAR
+                 =============================================== -->
 
-                <div>
+            <header class="gameTopBar">
+
+
+                <div class="miniBrand">
 
                     <div class="eyebrow">
                         CRISIS INTERVENTION TRAINING
                     </div>
 
-                    <h1>
+                    <strong>
                         CIT <b>FEUD</b>
-                    </h1>
+                    </strong>
+
+                </div>
+
+
+                <div class="topStrikeArea">
+
+                    <span class="strikeLabel">
+                        STRIKES
+                    </span>
+
+                    <div class="topStrikes">
+
+                        ${
+                            Array.from(
+                                {
+                                    length: 3
+                                },
+                                (
+                                    _,
+                                    index
+                                ) => `
+
+                                    <span
+                                        class="
+                                            ${
+                                                index <
+                                                game.strikes
+                                                    ? 'hot'
+                                                    : ''
+                                            }
+                                        "
+                                    >
+                                        ✕
+                                    </span>
+
+                                `
+                            ).join('')
+                        }
+
+                    </div>
 
                 </div>
 
 
                 <div class="roundbadge">
 
-                    QUESTION
-                    ${game.current + 1}
+                    ROUND ${game.round}
 
                     <small>
                         ${esc(
@@ -2323,18 +3026,35 @@ function renderProjector(
             </header>
 
 
-            <!-- QUESTION -->
+            <!-- ===============================================
+                 QUESTION
+                 =============================================== -->
 
-            <div class="prompt">
+            <div
+                class="
+                    prompt
+                    ${
+                        showQuestion
+                            ? 'questionVisible'
+                            : 'questionHidden'
+                    }
+                "
+            >
 
-                ${esc(
-                    question.prompt
-                )}
+                ${
+                    showQuestion
+                        ? esc(
+                            question.prompt
+                        )
+                        : '&nbsp;'
+                }
 
             </div>
 
 
-            <!-- ANSWERS -->
+            <!-- ===============================================
+                 ANSWER BOARD
+                 =============================================== -->
 
             <div class="projectorAnswers">
 
@@ -2346,6 +3066,7 @@ function renderProjector(
                         ) => `
 
                             <div
+                                data-projector-answer="${index}"
                                 class="
                                     tile
                                     ${
@@ -2362,23 +3083,19 @@ function renderProjector(
                                     ${index + 1}
                                 </span>
 
-
                                 <b>
 
                                     ${
                                         game.revealed.includes(
                                             index
                                         )
-
                                             ? esc(
                                                 answer[0]
                                             )
-
                                             : ''
                                     }
 
                                 </b>
-
 
                                 <em>
 
@@ -2386,9 +3103,7 @@ function renderProjector(
                                         game.revealed.includes(
                                             index
                                         )
-
                                             ? answer[1]
-
                                             : ''
                                     }
 
@@ -2397,51 +3112,43 @@ function renderProjector(
                             </div>
 
                         `
-
                     ).join('')
                 }
 
             </div>
 
 
-            <!-- STRIKES -->
+            <!-- ===============================================
+                 ROUND BANK
+                 =============================================== -->
 
-            <div class="strikebar">
+            <div class="projectorBank">
 
-                ${
-                    Array.from(
-                        {
-                            length: 3
-                        },
-                        (
-                            _,
-                            index
-                        ) => `
+                <span>
+                    ROUND
+                </span>
 
-                            <span
-                                class="
-                                    ${
-                                        index <
-                                        game.strikes
-                                            ? 'hot'
-                                            : ''
-                                    }
-                                "
-                            >
-                                ✕
-                            </span>
-
-                        `
-
-                    ).join('')
-                }
+                <strong>
+                    ${game.bank}
+                </strong>
 
             </div>
 
 
-            <!-- SCORES -->
+            <!-- ===============================================
+                 TEAMS
+                 =============================================== -->
 
-            <footer class="projectorScores">
+            <footer
+                class="projectorScores"
+                style="
+                    grid-template-columns:
+                    repeat(
+                        ${game.teams.length},
+                        minmax(0,1fr)
+                    );
+                "
+            >
 
                 ${
                     game.teams.map(
@@ -2451,7 +3158,9 @@ function renderProjector(
                         ) => `
 
                             <div
+                                data-projector-team="${index}"
                                 class="
+                                    projectorTeam
                                     ${
                                         game.activeTeam === index
                                             ? 'activeAnswerer'
@@ -2470,29 +3179,13 @@ function renderProjector(
                                     ${team.score}
                                 </strong>
 
-                                ${
-                                    game.activeTeam === index
-
-                                        ? `
-
-                                            <small>
-                                                ANSWERING
-                                            </small>
-
-                                        `
-
-                                        : ''
-                                }
-
                             </div>
 
                         `
-
                     ).join('')
                 }
 
             </footer>
-
 
         </section>
 
@@ -2502,19 +3195,10 @@ function renderProjector(
 
 
 /* =============================================================
-   ADMIN / HOST ACCESS BUTTON
-
-   This is intentionally generated by JavaScript.
-
-   It appears ONLY on the projector page and remains available
-   whether a game is active or not.
-
-   Clicking it opens host.html in a new tab/window.
+   PROJECTOR ADMIN + FULLSCREEN CONTROLS
    ============================================================= */
 
-function createAdminButton() {
-
-    /* Only place this button on the projector page */
+function createProjectorUtilities() {
 
     if (
         !document.body
@@ -2527,11 +3211,9 @@ function createAdminButton() {
     }
 
 
-    /* Do not create duplicates */
-
     if (
         document.querySelector(
-            '.admin-corner'
+            '.projectorUtilities'
         )
     ) {
 
@@ -2540,91 +3222,76 @@ function createAdminButton() {
     }
 
 
-    const button =
+    const utilities =
         document.createElement(
-            'a'
+            'div'
         );
 
 
-    button.href =
-        'host.html';
+    utilities.className =
+        'projectorUtilities';
 
 
-    button.target =
-        '_blank';
+    utilities.innerHTML = `
 
-
-    button.rel =
-        'noopener';
-
-
-    button.className =
-        'admin-corner';
-
-
-    button.title =
-        'Open Host Controls';
-
-
-    button.setAttribute(
-        'aria-label',
-        'Open Host Controls'
-    );
-
-
-    /* =========================================================
-       USER ICON
-
-       SVG is used instead of an emoji so the icon looks the
-       same across Windows, Chrome, Edge and the projector.
-       ========================================================= */
-
-    button.innerHTML = `
-
-        <svg
-            class="admin-user-icon"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
+        <a
+            href="host.html"
+            target="_blank"
+            rel="noopener"
+            class="projectorUtilityButton"
+            title="Open Host Controls"
+            aria-label="Open Host Controls"
         >
 
-            <circle
-                cx="12"
-                cy="8"
-                r="4"
-            ></circle>
+            <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+            >
 
-            <path
-                d="M4.5 20c.7-4.2 3.2-6.3 7.5-6.3s6.8 2.1 7.5 6.3"
-            ></path>
+                <circle
+                    cx="12"
+                    cy="8"
+                    r="4"
+                ></circle>
 
-        </svg>
+                <path
+                    d="M4.5 20c.7-4.2 3.2-6.3 7.5-6.3s6.8 2.1 7.5 6.3"
+                ></path>
+
+            </svg>
+
+            <span class="utilityGear">
+                ⚙
+            </span>
+
+        </a>
 
 
-        <span
-            class="admin-settings-icon"
-            aria-hidden="true"
+        <button
+            class="projectorUtilityButton"
+            id="projectorFullscreen"
+            title="Fullscreen"
+            aria-label="Fullscreen"
         >
-            ⚙
-        </span>
+            ⛶
+        </button>
 
     `;
 
 
     document.body.appendChild(
-        button
+        utilities
     );
+
+
+    $('#projectorFullscreen').onclick =
+        toggleFullscreen;
 
 }
 
 
 /* =============================================================
-   PAGE STARTUP
-
-   host.html:
-   <body class="host">
-
-   index.html:
-   <body class="projector">
+   STARTUP
    ============================================================= */
 
 if (
@@ -2639,6 +3306,6 @@ if (
 
     renderProjector();
 
-    createAdminButton();
+    createProjectorUtilities();
 
 }
