@@ -1,18 +1,22 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <html lang="en">
 
 <head>
 
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0"
+        content="width=device-width, initial-scale=1"
     >
 
-    <title>
-        CIT Feud | Crisis Intervention Training
-    </title>
+    <meta
+        name="theme-color"
+        content="#071426"
+    >
+
+    <title>CIT Feud</title>
 
     <link
         rel="stylesheet"
@@ -25,58 +29,22 @@
 <body class="projector">
 
 
-    <main id="projectorApp">
+    <main id="projectorApp"></main>
 
 
-        <section class="waiting">
+    <!-- =====================================================
+         GAME PACKS
+
+         Add additional GamePacks files here later.
+         Each pack must load BEFORE script.js.
+         ===================================================== -->
+
+    <script src="GamePacks/safety-planning.js"></script>
 
 
-            <div class="eyebrow">
-                CRISIS INTERVENTION TRAINING
-            </div>
-
-
-            <h1>
-                CIT <b>FEUD</b>
-            </h1>
-
-
-            <p>
-                Waiting for the host to start or resume a game...
-            </p>
-
-
-        </section>
-
-
-    </main>
-
-
-    <!-- ============================================
-         ADMIN / HOST CONTROL ACCESS
-
-         Always available in bottom-left corner.
-         Opens the private moderator control panel.
-         ============================================ -->
-
-    <a
-        href="host.html"
-        target="_blank"
-        class="admin-corner"
-        title="Open Host Controls"
-        aria-label="Open Host Controls"
-    >
-
-        <span class="admin-user">
-            👤
-        </span>
-
-        <span class="admin-gear">
-            ⚙
-        </span>
-
-    </a>
-
+    <!-- =====================================================
+         MAIN GAME ENGINE
+         ===================================================== -->
 
     <script src="script.js"></script>
 
