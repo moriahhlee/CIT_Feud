@@ -1,4 +1,4 @@
-/* =============================================================
+* =============================================================
    CIT FEUD — MAIN GAME ENGINE
    ============================================================= */
 
@@ -184,10 +184,11 @@ function fresh(
     name,
     date,
     packs,
-    teams
+    teams,
+    roundCount = null
 ) {
 
-    const questions = QUESTION_PACKS
+    const allQuestions = QUESTION_PACKS
         .filter(pack =>
             packs.includes(pack.id)
         )
@@ -197,6 +198,14 @@ function fresh(
                 pack: pack.title
             }))
         );
+
+    const requestedRounds =
+        Number.isInteger(+roundCount) && +roundCount > 0
+            ? Math.min(+roundCount, allQuestions.length)
+            : allQuestions.length;
+
+    const questions =
+        allQuestions.slice(0, requestedRounds);
 
     return {
 
@@ -231,6 +240,13 @@ function fresh(
         activeTeam: null,
 
         controllingTeam: null,
+
+        matchupOrder:
+            teams.map((_, index) => index),
+
+        whiteboardAwards: {},
+
+        showScores: false,
 
         stealResults: {},
 
@@ -292,6 +308,42 @@ function normalizeGame(game) {
         game.stealAwarded = false;
     }
 
+
+    if (
+        !Array.isArray(game.matchupOrder) ||
+        game.matchupOrder.length !== game.teams.length
+    ) {
+        game.matchupOrder =
+            game.teams.map((_, index) => index);
+    }
+
+    game.matchupOrder =
+        game.matchupOrder
+            .filter(
+                (index, position, values) =>
+                    Number.isInteger(index) &&
+                    index >= 0 &&
+                    index < game.teams.length &&
+                    values.indexOf(index) === position
+            );
+
+    game.teams.forEach((_, index) => {
+        if (!game.matchupOrder.includes(index)) {
+            game.matchupOrder.push(index);
+        }
+    });
+
+    if (
+        !game.whiteboardAwards ||
+        typeof game.whiteboardAwards !== 'object'
+    ) {
+        game.whiteboardAwards = {};
+    }
+
+    if (game.showScores === undefined) {
+        game.showScores = false;
+    }
+
     if (
         !game.phase ||
         game.phase === 'top'
@@ -322,6 +374,10 @@ function resetRoundState(game) {
     game.activeTeam = null;
 
     game.controllingTeam = null;
+
+    game.whiteboardAwards = {};
+
+    game.showScores = false;
 
     game.stealResults = {};
 
@@ -765,6 +821,31 @@ function renderSetup(slot) {
                 </div>
 
 
+                <div class="formrow roundCountRow">
+
+                    <label class="roundCountField">
+
+                        Number of rounds
+
+                        <input
+                            id="roundCount"
+                            type="number"
+                            min="1"
+                            step="1"
+                            value="1"
+                            required
+                        >
+
+                        <small
+                            id="roundCountHelp"
+                            class="roundCountHelp"
+                        ></small>
+
+                    </label>
+
+                </div>
+
+
                 <h2>
                     Question Packs
                 </h2>
@@ -890,6 +971,57 @@ function renderSetup(slot) {
     const teamCount =
         $('#teamCount');
 
+    const roundCount =
+        $('#roundCount');
+
+    const roundCountHelp =
+        $('#roundCountHelp');
+
+    function updateRoundLimit() {
+
+        const selectedIds =
+            $$('input[name="pack"]:checked')
+                .map(input => input.value);
+
+        const available =
+            QUESTION_PACKS
+                .filter(pack =>
+                    selectedIds.includes(pack.id)
+                )
+                .reduce(
+                    (total, pack) =>
+                        total + pack.questions.length,
+                    0
+                );
+
+        const safeAvailable =
+            Math.max(1, available);
+
+        roundCount.max =
+            String(safeAvailable);
+
+        if (
+            !roundCount.value ||
+            +roundCount.value > safeAvailable
+        ) {
+            roundCount.value =
+                String(safeAvailable);
+        }
+
+        roundCountHelp.textContent =
+            available
+                ? `${available} round${available === 1 ? '' : 's'} available from the selected pack${selectedIds.length === 1 ? '' : 's'}.`
+                : 'Select at least one question pack.';
+    }
+
+    $$('input[name="pack"]')
+        .forEach(input => {
+            input.onchange =
+                updateRoundLimit;
+        });
+
+    updateRoundLimit();
+
 
     function renderTeamNames() {
 
@@ -967,7 +1099,8 @@ function renderSetup(slot) {
                     $('#gameDate')
                         .value,
                     packs,
-                    teamNames
+                    teamNames,
+                    +roundCount.value
                 );
 
 
@@ -997,24 +1130,20 @@ function renderSetup(slot) {
 function eligibleStealTeams(game) {
 
     if (
-        game.controllingTeam === null
+        game.controllingTeam === null ||
+        !Array.isArray(game.matchupOrder)
     ) {
         return [];
     }
 
+    const activeMatchup =
+        game.matchupOrder.slice(0, 2);
 
-    return game.teams
-        .map(
-            (_, index) =>
-                index
-        )
-        .filter(
-            index =>
-                index !==
-                game.controllingTeam
-        );
+    return activeMatchup.filter(
+        index =>
+            index !== game.controllingTeam
+    );
 }
-
 
 function stealWinners(game) {
 
@@ -1030,76 +1159,187 @@ function stealWinners(game) {
 
 function awardSteal(game) {
 
-    if (
-        game.stealAwarded
-    ) {
+    if (game.stealAwarded) {
         return;
     }
-
 
     const winners =
         stealWinners(game);
 
-
-    if (
-        !winners.length
-    ) {
+    if (!winners.length) {
         return;
     }
 
+    const winner =
+        winners[0];
 
-    const base =
-        Math.floor(
-            game.bank /
-            winners.length
-        );
+    if (
+        game.controllingTeam !== null &&
+        game.teams[game.controllingTeam]
+    ) {
+        game.teams[game.controllingTeam].score =
+            Math.max(
+                0,
+                game.teams[game.controllingTeam].score -
+                game.bank
+            );
+    }
 
-
-    const remainder =
-        game.bank %
-        winners.length;
-
-
-    winners.forEach(
-        (
-            teamIndex,
-            winnerIndex
-        ) => {
-
-            game.teams[
-                teamIndex
-            ].score +=
-                base +
-                (
-                    winnerIndex <
-                    remainder
-                        ? 1
-                        : 0
-                );
-        }
-    );
-
+    game.teams[winner].score +=
+        game.bank;
 
     game.stealAwarded = true;
 
-
     game.attemptLog.push({
-
         ok: true,
+        team: game.teams[winner].name,
+        answer: `Stole ${game.bank} point bank`,
+        time: Date.now()
+    });
+}
 
-        team:
-            winners
-                .map(
-                    index =>
-                        game.teams[index].name
-                )
-                .join(', '),
+function setupMatchupDragAndDrop() {
 
-        answer:
-            `Split ${game.bank} point bank`,
+    const cards =
+        $$('[data-matchup-team]');
 
-        time:
-            Date.now()
+    let draggedIndex =
+        null;
+
+    cards.forEach(card => {
+
+        card.ondragstart =
+            event => {
+
+                draggedIndex =
+                    +card.dataset.matchupTeam;
+
+                card.classList.add(
+                    'dragging'
+                );
+
+                event.dataTransfer.effectAllowed =
+                    'move';
+
+                event.dataTransfer.setData(
+                    'text/plain',
+                    String(draggedIndex)
+                );
+            };
+
+        card.ondragend =
+            () => {
+
+                draggedIndex =
+                    null;
+
+                cards.forEach(item =>
+                    item.classList.remove(
+                        'dragging',
+                        'dragTarget'
+                    )
+                );
+            };
+
+        card.ondragover =
+            event => {
+
+                event.preventDefault();
+
+                card.classList.add(
+                    'dragTarget'
+                );
+
+                event.dataTransfer.dropEffect =
+                    'move';
+            };
+
+        card.ondragleave =
+            () =>
+                card.classList.remove(
+                    'dragTarget'
+                );
+
+        card.ondrop =
+            event => {
+
+                event.preventDefault();
+
+                const targetIndex =
+                    +card.dataset.matchupTeam;
+
+                const sourceIndex =
+                    draggedIndex !== null
+                        ? draggedIndex
+                        : +event.dataTransfer.getData(
+                            'text/plain'
+                        );
+
+                card.classList.remove(
+                    'dragTarget'
+                );
+
+                if (
+                    !Number.isInteger(sourceIndex) ||
+                    sourceIndex === targetIndex
+                ) {
+                    return;
+                }
+
+                mutate(
+                    gameState => {
+
+                        const order =
+                            [...gameState.matchupOrder];
+
+                        const sourcePosition =
+                            order.indexOf(sourceIndex);
+
+                        const targetPosition =
+                            order.indexOf(targetIndex);
+
+                        if (
+                            sourcePosition < 0 ||
+                            targetPosition < 0
+                        ) {
+                            return;
+                        }
+
+                        [
+                            order[sourcePosition],
+                            order[targetPosition]
+                        ] = [
+                            order[targetPosition],
+                            order[sourcePosition]
+                        ];
+
+                        gameState.matchupOrder =
+                            order;
+
+                        const active =
+                            order.slice(0, 2);
+
+                        if (
+                            gameState.controllingTeam !== null &&
+                            !active.includes(
+                                gameState.controllingTeam
+                            )
+                        ) {
+                            gameState.controllingTeam =
+                                null;
+
+                            gameState.activeTeam =
+                                null;
+                        }
+
+                        gameState.stealResults =
+                            {};
+
+                        gameState.stealAwarded =
+                            false;
+                    }
+                );
+            };
     });
 }
 
@@ -1165,6 +1405,15 @@ function renderHostGame() {
     const finalRound =
         game.current ===
         game.questions.length - 1;
+
+    const matchupOrder =
+        game.matchupOrder || game.teams.map((_, index) => index);
+
+    const matchupTeams =
+        matchupOrder.slice(0, 2);
+
+    const benchTeams =
+        matchupOrder.slice(2);
 
 
     root.innerHTML = `
@@ -1593,63 +1842,128 @@ function renderHostGame() {
                         `
 
                         : `
-                            <div
-                                class="buzzsection"
-                            >
+                            <div class="buzzsection matchupControl">
 
-                                <div
-                                    class="sectionlabel"
-                                >
-                                    WHO IS ANSWERING?
+                                <div class="matchupControlHeader">
+
+                                    <div>
+                                        <div class="sectionlabel">
+                                            WHO IS ANSWERING?
+                                        </div>
+
+                                        <strong>
+                                            Choose who won the first answer
+                                        </strong>
+                                    </div>
+
+                                    <small>
+                                        Drag teams to change the head-to-head matchup.
+                                    </small>
+
                                 </div>
 
 
-                                <div
-                                    class="buzzteams"
-                                >
+                                <div class="matchupPrimary">
 
                                     ${
-                                        game.teams
-                                        .map(
-                                            (team, index) => `
-                                                <button
-                                                    class="
-                                                        buzzbtn
+                                        matchupTeams[0] !== undefined
+                                        ? `
+                                            <button
+                                                class="matchupTeam ${
+                                                    game.controllingTeam === matchupTeams[0]
+                                                        ? 'firstAnswer'
+                                                        : ''
+                                                }"
+                                                draggable="true"
+                                                data-matchup-team="${matchupTeams[0]}"
+                                                data-buzz="${matchupTeams[0]}"
+                                            >
+                                                <div>
+                                                    <strong>
+                                                        ${esc(game.teams[matchupTeams[0]].name)}
+                                                    </strong>
+                                                    <small>
                                                         ${
-                                                            game.activeTeam === index
-                                                                ? 'active'
-                                                                : ''
+                                                            game.controllingTeam === matchupTeams[0]
+                                                                ? 'FIRST ANSWER · GUESSING'
+                                                                : 'CLICK IF FIRST ANSWER'
                                                         }
-                                                    "
-                                                    data-buzz="${index}"
-                                                >
+                                                    </small>
+                                                </div>
+                                            </button>
+                                        `
+                                        : ''
+                                    }
 
-                                                    <span>
-                                                        ${index + 1}
-                                                    </span>
+                                    <div class="matchupVs">
+                                        VS
+                                    </div>
 
-                                                    ${
-                                                        esc(
-                                                            team.name
-                                                        )
-                                                    }
-
-                                                </button>
-                                            `
-                                        )
-                                        .join('')
+                                    ${
+                                        matchupTeams[1] !== undefined
+                                        ? `
+                                            <button
+                                                class="matchupTeam ${
+                                                    game.controllingTeam === matchupTeams[1]
+                                                        ? 'firstAnswer'
+                                                        : ''
+                                                }"
+                                                draggable="true"
+                                                data-matchup-team="${matchupTeams[1]}"
+                                                data-buzz="${matchupTeams[1]}"
+                                            >
+                                                <div>
+                                                    <strong>
+                                                        ${esc(game.teams[matchupTeams[1]].name)}
+                                                    </strong>
+                                                    <small>
+                                                        ${
+                                                            game.controllingTeam === matchupTeams[1]
+                                                                ? 'FIRST ANSWER · GUESSING'
+                                                                : 'CLICK IF FIRST ANSWER'
+                                                        }
+                                                    </small>
+                                                </div>
+                                            </button>
+                                        `
+                                        : ''
                                     }
 
                                 </div>
 
 
-                                <p
-                                    class="microcopy"
-                                >
-                                    Select the team answering.
-                                    The first selected team
-                                    becomes the defending team
-                                    for a later steal.
+                                ${
+                                    benchTeams.length
+                                    ? `
+                                        <div class="matchupBench">
+
+                                            ${
+                                                benchTeams
+                                                    .map(index => `
+                                                        <div
+                                                            class="matchupBenchTeam"
+                                                            draggable="true"
+                                                            data-matchup-team="${index}"
+                                                        >
+                                                            <strong>
+                                                                ${esc(game.teams[index].name)}
+                                                            </strong>
+                                                            <small>
+                                                                WHITEBOARD
+                                                            </small>
+                                                        </div>
+                                                    `)
+                                                    .join('')
+                                            }
+
+                                        </div>
+                                    `
+                                    : ''
+                                }
+
+
+                                <p class="matchupInstruction">
+                                    The green team controls the board. Teams underneath are outside the active matchup.
                                 </p>
 
                             </div>
@@ -1797,101 +2111,112 @@ function renderHostGame() {
                         ${
                             game.teams
                             .map(
-                                (team, index) => `
-                                    <div
-                                        class="
-                                            teamctl
-                                            ${
-                                                game.activeTeam === index
-                                                    ? 'answering'
-                                                    : ''
-                                            }
-                                            ${
-                                                game.controllingTeam === index
-                                                    ? 'controlling'
-                                                    : ''
-                                            }
-                                        "
-                                    >
+                                (team, index) => {
 
+                                    const isBench =
+                                        benchTeams.includes(index);
+
+                                    const halfPoints =
+                                        Math.floor(game.bank / 2);
+
+                                    const halfAwarded =
+                                        game.whiteboardAwards[
+                                            String(index)
+                                        ] === true;
+
+                                    return `
                                         <div
-                                            class="hostTeamHeader"
+                                            class="
+                                                teamctl
+                                                ${
+                                                    game.activeTeam === index
+                                                        ? 'answering'
+                                                        : ''
+                                                }
+                                                ${
+                                                    game.controllingTeam === index
+                                                        ? 'controlling'
+                                                        : ''
+                                                }
+                                            "
                                         >
 
-                                            <input
-                                                value="${
-                                                    esc(
-                                                        team.name
-                                                    )
-                                                }"
-                                                data-teamname="${index}"
-                                                maxlength="24"
-                                            >
+                                            <div class="hostTeamHeader">
 
-                                            <strong>
-                                                ${team.score}
-                                            </strong>
+                                                <input
+                                                    value="${esc(team.name)}"
+                                                    data-teamname="${index}"
+                                                    maxlength="24"
+                                                >
 
-                                        </div>
+                                                <strong
+                                                    class="teamScore"
+                                                    data-score-edit="${index}"
+                                                    title="Double-click to set score"
+                                                >
+                                                    ${team.score}
+                                                </strong>
+
+                                            </div>
+
+                                            <small class="scoreEditHint">
+                                                Double-click score to edit
+                                            </small>
 
 
-                                        <div
-                                            class="teamRoleLine"
-                                        >
+                                            <div class="teamScoreButtons">
+
+                                                <button
+                                                    class="scoreMinus"
+                                                    data-score-delta="-1"
+                                                    data-score-team="${index}"
+                                                    title="Subtract 1 point"
+                                                >
+                                                    −
+                                                </button>
+
+                                                <button
+                                                    class="scorePlus"
+                                                    data-score-delta="1"
+                                                    data-score-team="${index}"
+                                                    title="Add 1 point"
+                                                >
+                                                    +
+                                                </button>
+
+                                            </div>
+
 
                                             ${
-                                                game.controllingTeam === index
-
+                                                isBench
                                                 ? `
-                                                    <span>
-                                                        DEFENDING TEAM
-                                                    </span>
+                                                    <button
+                                                        class="whiteboardAward ${
+                                                            halfAwarded
+                                                                ? 'awarded'
+                                                                : ''
+                                                        }"
+                                                        data-half-award="${index}"
+                                                        ${
+                                                            halfAwarded ||
+                                                            game.bank <= 0
+                                                                ? 'disabled'
+                                                                : ''
+                                                        }
+                                                    >
+                                                        ${
+                                                            halfAwarded
+                                                                ? `Whiteboard ½ awarded ✓`
+                                                                : `Whiteboard ½ · +${halfPoints}`
+                                                        }
+                                                    </button>
                                                 `
-
-                                                : stealMode
-
-                                                ? `
-                                                    <span>
-                                                        STEAL ELIGIBLE
-                                                    </span>
-                                                `
-
                                                 : ''
                                             }
 
                                         </div>
-
-
-                                        <div
-                                            class="teamScoreButtons"
-                                        >
-
-                                            <button
-                                                data-award="${index}"
-                                            >
-                                                + Bank
-                                            </button>
-
-                                            <button
-                                                class="ghost"
-                                                data-adjust="${index}"
-                                                data-delta="10"
-                                            >
-                                                +10
-                                            </button>
-
-                                            <button
-                                                class="ghost"
-                                                data-adjust="${index}"
-                                                data-delta="-10"
-                                            >
-                                                −10
-                                            </button>
-
-                                        </div>
-
-                                    </div>
-                                `
+                                    `;
+                                }
                             )
                             .join('')
                         }
@@ -2138,6 +2463,16 @@ function renderHostGame() {
             );
 
 
+    $('#showScores').onclick =
+        () =>
+            mutate(
+                gameState => {
+                    gameState.showScores =
+                        !gameState.showScores;
+                }
+            );
+
+
     $('#showSteal').onclick =
         () => {
 
@@ -2232,25 +2567,30 @@ function renderHostGame() {
                         const index =
                             +button.dataset.buzz;
 
-
                         mutate(
                             gameState => {
 
-                                gameState.activeTeam =
-                                    gameState.activeTeam === index
-                                        ? null
-                                        : index;
-
+                                const activeMatchup =
+                                    (gameState.matchupOrder || [])
+                                        .slice(0, 2);
 
                                 if (
-                                    gameState.activeTeam !== null &&
-                                    gameState.controllingTeam === null
+                                    !activeMatchup.includes(index)
                                 ) {
-
-                                    gameState.controllingTeam =
-                                        gameState.activeTeam;
+                                    return;
                                 }
 
+                                gameState.activeTeam =
+                                    index;
+
+                                gameState.controllingTeam =
+                                    index;
+
+                                gameState.stealResults =
+                                    {};
+
+                                gameState.stealAwarded =
+                                    false;
                             },
 
                             {
@@ -2262,6 +2602,8 @@ function renderHostGame() {
             }
         );
 
+
+    setupMatchupDragAndDrop();
 
     $$('[data-correct]')
         .forEach(
@@ -2314,6 +2656,21 @@ function renderHostGame() {
                                                     ),
                                                 0
                                             );
+
+                                    const points =
+                                        currentQuestion
+                                            .answers[index]?.[1] || 0;
+
+                                    if (
+                                        gameState.controllingTeam !== null &&
+                                        gameState.teams[
+                                            gameState.controllingTeam
+                                        ]
+                                    ) {
+                                        gameState.teams[
+                                            gameState.controllingTeam
+                                        ].score += points;
+                                    }
                                 }
 
 
@@ -2444,28 +2801,7 @@ function renderHostGame() {
     }
 
 
-    $$('[data-award]')
-        .forEach(
-            button => {
-
-                button.onclick =
-                    () =>
-                        mutate(
-                            gameState => {
-
-                                gameState
-                                    .teams[
-                                        +button.dataset.award
-                                    ]
-                                    .score +=
-                                    gameState.bank;
-                            }
-                        );
-            }
-        );
-
-
-    $$('[data-adjust]')
+    $$('[data-score-team]')
         .forEach(
             button => {
 
@@ -2475,26 +2811,113 @@ function renderHostGame() {
                             gameState => {
 
                                 const index =
-                                    +button.dataset.adjust;
+                                    +button.dataset.scoreTeam;
 
+                                const delta =
+                                    +button.dataset.scoreDelta;
 
-                                gameState
-                                    .teams[index]
-                                    .score =
+                                gameState.teams[index].score =
                                     Math.max(
                                         0,
-                                        gameState
-                                            .teams[index]
-                                            .score +
-                                        (
-                                            +button.dataset.delta
-                                        )
+                                        gameState.teams[index].score +
+                                        delta
                                     );
                             }
                         );
             }
         );
 
+
+    $$('[data-score-edit]')
+        .forEach(
+            score => {
+
+                score.ondblclick =
+                    () => {
+
+                        const index =
+                            +score.dataset.scoreEdit;
+
+                        const current =
+                            normalizeGame(live());
+
+                        const entered =
+                            prompt(
+                                `Set score for ${current.teams[index].name}:`,
+                                String(current.teams[index].score)
+                            );
+
+                        if (entered === null) {
+                            return;
+                        }
+
+                        const value =
+                            Number.parseInt(
+                                entered.trim(),
+                                10
+                            );
+
+                        if (
+                            !Number.isFinite(value) ||
+                            value < 0
+                        ) {
+                            alert(
+                                'Enter a whole-number score of 0 or higher.'
+                            );
+                            return;
+                        }
+
+                        mutate(
+                            gameState => {
+                                gameState.teams[index].score =
+                                    value;
+                            }
+                        );
+                    };
+            }
+        );
+
+
+    $$('[data-half-award]')
+        .forEach(
+            button => {
+
+                button.onclick =
+                    () =>
+                        mutate(
+                            gameState => {
+
+                                const index =
+                                    +button.dataset.halfAward;
+
+                                if (
+                                    gameState.whiteboardAwards[
+                                        String(index)
+                                    ] === true
+                                ) {
+                                    return;
+                                }
+
+                                const bench =
+                                    (gameState.matchupOrder || [])
+                                        .slice(2);
+
+                                if (!bench.includes(index)) {
+                                    return;
+                                }
+
+                                gameState.teams[index].score +=
+                                    Math.floor(
+                                        gameState.bank / 2
+                                    );
+
+                                gameState.whiteboardAwards[
+                                    String(index)
+                                ] = true;
+                            }
+                        );
+            }
+        );
 
     $$('[data-teamname]')
         .forEach(
@@ -2847,6 +3270,24 @@ function createProjectorUtilities() {
 
 
             <button
+                id="projectorScores"
+                class="projectorUtilityButton projectorScoresButton"
+                title="Ranked Scores"
+            >
+                🏆
+            </button>
+
+
+            <button
+                id="projectorHome"
+                class="projectorUtilityButton projectorHomeButton"
+                title="Save and return home"
+            >
+                ⌂
+            </button>
+
+
+            <button
                 id="projectorVolume"
                 class="projectorUtilityButton"
             ></button>
@@ -2867,6 +3308,12 @@ function createProjectorUtilities() {
             );
     }
 
+
+    const scoresButton =
+        $('#projectorScores', utilities);
+
+    const homeButton =
+        $('#projectorHome', utilities);
 
     const volumeButton =
         $('#projectorVolume', utilities);
@@ -2891,6 +3338,69 @@ function createProjectorUtilities() {
         volumeButton.title =
             `Volume: ${setting.label}`;
     }
+
+
+    scoresButton.onclick =
+        () => {
+
+            const current =
+                normalizeGame(live());
+
+            if (!current) {
+                return;
+            }
+
+            current.showScores =
+                !current.showScores;
+
+            current.updated =
+                new Date().toISOString();
+
+            save(current);
+
+            renderProjector(current);
+        };
+
+
+    homeButton.onclick =
+        () => {
+
+            const current =
+                normalizeGame(live());
+
+            if (current) {
+
+                if (
+                    !Number.isInteger(current.slot) ||
+                    current.slot < 0 ||
+                    current.slot > 2
+                ) {
+                    const saved =
+                        slots();
+
+                    const empty =
+                        saved.findIndex(
+                            item => !item
+                        );
+
+                    current.slot =
+                        empty >= 0
+                            ? empty
+                            : 0;
+                }
+
+                current.showScores =
+                    false;
+
+                current.updated =
+                    new Date().toISOString();
+
+                save(current);
+            }
+
+            window.location.href =
+                'host.html';
+        };
 
 
     volumeButton.onclick =
@@ -3029,6 +3539,90 @@ function handleProjectorEvent(event) {
 }
 
 
+function rankedScoresMarkup(game) {
+
+    const ranked =
+        game.teams
+            .map((team, index) => ({
+                ...team,
+                index
+            }))
+            .sort(
+                (a, b) =>
+                    b.score - a.score ||
+                    a.index - b.index
+            );
+
+    const highScore =
+        ranked.length
+            ? ranked[0].score
+            : 0;
+
+    return `
+        <div class="scoreRankingOverlay">
+
+            <section class="scoreRankingPanel">
+
+                <div class="scoreRankingHeading">
+
+                    <div class="eyebrow">
+                        CIT FEUD
+                    </div>
+
+                    <h2>
+                        Ranked Scores
+                    </h2>
+
+                </div>
+
+
+                <div class="scoreRankingList">
+
+                    ${
+                        ranked
+                            .map(
+                                (team, index) => `
+                                    <div
+                                        class="
+                                            scoreRankingRow
+                                            ${
+                                                team.score === highScore
+                                                    ? 'leader'
+                                                    : ''
+                                            }
+                                        "
+                                    >
+                                        <span class="scoreRankingPosition">
+                                            ${index + 1}
+                                        </span>
+
+                                        <strong class="scoreRankingName">
+                                            ${esc(team.name)}
+                                        </strong>
+
+                                        <span class="scoreRankingScore">
+                                            ${team.score}
+                                        </span>
+                                    </div>
+                                `
+                            )
+                            .join('')
+                    }
+
+                </div>
+
+
+                <p class="scoreRankingCloseHint">
+                    Press the trophy button to return to the game
+                </p>
+
+            </section>
+
+        </div>
+    `;
+}
+
+
 /* =============================================================
    PROJECTOR
    ============================================================= */
@@ -3074,6 +3668,13 @@ function renderProjector(
 
 
         createProjectorUtilities();
+
+    if (game?.showScores) {
+        root.insertAdjacentHTML(
+            'beforeend',
+            rankedScoresMarkup(game)
+        );
+    }
 
         return;
     }
@@ -3128,6 +3729,13 @@ function renderProjector(
 
 
         createProjectorUtilities();
+
+    if (game?.showScores) {
+        root.insertAdjacentHTML(
+            'beforeend',
+            rankedScoresMarkup(game)
+        );
+    }
 
         return;
     }
@@ -3522,6 +4130,13 @@ function renderProjector(
 
 
     createProjectorUtilities();
+
+    if (game?.showScores) {
+        root.insertAdjacentHTML(
+            'beforeend',
+            rankedScoresMarkup(game)
+        );
+    }
 }
 
 
