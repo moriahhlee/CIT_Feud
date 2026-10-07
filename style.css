@@ -3553,7 +3553,7 @@ body.projector::after{
         width: 100%;
         padding: 20px 14px;
     }
-
+ 
     .scoreRankingRow {
         grid-template-columns: 44px minmax(0,1fr) auto;
         gap: 9px;
