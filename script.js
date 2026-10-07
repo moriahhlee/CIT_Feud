@@ -43,10 +43,6 @@ const QUESTION_PACKS = [
 
         questions: [
 
-            /* -------------------------------------------------
-               QUESTION 1
-               ------------------------------------------------- */
-
             {
                 id: 'warn',
 
@@ -75,11 +71,6 @@ const QUESTION_PACKS = [
                     ['Stopping normal routines', 5]
                 ]
             },
-
-
-            /* -------------------------------------------------
-               QUESTION 2
-               ------------------------------------------------- */
 
             {
                 id: 'cope',
@@ -110,11 +101,6 @@ const QUESTION_PACKS = [
                 ]
             },
 
-
-            /* -------------------------------------------------
-               QUESTION 3
-               ------------------------------------------------- */
-
             {
                 id: 'distract',
 
@@ -143,11 +129,6 @@ const QUESTION_PACKS = [
                     ['Neighbor', 4]
                 ]
             },
-
-
-            /* -------------------------------------------------
-               QUESTION 4
-               ------------------------------------------------- */
 
             {
                 id: 'help',
@@ -178,11 +159,6 @@ const QUESTION_PACKS = [
                 ]
             },
 
-
-            /* -------------------------------------------------
-               QUESTION 5
-               ------------------------------------------------- */
-
             {
                 id: 'professional',
 
@@ -211,11 +187,6 @@ const QUESTION_PACKS = [
                     ['Peer / recovery specialist', 4]
                 ]
             },
-
-
-            /* -------------------------------------------------
-               QUESTION 6
-               ------------------------------------------------- */
 
             {
                 id: 'safer',
@@ -297,30 +268,16 @@ const QUESTION_PACKS = [
 
 
 /* =============================================================
-   END QUESTION LIBRARY
-
-   YOU GENERALLY DO NOT NEED TO EDIT BELOW THIS LINE.
-   ============================================================= */
-
-
-/* =============================================================
    STORAGE / SYNC SETTINGS
    ============================================================= */
 
-const KEY =
-    'citFeudSlotsV3';
+const KEY = 'citFeudSlotsV3';
 
-const LIVE =
-    'citFeudLiveV3';
-
+const LIVE = 'citFeudLiveV3';
 
 const bc =
     ('BroadcastChannel' in window)
-
-        ? new BroadcastChannel(
-            'cit-feud-v3'
-        )
-
+        ? new BroadcastChannel('cit-feud-v3')
         : null;
 
 
@@ -328,45 +285,31 @@ const bc =
    BASIC HELPERS
    ============================================================= */
 
-const $ =
-    (
-        selector,
-        root = document
-    ) =>
-        root.querySelector(
-            selector
-        );
+const $ = (
+    selector,
+    root = document
+) =>
+    root.querySelector(selector);
 
 
-const $$ =
-    (
-        selector,
-        root = document
-    ) =>
-        [
-            ...root.querySelectorAll(
-                selector
-            )
-        ];
+const $$ = (
+    selector,
+    root = document
+) =>
+    [...root.querySelectorAll(selector)];
 
 
-const esc =
-    value =>
-        String(
-            value ?? ''
-        ).replace(
-            /[&<>"']/g,
-
-            character => ({
-
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-
-            }[character])
-        );
+const esc = value =>
+    String(value ?? '').replace(
+        /[&<>"']/g,
+        character => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        }[character])
+    );
 
 
 /* =============================================================
@@ -378,26 +321,18 @@ function slots() {
     try {
 
         return (
-
             JSON.parse(
-                localStorage.getItem(
-                    KEY
-                )
+                localStorage.getItem(KEY)
             )
-
             ||
-
             [
                 null,
                 null,
                 null
             ]
-
         );
 
-    }
-
-    catch {
+    } catch {
 
         return [
             null,
@@ -410,18 +345,11 @@ function slots() {
 }
 
 
-function writeSlots(
-    value
-) {
+function writeSlots(value) {
 
     localStorage.setItem(
-
         KEY,
-
-        JSON.stringify(
-            value
-        )
-
+        JSON.stringify(value)
     );
 
 }
@@ -436,16 +364,10 @@ function live() {
     try {
 
         return JSON.parse(
-
-            localStorage.getItem(
-                LIVE
-            )
-
+            localStorage.getItem(LIVE)
         );
 
-    }
-
-    catch {
+    } catch {
 
         return null;
 
@@ -455,29 +377,19 @@ function live() {
 
 
 /* =============================================================
-   SEND GAME STATE TO PROJECTOR
+   BROADCAST GAME STATE
    ============================================================= */
 
-function broadcast(
-    game
-) {
+function broadcast(game) {
 
     localStorage.setItem(
-
         LIVE,
-
-        JSON.stringify(
-            game
-        )
-
+        JSON.stringify(game)
     );
-
 
     if (bc) {
 
-        bc.postMessage(
-            game
-        );
+        bc.postMessage(game);
 
     }
 
@@ -488,24 +400,18 @@ function broadcast(
    SAVE CURRENT GAME
    ============================================================= */
 
-function save(
-    game
-) {
+function save(game) {
 
     const savedSlots =
         slots();
 
-
     savedSlots[
         game.slot
-    ] =
-        game;
-
+    ] = game;
 
     writeSlots(
         savedSlots
     );
-
 
     broadcast(
         game
@@ -515,7 +421,7 @@ function save(
 
 
 /* =============================================================
-   CREATE A NEW GAME
+   CREATE NEW GAME
    ============================================================= */
 
 function fresh(
@@ -527,7 +433,6 @@ function fresh(
 ) {
 
     const questions =
-
         QUESTION_PACKS
 
             .filter(
@@ -541,12 +446,8 @@ function fresh(
                 pack =>
                     pack.questions.map(
                         question => ({
-
                             ...question,
-
-                            pack:
-                                pack.title
-
+                            pack: pack.title
                         })
                     )
             );
@@ -563,7 +464,6 @@ function fresh(
         date,
 
         packs,
-
 
         teams:
             teams.map(
@@ -582,32 +482,23 @@ function fresh(
                 })
             ),
 
-
         questions,
-
 
         current: 0,
 
-
         revealed: [],
-
 
         strikes: 0,
 
-
         bank: 0,
-
 
         activeTeam: null,
 
-
         attemptLog: [],
-
 
         started:
             new Date()
                 .toISOString(),
-
 
         updated:
             new Date()
@@ -619,19 +510,16 @@ function fresh(
 
 
 /* =============================================================
-   NORMALIZE SAVED GAMES
+   NORMALIZE SAVED GAME
    ============================================================= */
 
-function normalizeGame(
-    game
-) {
+function normalizeGame(game) {
 
     if (!game) {
 
         return game;
 
     }
-
 
     if (
         game.activeTeam === undefined
@@ -641,7 +529,6 @@ function normalizeGame(
             null;
 
     }
-
 
     if (
         !Array.isArray(
@@ -654,7 +541,6 @@ function normalizeGame(
 
     }
 
-
     return game;
 
 }
@@ -664,15 +550,12 @@ function normalizeGame(
    CHANGE GAME STATE
    ============================================================= */
 
-function mutate(
-    callback
-) {
+function mutate(callback) {
 
     let game =
         normalizeGame(
             live()
         );
-
 
     if (!game) {
 
@@ -680,21 +563,13 @@ function mutate(
 
     }
 
-
-    callback(
-        game
-    );
-
+    callback(game);
 
     game.updated =
         new Date()
             .toISOString();
 
-
-    save(
-        game
-    );
-
+    save(game);
 
     renderHostGame();
 
@@ -705,19 +580,15 @@ function mutate(
    BROADCAST WITHOUT CHANGING GAME
    ============================================================= */
 
-function notify(
-    game
-) {
+function notify(game) {
 
-    broadcast(
-        game
-    );
+    broadcast(game);
 
 }
 
 
 /* =============================================================
-   CROSS-WINDOW LIVE SYNC
+   CROSS-WINDOW SYNC
    ============================================================= */
 
 if (bc) {
@@ -728,9 +599,7 @@ if (bc) {
             if (
                 document.body
                     .classList
-                    .contains(
-                        'projector'
-                    )
+                    .contains('projector')
             ) {
 
                 renderProjector(
@@ -745,13 +614,11 @@ if (bc) {
 
 
 /* =============================================================
-   FALLBACK SYNC USING LOCAL STORAGE
+   LOCAL STORAGE FALLBACK SYNC
    ============================================================= */
 
 window.addEventListener(
-
     'storage',
-
     event => {
 
         if (
@@ -759,9 +626,7 @@ window.addEventListener(
             &&
             document.body
                 .classList
-                .contains(
-                    'projector'
-                )
+                .contains('projector')
         ) {
 
             renderProjector(
@@ -771,7 +636,6 @@ window.addEventListener(
         }
 
     }
-
 );
 
 
@@ -789,19 +653,11 @@ function tags(
 
             ${
                 tagArray
-
-                    .slice(
-                        0,
-                        3
-                    )
-
+                    .slice(0, 3)
                     .map(
                         tag =>
-
                             `<span>${esc(tag)}</span>`
-
                     )
-
                     .join('')
             }
 
@@ -821,7 +677,6 @@ function renderHostHome() {
     const root =
         $('#hostApp');
 
-
     const savedSlots =
         slots();
 
@@ -830,27 +685,21 @@ function renderHostHome() {
 
         <section class="startup">
 
-
             <div class="brand">
-
 
                 <div class="eyebrow">
                     CRISIS INTERVENTION TRAINING
                 </div>
 
-
                 <h1>
                     CIT <b>FEUD</b>
                 </h1>
-
 
                 <p>
                     Control Room
                 </p>
 
-
             </div>
-
 
 
             <div class="homegrid">
@@ -858,11 +707,9 @@ function renderHostHome() {
 
                 <div class="panel">
 
-
                     <h2>
                         Saved Games
                     </h2>
-
 
                     <p>
                         Resume a previous game or start a new one.
@@ -871,7 +718,6 @@ function renderHostHome() {
 
                     <div class="slots">
 
-
                         ${
                             savedSlots.map(
                                 (
@@ -879,26 +725,21 @@ function renderHostHome() {
                                     index
                                 ) => {
 
-
                                     if (game) {
 
                                         return `
 
                                             <article class="savecard">
 
-
                                                 <div>
-
 
                                                     <small>
                                                         SLOT ${index + 1}
                                                     </small>
 
-
                                                     <h3>
                                                         ${esc(game.name)}
                                                     </h3>
-
 
                                                     <p>
 
@@ -918,45 +759,32 @@ function renderHostHome() {
 
                                                     </p>
 
-
                                                 </div>
-
 
 
                                                 <div class="actions">
 
-
                                                     <button
                                                         data-resume="${index}"
                                                     >
-
                                                         Resume
-
                                                     </button>
-
 
                                                     <button
                                                         class="ghost"
                                                         data-new="${index}"
                                                     >
-
                                                         Replace
-
                                                     </button>
-
 
                                                     <button
                                                         class="danger ghost"
                                                         data-delete="${index}"
                                                     >
-
                                                         Delete
-
                                                     </button>
 
-
                                                 </div>
-
 
                                             </article>
 
@@ -969,36 +797,27 @@ function renderHostHome() {
 
                                         <article class="savecard empty">
 
-
                                             <div>
-
 
                                                 <small>
                                                     SLOT ${index + 1}
                                                 </small>
 
-
                                                 <h3>
                                                     Empty Save
                                                 </h3>
-
 
                                                 <p>
                                                     Available for a new game.
                                                 </p>
 
-
                                             </div>
-
 
                                             <button
                                                 data-new="${index}"
                                             >
-
                                                 New Game
-
                                             </button>
-
 
                                         </article>
 
@@ -1009,49 +828,38 @@ function renderHostHome() {
                             ).join('')
                         }
 
-
                     </div>
-
 
                 </div>
 
 
-
                 <div class="panel help">
-
 
                     <h2>
                         Projector Setup
                     </h2>
 
-
                     <ol>
-
 
                         <li>
                             Keep this control room on your laptop.
                         </li>
 
-
                         <li>
                             Open the projector board.
                         </li>
-
 
                         <li>
                             Move the projector window to your second display.
                         </li>
 
-
                         <li>
                             Press F11 for fullscreen.
                         </li>
 
-
                         <li>
                             All game changes sync automatically.
                         </li>
-
 
                     </ol>
 
@@ -1061,26 +869,20 @@ function renderHostHome() {
                         href="index.html"
                         target="_blank"
                     >
-
                         Open Projector Board ↗
-
                     </a>
-
 
                 </div>
 
 
             </div>
 
-
         </section>
 
     `;
 
 
-    /* ---------------------------------------------------------
-       RESUME GAME
-       --------------------------------------------------------- */
+    /* RESUME */
 
     $$(
         '[data-resume]'
@@ -1092,18 +894,12 @@ function renderHostHome() {
 
                     const game =
                         normalizeGame(
-
                             savedSlots[
                                 +button.dataset.resume
                             ]
-
                         );
 
-
-                    broadcast(
-                        game
-                    );
-
+                    broadcast(game);
 
                     renderHostGame();
 
@@ -1113,9 +909,7 @@ function renderHostHome() {
     );
 
 
-    /* ---------------------------------------------------------
-       NEW / REPLACE GAME
-       --------------------------------------------------------- */
+    /* NEW / REPLACE */
 
     $$(
         '[data-new]'
@@ -1124,7 +918,6 @@ function renderHostHome() {
 
             button.onclick =
                 () =>
-
                     renderSetup(
                         +button.dataset.new
                     );
@@ -1133,9 +926,7 @@ function renderHostHome() {
     );
 
 
-    /* ---------------------------------------------------------
-       DELETE SAVE
-       --------------------------------------------------------- */
+    /* DELETE */
 
     $$(
         '[data-delete]'
@@ -1148,7 +939,6 @@ function renderHostHome() {
                     const index =
                         +button.dataset.delete;
 
-
                     if (
                         confirm(
                             'Delete this saved game?'
@@ -1157,14 +947,11 @@ function renderHostHome() {
 
                         savedSlots[
                             index
-                        ] =
-                            null;
-
+                        ] = null;
 
                         writeSlots(
                             savedSlots
                         );
-
 
                         renderHostHome();
 
@@ -1182,9 +969,7 @@ function renderHostHome() {
    NEW GAME SETUP
    ============================================================= */
 
-function renderSetup(
-    slot
-) {
+function renderSetup(slot) {
 
     const root =
         $('#hostApp');
@@ -1194,26 +979,17 @@ function renderSetup(
 
         <section class="startup">
 
-
             <div class="brand compact">
 
-
                 <div class="eyebrow">
-
-                    NEW GAME
-                    ·
-                    SLOT ${slot + 1}
-
+                    NEW GAME · SLOT ${slot + 1}
                 </div>
-
 
                 <h1>
                     CIT <b>FEUD</b>
                 </h1>
 
-
             </div>
-
 
 
             <form
@@ -1221,15 +997,12 @@ function renderSetup(
                 class="panel setup"
             >
 
-
                 <h2>
                     Game Details
                 </h2>
 
 
-
                 <div class="formrow">
-
 
                     <label>
 
@@ -1244,7 +1017,6 @@ function renderSetup(
                     </label>
 
 
-
                     <label>
 
                         Date
@@ -1256,33 +1028,25 @@ function renderSetup(
                             value="${
                                 new Date()
                                     .toISOString()
-                                    .slice(
-                                        0,
-                                        10
-                                    )
+                                    .slice(0, 10)
                             }"
                         >
 
                     </label>
 
-
                 </div>
-
 
 
                 <h2>
                     Question Packs
                 </h2>
 
-
                 <p>
                     Select one or multiple question packs.
                 </p>
 
 
-
                 <div class="packgrid">
-
 
                     ${
                         QUESTION_PACKS.map(
@@ -1291,9 +1055,7 @@ function renderSetup(
                                 index
                             ) => `
 
-
                                 <label class="packcard">
-
 
                                     <input
                                         type="checkbox"
@@ -1301,52 +1063,38 @@ function renderSetup(
                                         value="${pack.id}"
                                         ${
                                             index === 0
-
                                                 ? 'checked'
-
                                                 : ''
                                         }
                                     >
 
-
                                     <div>
-
 
                                         <h3>
                                             ${esc(pack.title)}
                                         </h3>
 
-
                                         <p>
                                             ${esc(pack.description)}
                                         </p>
 
-
                                         ${tags(pack.tags)}
 
-
                                         <small>
-
                                             ${pack.questions.length}
                                             questions
-
                                         </small>
-
 
                                     </div>
 
-
                                 </label>
-
 
                             `
 
                         ).join('')
                     }
 
-
                 </div>
-
 
 
                 <h2>
@@ -1354,75 +1102,55 @@ function renderSetup(
                 </h2>
 
 
-
                 <div class="formrow">
-
 
                     <label>
 
                         Number of Teams
 
-
                         <select id="teamCount">
-
 
                             <option>
                                 2
                             </option>
 
-
                             <option>
                                 3
                             </option>
-
 
                             <option selected>
                                 4
                             </option>
 
-
                         </select>
-
 
                     </label>
 
-
                 </div>
-
 
 
                 <div id="teamNames"></div>
 
 
-
                 <div class="actions">
-
 
                     <button
                         type="button"
                         class="ghost"
                         id="cancelSetup"
                     >
-
                         Cancel
-
                     </button>
-
 
                     <button
                         type="submit"
                     >
-
                         Start Game
-
                     </button>
-
 
                 </div>
 
-
             </form>
-
 
         </section>
 
@@ -1433,61 +1161,45 @@ function renderSetup(
         $('#teamCount');
 
 
-    /* ---------------------------------------------------------
-       TEAM NAME FIELDS
-       --------------------------------------------------------- */
-
     function renderTeamNames() {
 
         const count =
             +teamCount.value;
 
 
-        $('#teamNames')
-            .innerHTML = `
+        $('#teamNames').innerHTML = `
 
+            <div class="teaminputs">
 
-                <div class="teaminputs">
+                ${
+                    Array.from(
+                        {
+                            length: count
+                        },
+                        (
+                            _,
+                            index
+                        ) => `
 
+                            <label>
 
-                    ${
-                        Array.from(
+                                Team ${index + 1} Name
 
-                            {
-                                length:
-                                    count
-                            },
+                                <input
+                                    name="teamName"
+                                    value="Team ${index + 1}"
+                                    maxlength="24"
+                                >
 
-                            (
-                                _,
-                                index
-                            ) => `
+                            </label>
 
+                        `
+                    ).join('')
+                }
 
-                                <label>
+            </div>
 
-                                    Team ${index + 1} Name
-
-
-                                    <input
-                                        name="teamName"
-                                        value="Team ${index + 1}"
-                                        maxlength="24"
-                                    >
-
-                                </label>
-
-
-                            `
-
-                        ).join('')
-                    }
-
-
-                </div>
-
-
-            `;
+        `;
 
     }
 
@@ -1499,21 +1211,12 @@ function renderSetup(
     renderTeamNames();
 
 
-    /* ---------------------------------------------------------
-       CANCEL
-       --------------------------------------------------------- */
-
     $('#cancelSetup').onclick =
         renderHostHome;
 
 
-    /* ---------------------------------------------------------
-       START GAME
-       --------------------------------------------------------- */
-
     $('#setupForm').onsubmit =
         event => {
-
 
             event.preventDefault();
 
@@ -1538,20 +1241,14 @@ function renderSetup(
 
             const game =
                 fresh(
-
                     slot,
-
                     $('#gameName')
                         .value
                         .trim(),
-
                     $('#gameDate')
                         .value,
-
                     packs,
-
                     teamNames
-
                 );
 
 
@@ -1568,10 +1265,7 @@ function renderSetup(
             }
 
 
-            save(
-                game
-            );
-
+            save(game);
 
             renderHostGame();
 
@@ -1616,25 +1310,17 @@ function renderHostGame() {
         <section class="control">
 
 
-            <!-- ===============================================
-                 CONTROL ROOM HEADER
-                 =============================================== -->
-
             <header class="controltop">
 
-
                 <div>
-
 
                     <div class="eyebrow">
                         CIT FEUD CONTROL ROOM
                     </div>
 
-
                     <h1>
                         ${esc(game.name)}
                     </h1>
-
 
                     <p>
 
@@ -1657,81 +1343,54 @@ function renderHostGame() {
 
                     </p>
 
-
                 </div>
 
 
                 <div class="saveok">
-
                     ✓ Autosaved
-
                 </div>
-
 
             </header>
 
 
-
             <div class="controlgrid">
 
-
-
-                <!-- ===========================================
-                     LEFT SIDE
-                     QUESTION / ANSWERS
-                     =========================================== -->
 
                 <section class="panel boardcontrol">
 
 
                     <div class="qmeta">
 
-
                         ${tags(
                             question.tags
                         )}
 
-
                         <small>
-
                             ${esc(
                                 question.title
                             )}
-
                         </small>
-
 
                     </div>
 
 
-
                     <h2>
-
                         ${esc(
                             question.prompt
                         )}
-
                     </h2>
 
 
-
-                    <!-- =======================================
-                         WHO IS ANSWERING
-                         ======================================= -->
+                    <!-- WHO IS ANSWERING -->
 
                     <div class="buzzsection">
 
-
                         <div class="sectionlabel">
-
                             WHO IS ANSWERING?
-
                         </div>
 
 
-
                         <div class="buzzteams">
-
 
                             ${
                                 game.teams.map(
@@ -1740,48 +1399,34 @@ function renderHostGame() {
                                         index
                                     ) => `
 
-
                                         <button
-
                                             class="
                                                 buzzbtn
-
                                                 ${
                                                     game.activeTeam === index
-
                                                         ? 'active'
-
                                                         : ''
                                                 }
                                             "
-
                                             data-buzz="${index}"
                                         >
 
-
                                             <span>
-
                                                 ${index + 1}
-
                                             </span>
-
 
                                             ${esc(
                                                 team.name
                                             )}
 
-
                                         </button>
-
 
                                     `
 
                                 ).join('')
                             }
 
-
                         </div>
-
 
 
                         <p class="microcopy">
@@ -1792,25 +1437,17 @@ function renderHostGame() {
 
                         </p>
 
-
                     </div>
 
 
-
-                    <!-- =======================================
-                         HOST ANSWER BOARD
-                         ======================================= -->
+                    <!-- ANSWER BOARD -->
 
                     <div class="sectionlabel answerlabel">
-
                         ANSWER BOARD · HOST VIEW
-
                     </div>
-
 
 
                     <div class="answerjudge">
-
 
                         ${
                             question.answers.map(
@@ -1819,206 +1456,123 @@ function renderHostGame() {
                                     index
                                 ) => `
 
-
                                     <div
-
                                         class="
                                             judgeRow
-
                                             ${
                                                 game.revealed.includes(
                                                     index
                                                 )
-
                                                     ? 'correct'
-
                                                     : ''
                                             }
                                         "
                                     >
 
-
                                         <span class="answerNum">
-
                                             ${index + 1}
-
                                         </span>
 
-
-
                                         <b>
-
                                             ${esc(
                                                 answer[0]
                                             )}
-
                                         </b>
 
-
-
                                         <em>
-
-                                            ${answer[1]}
-                                            pts
-
+                                            ${answer[1]} pts
                                         </em>
 
-
-
                                         <button
-
                                             class="judge yes"
-
                                             data-correct="${index}"
-
                                             title="Correct answer"
                                         >
-
                                             ✓
-
                                         </button>
-
-
 
                                         <button
-
                                             class="judge no"
-
                                             data-wrong="${index}"
-
                                             title="Incorrect answer"
                                         >
-
                                             ✕
-
                                         </button>
 
-
                                     </div>
-
 
                                 `
 
                             ).join('')
                         }
 
-
                     </div>
 
 
-
-                    <!-- =======================================
-                         ROUND BANK
-                         ======================================= -->
+                    <!-- BANK -->
 
                     <div class="bankline">
 
-
                         <span>
-
                             Round Bank
-
                         </span>
 
-
                         <strong>
-
                             ${game.bank}
-
                         </strong>
-
 
                     </div>
 
 
-
-                    <!-- =======================================
-                         QUESTION NAVIGATION
-                         ======================================= -->
+                    <!-- NAVIGATION -->
 
                     <div class="roundnav">
 
-
                         <button
-
                             id="prevQ"
-
                             ${
                                 game.current === 0
-
                                     ? 'disabled'
-
                                     : ''
                             }
                         >
-
                             ← Previous
-
                         </button>
 
-
-
                         <button
-
                             id="resetRound"
-
                             class="ghost"
                         >
-
                             Reset Question
-
                         </button>
 
-
-
                         <button
-
                             id="nextQ"
-
                             ${
                                 game.current ===
                                 game.questions.length - 1
-
                                     ? 'disabled'
-
                                     : ''
                             }
                         >
-
                             Next →
-
                         </button>
 
-
                     </div>
-
 
                 </section>
 
 
-
-                <!-- ===========================================
-                     RIGHT SIDE
-                     GAME CONTROL
-                     =========================================== -->
+                <!-- GAME CONTROL -->
 
                 <aside class="panel scorepanel">
 
-
                     <h2>
-
                         Game Control
-
                     </h2>
 
 
-
-                    <!-- =======================================
-                         TEAM SCORES
-                         ======================================= -->
-
                     <div class="teamscorelist">
-
 
                         ${
                             game.teams.map(
@@ -2027,127 +1581,81 @@ function renderHostGame() {
                                     index
                                 ) => `
 
-
                                     <div
-
                                         class="
                                             teamctl
-
                                             ${
                                                 game.activeTeam === index
-
                                                     ? 'answering'
-
                                                     : ''
                                             }
                                         "
                                     >
 
-
                                         <input
-
                                             value="${esc(
                                                 team.name
                                             )}"
-
                                             data-teamname="${index}"
-
                                             maxlength="24"
                                         >
 
-
-
                                         <strong>
-
                                             ${team.score}
-
                                         </strong>
-
-
 
                                         <div>
 
-
                                             <button
-
                                                 data-award="${index}"
                                             >
-
                                                 + Bank
-
                                             </button>
 
-
-
                                             <button
-
                                                 class="ghost"
-
                                                 data-adjust="${index}"
-
                                                 data-delta="10"
                                             >
-
                                                 +10
-
                                             </button>
-
-
 
                                             <button
-
                                                 class="ghost"
-
                                                 data-adjust="${index}"
-
                                                 data-delta="-10"
                                             >
-
                                                 −10
-
                                             </button>
-
 
                                         </div>
 
-
                                     </div>
-
 
                                 `
 
                             ).join('')
                         }
 
-
                     </div>
 
 
-
-                    <!-- =======================================
-                         STRIKE BOARD
-                         ======================================= -->
+                    <!-- STRIKES -->
 
                     <div class="strikectl">
 
-
                         <span>
-
                             Strike Board
-
                         </span>
 
 
-
                         <div class="xs">
-
 
                             ${
                                 '✕'.repeat(
                                     game.strikes
                                 )
                             }
-
 
                             ${
                                 '○'.repeat(
@@ -2156,230 +1664,148 @@ function renderHostGame() {
                                 )
                             }
 
-
                         </div>
-
 
 
                         <p>
 
-
                             ${
                                 game.activeTeam !== null
 
-                                    ?
-
-                                    `${esc(
+                                    ? `${esc(
                                         game.teams[
                                             game.activeTeam
                                         ].name
                                     )} is answering`
 
-                                    :
-
-                                    'Select an answering team'
+                                    : 'Select an answering team'
                             }
 
-
                         </p>
-
 
 
                         <button
                             id="addStrike"
                         >
-
                             Manual Strike
-
                         </button>
-
 
 
                         <button
-
                             id="clearStrike"
-
                             class="ghost"
                         >
-
                             Clear Strikes
-
                         </button>
-
 
                     </div>
 
 
-
-                    <!-- =======================================
-                         RECENT CALLS
-                         ======================================= -->
+                    <!-- RECENT CALLS -->
 
                     <div class="attempts">
 
-
                         <h3>
-
                             Recent Calls
-
                         </h3>
-
 
 
                         ${
                             game.attemptLog.length
 
-                                ?
+                                ? game.attemptLog
 
-                                game.attemptLog
-
-                                    .slice(
-                                        -5
-                                    )
+                                    .slice(-5)
 
                                     .reverse()
 
                                     .map(
                                         attempt => `
 
-
                                             <div>
 
-
                                                 <span>
-
                                                     ${
                                                         attempt.ok
-
                                                             ? '✓'
-
                                                             : '✕'
                                                     }
-
                                                 </span>
 
-
-
                                                 <b>
-
                                                     ${esc(
                                                         attempt.team
                                                     )}
-
                                                 </b>
-
-
 
                                                 <small>
 
-
                                                     ${
                                                         attempt.ok
-
-                                                            ?
-
-                                                            esc(
+                                                            ? esc(
                                                                 attempt.answer
                                                             )
-
-                                                            :
-
-                                                            'Strike'
+                                                            : 'Strike'
                                                     }
-
 
                                                 </small>
 
-
                                             </div>
-
 
                                         `
 
                                     ).join('')
 
-                                :
-
-                                `
+                                : `
 
                                     <p class="microcopy">
-
                                         Correct answers and strikes will appear here.
-
                                     </p>
 
                                 `
                         }
 
-
                     </div>
 
 
-
-                    <!-- =======================================
-                         FACILITATOR NOTE
-                         ======================================= -->
+                    <!-- FACILITATOR NOTE -->
 
                     <div class="facilitator">
 
-
                         <h3>
-
                             Facilitator Note
-
                         </h3>
 
-
                         <p>
-
                             ${esc(
                                 question.note || ''
                             )}
-
                         </p>
-
 
                     </div>
 
 
-
-                    <!-- =======================================
-                         HOST FOOTER
-                         ======================================= -->
-
                     <div class="hostfooter">
-
 
                         <button
                             id="openProjector"
                         >
-
                             Open Projector ↗
-
                         </button>
-
-
 
                         <button
-
                             id="homeBtn"
-
                             class="ghost"
                         >
-
                             Saved Games
-
                         </button>
 
-
                     </div>
-
 
                 </aside>
 
 
             </div>
-
 
         </section>
 
@@ -2400,19 +1826,13 @@ function renderHostGame() {
                     mutate(
                         game => {
 
-
                             const index =
                                 +button.dataset.buzz;
 
-
                             game.activeTeam =
-
                                 game.activeTeam === index
-
                                     ? null
-
                                     : index;
-
 
                         }
                     );
@@ -2435,10 +1855,8 @@ function renderHostGame() {
                     mutate(
                         game => {
 
-
                             const index =
                                 +button.dataset.correct;
-
 
                             const question =
                                 game.questions[
@@ -2446,16 +1864,11 @@ function renderHostGame() {
                                 ];
 
 
-                            /* ---------------------------------
-                               ONLY ADD POINTS ON FIRST REVEAL
-                               --------------------------------- */
-
                             if (
                                 !game.revealed.includes(
                                     index
                                 )
                             ) {
-
 
                                 game.revealed.push(
                                     index
@@ -2463,58 +1876,39 @@ function renderHostGame() {
 
 
                                 game.bank =
-
                                     game.revealed.reduce(
-
                                         (
                                             total,
                                             answerIndex
                                         ) =>
-
                                             total +
-
                                             (
                                                 question.answers[
                                                     answerIndex
                                                 ]?.[1]
-
                                                 ||
-
                                                 0
                                             ),
-
                                         0
-
                                     );
 
                             }
 
 
-                            /* ---------------------------------
-                               RECORD CALL
-                               --------------------------------- */
-
                             game.attemptLog.push({
 
-                                ok:
-                                    true,
+                                ok: true,
 
                                 team:
-
                                     game.activeTeam !== null
 
-                                        ?
-
-                                        game.teams[
+                                        ? game.teams[
                                             game.activeTeam
                                         ].name
 
-                                        :
-
-                                        'Unassigned',
+                                        : 'Unassigned',
 
                                 answer:
-
                                     question.answers[
                                         index
                                     ][0],
@@ -2523,7 +1917,6 @@ function renderHostGame() {
                                     Date.now()
 
                             });
-
 
                         }
                     );
@@ -2534,7 +1927,6 @@ function renderHostGame() {
 
     /* =========================================================
        WRONG ANSWER
-       AUTOMATICALLY CREATES STRIKE
        ========================================================= */
 
     $$(
@@ -2547,42 +1939,30 @@ function renderHostGame() {
                     mutate(
                         game => {
 
-
                             game.strikes =
-
                                 Math.min(
-
                                     3,
-
                                     game.strikes + 1
-
                                 );
 
 
                             game.attemptLog.push({
 
-                                ok:
-                                    false,
+                                ok: false,
 
                                 team:
-
                                     game.activeTeam !== null
 
-                                        ?
-
-                                        game.teams[
+                                        ? game.teams[
                                             game.activeTeam
                                         ].name
 
-                                        :
-
-                                        'Unassigned',
+                                        : 'Unassigned',
 
                                 time:
                                     Date.now()
 
                             });
-
 
                         }
                     );
@@ -2592,7 +1972,7 @@ function renderHostGame() {
 
 
     /* =========================================================
-       AWARD CURRENT BANK
+       AWARD BANK
        ========================================================= */
 
     $$(
@@ -2605,12 +1985,10 @@ function renderHostGame() {
                     mutate(
                         game => {
 
-
                             game.teams[
                                 +button.dataset.award
                             ].score +=
                                 game.bank;
-
 
                         }
                     );
@@ -2620,7 +1998,7 @@ function renderHostGame() {
 
 
     /* =========================================================
-       MANUAL SCORE ADJUSTMENT
+       SCORE ADJUSTMENT
        ========================================================= */
 
     $$(
@@ -2633,27 +2011,19 @@ function renderHostGame() {
                     mutate(
                         game => {
 
-
                             const team =
                                 game.teams[
                                     +button.dataset.adjust
                                 ];
 
-
                             team.score =
-
                                 Math.max(
-
                                     0,
-
                                     team.score +
-
                                     (
                                         +button.dataset.delta
                                     )
-
                                 );
-
 
                         }
                     );
@@ -2663,7 +2033,7 @@ function renderHostGame() {
 
 
     /* =========================================================
-       CHANGE TEAM NAME
+       TEAM NAME
        ========================================================= */
 
     $$(
@@ -2676,21 +2046,15 @@ function renderHostGame() {
                     mutate(
                         game => {
 
-
                             const index =
                                 +input.dataset.teamname;
-
 
                             game.teams[
                                 index
                             ].name =
-
                                 input.value.trim()
-
                                 ||
-
                                 `Team ${index + 1}`;
-
 
                         }
                     );
@@ -2708,42 +2072,30 @@ function renderHostGame() {
             mutate(
                 game => {
 
-
                     game.strikes =
-
                         Math.min(
-
                             3,
-
                             game.strikes + 1
-
                         );
 
 
                     game.attemptLog.push({
 
-                        ok:
-                            false,
+                        ok: false,
 
                         team:
-
                             game.activeTeam !== null
 
-                                ?
-
-                                game.teams[
+                                ? game.teams[
                                     game.activeTeam
                                 ].name
 
-                                :
-
-                                'Unassigned',
+                                : 'Unassigned',
 
                         time:
                             Date.now()
 
                     });
-
 
                 }
             );
@@ -2758,17 +2110,14 @@ function renderHostGame() {
             mutate(
                 game => {
 
-
-                    game.strikes =
-                        0;
-
+                    game.strikes = 0;
 
                 }
             );
 
 
     /* =========================================================
-       RESET CURRENT QUESTION
+       RESET QUESTION
        ========================================================= */
 
     $('#resetRound').onclick =
@@ -2788,26 +2137,15 @@ function renderHostGame() {
             mutate(
                 game => {
 
+                    game.revealed = [];
 
-                    game.revealed =
-                        [];
+                    game.strikes = 0;
 
+                    game.bank = 0;
 
-                    game.strikes =
-                        0;
+                    game.activeTeam = null;
 
-
-                    game.bank =
-                        0;
-
-
-                    game.activeTeam =
-                        null;
-
-
-                    game.attemptLog =
-                        [];
-
+                    game.attemptLog = [];
 
                 }
             );
@@ -2824,29 +2162,17 @@ function renderHostGame() {
             mutate(
                 game => {
 
-
                     game.current--;
 
+                    game.revealed = [];
 
-                    game.revealed =
-                        [];
+                    game.strikes = 0;
 
+                    game.bank = 0;
 
-                    game.strikes =
-                        0;
+                    game.activeTeam = null;
 
-
-                    game.bank =
-                        0;
-
-
-                    game.activeTeam =
-                        null;
-
-
-                    game.attemptLog =
-                        [];
-
+                    game.attemptLog = [];
 
                 }
             );
@@ -2861,29 +2187,17 @@ function renderHostGame() {
             mutate(
                 game => {
 
-
                     game.current++;
 
+                    game.revealed = [];
 
-                    game.revealed =
-                        [];
+                    game.strikes = 0;
 
+                    game.bank = 0;
 
-                    game.strikes =
-                        0;
+                    game.activeTeam = null;
 
-
-                    game.bank =
-                        0;
-
-
-                    game.activeTeam =
-                        null;
-
-
-                    game.attemptLog =
-                        [];
-
+                    game.attemptLog = [];
 
                 }
             );
@@ -2895,37 +2209,27 @@ function renderHostGame() {
 
     $('#openProjector').onclick =
         () =>
-
             window.open(
-
                 'index.html',
-
                 'citfeudprojector'
-
             );
 
 
     /* =========================================================
-       RETURN TO SAVE SCREEN
+       HOME
        ========================================================= */
 
     $('#homeBtn').onclick =
         renderHostHome;
 
 
-    /* =========================================================
-       MAKE SURE PROJECTOR HAS CURRENT STATE
-       ========================================================= */
-
-    notify(
-        game
-    );
+    notify(game);
 
 }
 
 
 /* =============================================================
-   PROJECTOR
+   PROJECTOR DISPLAY
    ============================================================= */
 
 function renderProjector(
@@ -2948,39 +2252,25 @@ function renderProjector(
 
     if (!game) {
 
-
         root.innerHTML = `
-
 
             <section class="waiting">
 
-
                 <div class="eyebrow">
-
                     CRISIS INTERVENTION TRAINING
-
                 </div>
 
-
                 <h1>
-
                     CIT <b>FEUD</b>
-
                 </h1>
 
-
                 <p>
-
                     Waiting for the host to start or resume a game…
-
                 </p>
-
 
             </section>
 
-
         `;
-
 
         return;
 
@@ -2999,83 +2289,54 @@ function renderProjector(
 
     root.innerHTML = `
 
-
         <section class="stage">
 
 
-            <!-- ===============================================
-                 HEADER
-                 =============================================== -->
-
             <header>
-
 
                 <div>
 
-
                     <div class="eyebrow">
-
                         CRISIS INTERVENTION TRAINING
-
                     </div>
 
-
                     <h1>
-
                         CIT <b>FEUD</b>
-
                     </h1>
 
-
                 </div>
-
 
 
                 <div class="roundbadge">
 
-
                     QUESTION
                     ${game.current + 1}
 
-
                     <small>
-
                         ${esc(
                             question.title
                         )}
-
                     </small>
 
-
                 </div>
-
 
             </header>
 
 
-
-            <!-- ===============================================
-                 QUESTION
-                 =============================================== -->
+            <!-- QUESTION -->
 
             <div class="prompt">
-
 
                 ${esc(
                     question.prompt
                 )}
 
-
             </div>
 
 
-
-            <!-- ===============================================
-                 ANSWER BOARD
-                 =============================================== -->
+            <!-- ANSWERS -->
 
             <div class="projectorAnswers">
-
 
                 ${
                     question.answers.map(
@@ -3084,146 +2345,103 @@ function renderProjector(
                             index
                         ) => `
 
-
                             <div
-
                                 class="
                                     tile
-
                                     ${
                                         game.revealed.includes(
                                             index
                                         )
-
                                             ? 'revealed'
-
                                             : ''
                                     }
                                 "
                             >
 
-
                                 <span>
-
                                     ${index + 1}
-
                                 </span>
-
 
 
                                 <b>
 
-
                                     ${
                                         game.revealed.includes(
                                             index
                                         )
 
-                                            ?
-
-                                            esc(
+                                            ? esc(
                                                 answer[0]
                                             )
 
-                                            :
-
-                                            ''
+                                            : ''
                                     }
-
 
                                 </b>
 
 
-
                                 <em>
-
 
                                     ${
                                         game.revealed.includes(
                                             index
                                         )
 
-                                            ?
+                                            ? answer[1]
 
-                                            answer[1]
-
-                                            :
-
-                                            ''
+                                            : ''
                                     }
-
 
                                 </em>
 
-
                             </div>
-
 
                         `
 
                     ).join('')
                 }
 
-
             </div>
 
 
-
-            <!-- ===============================================
-                 STRIKE BOARD
-                 =============================================== -->
+            <!-- STRIKES -->
 
             <div class="strikebar">
 
-
                 ${
                     Array.from(
-
                         {
                             length: 3
                         },
-
                         (
                             _,
                             index
                         ) => `
 
-
                             <span
-
                                 class="
                                     ${
                                         index <
                                         game.strikes
-
                                             ? 'hot'
-
                                             : ''
                                     }
                                 "
                             >
-
                                 ✕
-
                             </span>
-
 
                         `
 
                     ).join('')
                 }
 
-
             </div>
 
 
-
-            <!-- ===============================================
-                 TEAM SCOREBOARD
-                 =============================================== -->
+            <!-- SCORES -->
 
             <footer class="projectorScores">
-
 
                 ${
                     game.teams.map(
@@ -3232,74 +2450,51 @@ function renderProjector(
                             index
                         ) => `
 
-
                             <div
-
                                 class="
                                     ${
                                         game.activeTeam === index
-
                                             ? 'activeAnswerer'
-
                                             : ''
                                     }
                                 "
                             >
 
-
                                 <span>
-
                                     ${esc(
                                         team.name
                                     )}
-
                                 </span>
 
-
-
                                 <strong>
-
                                     ${team.score}
-
                                 </strong>
-
-
 
                                 ${
                                     game.activeTeam === index
 
-                                        ?
-
-                                        `
+                                        ? `
 
                                             <small>
-
                                                 ANSWERING
-
                                             </small>
 
                                         `
 
-                                        :
-
-                                        ''
+                                        : ''
                                 }
 
-
                             </div>
-
 
                         `
 
                     ).join('')
                 }
 
-
             </footer>
 
 
         </section>
-
 
     `;
 
@@ -3307,33 +2502,143 @@ function renderProjector(
 
 
 /* =============================================================
+   ADMIN / HOST ACCESS BUTTON
+
+   This is intentionally generated by JavaScript.
+
+   It appears ONLY on the projector page and remains available
+   whether a game is active or not.
+
+   Clicking it opens host.html in a new tab/window.
+   ============================================================= */
+
+function createAdminButton() {
+
+    /* Only place this button on the projector page */
+
+    if (
+        !document.body
+            .classList
+            .contains('projector')
+    ) {
+
+        return;
+
+    }
+
+
+    /* Do not create duplicates */
+
+    if (
+        document.querySelector(
+            '.admin-corner'
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const button =
+        document.createElement(
+            'a'
+        );
+
+
+    button.href =
+        'host.html';
+
+
+    button.target =
+        '_blank';
+
+
+    button.rel =
+        'noopener';
+
+
+    button.className =
+        'admin-corner';
+
+
+    button.title =
+        'Open Host Controls';
+
+
+    button.setAttribute(
+        'aria-label',
+        'Open Host Controls'
+    );
+
+
+    /* =========================================================
+       USER ICON
+
+       SVG is used instead of an emoji so the icon looks the
+       same across Windows, Chrome, Edge and the projector.
+       ========================================================= */
+
+    button.innerHTML = `
+
+        <svg
+            class="admin-user-icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+
+            <circle
+                cx="12"
+                cy="8"
+                r="4"
+            ></circle>
+
+            <path
+                d="M4.5 20c.7-4.2 3.2-6.3 7.5-6.3s6.8 2.1 7.5 6.3"
+            ></path>
+
+        </svg>
+
+
+        <span
+            class="admin-settings-icon"
+            aria-hidden="true"
+        >
+            ⚙
+        </span>
+
+    `;
+
+
+    document.body.appendChild(
+        button
+    );
+
+}
+
+
+/* =============================================================
    PAGE STARTUP
 
-   host.html has:
+   host.html:
    <body class="host">
 
-   index.html has:
+   index.html:
    <body class="projector">
    ============================================================= */
 
 if (
     document.body
         .classList
-        .contains(
-            'host'
-        )
+        .contains('host')
 ) {
-
 
     renderHostHome();
 
-
-}
-
-else {
-
+} else {
 
     renderProjector();
 
+    createAdminButton();
 
 }
