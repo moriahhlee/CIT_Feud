@@ -1,0 +1,55 @@
+name: Build Gamepack Manifest
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Gamepacks/**"
+      - ".github/workflows/build-gamepacks.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-manifest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Generate gamepack manifest
+        shell: bash
+        run: |
+          echo "/* AUTO-GENERATED FILE - DO NOT EDIT MANUALLY */" > Gamepacks/manifest.js
+          echo "" >> Gamepacks/manifest.js
+          echo "window.CIT_FEUD_PACK_FILES = [" >> Gamepacks/manifest.js
+
+          find Gamepacks \
+            -maxdepth 1 \
+            -type f \
+            -name "*.js" \
+            ! -name "manifest.js" \
+            -printf "%f\n" \
+            | sort \
+            | while read file; do
+                echo "    '$file'," >> Gamepacks/manifest.js
+              done
+
+          echo "];" >> Gamepacks/manifest.js
+
+      - name: Commit updated manifest
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add Gamepacks/manifest.js
+
+          if git diff --cached --quiet; then
+            echo "Manifest is already current."
+          else
+            git commit -m "Automatically update gamepack manifest"
+            git push
+          fi
