@@ -524,7 +524,7 @@ function renderHostHome() {
                 </h1>
 
                 <p>
-                    Control Room
+                    Facilitator Control Room
                 </p>
 
             </div>
@@ -535,13 +535,8 @@ function renderHostHome() {
                 <div class="panel">
 
                     <h2>
-                        New Game
+                        Saved Games
                     </h2>
-
-                    <p>
-                        Choose an empty slot
-                        or replace an existing save.
-                    </p>
 
 
                     <div class="slots">
@@ -569,10 +564,6 @@ function renderHostHome() {
                                             <p>
                                                 ${esc(game.date)}
                                                 ·
-                                                ${game.teams.length}
-                                                teams
-                                                ·
-                                                Round
                                                 ${(game.current || 0) + 1}
                                                 /
                                                 ${game.questions.length}
@@ -848,7 +839,9 @@ function renderSetup(slot) {
 
                 <h2>
                     Question Packs
-               </h2>
+                </h2>
+
+
                 <div
                     id="packChoices"
                     class="packchoices"
@@ -947,11 +940,10 @@ function renderSetup(slot) {
                     >
                         + Add Team
                     </button>
+                                                </div>
 
-                </div>
 
-
-                <div class="setupActions">
+                <div class="setupactions">
 
                     <button
                         type="button"
@@ -960,7 +952,6 @@ function renderSetup(slot) {
                     >
                         Cancel
                     </button>
-
 
                     <button
                         type="submit"
@@ -988,10 +979,6 @@ function renderSetup(slot) {
 
                     const label =
                         input.closest('label');
-
-                    if (!label) {
-                        return;
-                    }
 
                     const textNode =
                         [...label.childNodes]
@@ -1539,6 +1526,7 @@ function teamMatchupMarkup(game) {
                             class="scoreStep scoreMinus"
                             data-score-minus="${teamIndex}"
                             aria-label="Subtract one point from ${esc(team.name)}"
+                            title="-1"
                         >
                             −
                         </button>
@@ -1547,7 +1535,7 @@ function teamMatchupMarkup(game) {
                         <span
                             class="editableTeamScore"
                             data-edit-score="${teamIndex}"
-                            title="Double-click to set score"
+                            title="Double-click to edit score"
                         >
                             ${team.score}
                         </span>
@@ -1558,6 +1546,7 @@ function teamMatchupMarkup(game) {
                             class="scoreStep scorePlus"
                             data-score-plus="${teamIndex}"
                             aria-label="Add one point to ${esc(team.name)}"
+                            title="+1"
                         >
                             +
                         </button>
@@ -1572,12 +1561,12 @@ function teamMatchupMarkup(game) {
     return `
         <section class="matchupControl">
 
-            <div class="controlSectionHeading">
+            <div class="matchupControlHeader">
 
                 <div>
 
-                    <div class="eyebrow">
-                        WHO IS ANSWERING?
+                    <div class="sectionlabel">
+                        WHO IS ANSWERING
                     </div>
 
                     <h3>
@@ -2004,270 +1993,167 @@ function wireMatchupControls() {
 
 
 /* =============================================================
-   HOST GAME — WHITEBOARD HALF POINTS
+   HOST GAME — WHITEBOARD AWARDS
    ============================================================= */
 
+function whiteboardAwardAmount(game) {
+
+    return Math.floor(
+        (+game.bank || 0) / 2
+    );
+}
+
+
+function awardWhiteboardTeam(
+    teamIndex
+) {
+
+    mutate(
+        game => {
+
+            if (
+                isMatchupTeam(
+                    game,
+                    teamIndex
+                )
+            ) {
+                return;
+            }
+
+
+            if (
+                game.whiteboardAwards[
+                    teamIndex
+                ]
+            ) {
+                return;
+            }
+
+
+            const amount =
+                whiteboardAwardAmount(game);
+
+
+            if (amount <= 0) {
+                return;
+            }
+
+
+            const team =
+                game.teams[
+                    teamIndex
+                ];
+
+
+            if (!team) {
+                return;
+            }
+
+
+            team.score +=
+                amount;
+
+
+            game.whiteboardAwards[
+                teamIndex
+            ] = amount;
+        }
+    );
+}
+
+
 function whiteboardMarkup(game) {
-
-    if (game.teams.length <= 2) {
-        return '';
-    }
-
 
     const active =
         activeMatchupTeams(game);
 
 
-    const waiting =
-        game.matchupOrder.filter(
-            index =>
-                !active.includes(index)
-        );
+    const otherTeams =
+        game.teams
+            .map(
+                (team, index) => ({
+                    team,
+                    index
+                })
+            )
+            .filter(
+                item =>
+                    !active.includes(
+                        item.index
+                    )
+            );
 
 
-    if (!waiting.length) {
+    if (!otherTeams.length) {
         return '';
     }
 
 
-    return `
-        <section class="whiteboardControl">
+    const amount =
+        whiteboardAwardAmount(game);
 
-            <div class="controlSectionHeading">
-
-                <div>
-
-                    <div class="eyebrow">
-                        WHITEBOARD TEAMS
-                    </div>
-
-                    <h3>
-                        Half Points
-                    </h3>
-
-                </div>
-
-
-                <small>
-                    Award half of the current round bank
-                    when a non-competing team answers correctly.
-                </small>
-
-            </div>
-
-
-            <div class="whiteboardTeamGrid">
-
-                ${
-                    waiting.map(
-                        teamIndex => {
-
-                            const team =
-                                game.teams[
-                                    teamIndex
-                                ];
-
-                            const award =
-                                game.whiteboardAwards[
-                                    teamIndex
-                                ] || 0;
-
-
-                            return `
-                                <button
-                                    type="button"
-                                    class="
-                                        whiteboardTeam
-                                        ${
-                                            award
-                                                ? 'awarded'
-                                                : ''
-                                        }
-                                    "
-                                    data-whiteboard="${teamIndex}"
-                                >
-
-                                    <span>
-                                        ${esc(team.name)}
-                                    </span>
-
-                                    <strong>
-                                        ${
-                                            award
-                                                ? `+${award}`
-                                                : '½ Bank'
-                                        }
-                                    </strong>
-
-                                </button>
-                            `;
-                        }
-                    ).join('')
-                }
-
-            </div>
-
-        </section>
-    `;
-}
-
-
-function wireWhiteboardControls() {
-
-    $$('[data-whiteboard]')
-        .forEach(
-            button => {
-
-                button.onclick =
-                    () => {
-
-                        const teamIndex =
-                            +button.dataset.whiteboard;
-
-
-                        mutate(
-                            game => {
-
-                                if (
-                                    isMatchupTeam(
-                                        game,
-                                        teamIndex
-                                    )
-                                ) {
-                                    return;
-                                }
-
-
-                                if (
-                                    game.whiteboardAwards[
-                                        teamIndex
-                                    ]
-                                ) {
-                                    return;
-                                }
-
-
-                                const award =
-                                    Math.floor(
-                                        (+game.bank || 0) /
-                                        2
-                                    );
-
-
-                                if (award <= 0) {
-
-                                    alert(
-                                        'There are no round points in the bank yet.'
-                                    );
-
-                                    return;
-                                }
-
-
-                                game.teams[
-                                    teamIndex
-                                ].score +=
-                                    award;
-
-
-                                game.whiteboardAwards[
-                                    teamIndex
-                                ] =
-                                    award;
-                            }
-                        );
-                    };
-            }
-        );
-}
-
-
-/* =============================================================
-   HOST GAME — ANSWERS
-   ============================================================= */
-
-function answerControlMarkup(
-    game,
-    question
-) {
 
     return `
-        <section class="answerControl">
+        <section class="whiteboardSection">
 
-            <div class="controlSectionHeading">
-
-                <div>
-
-                    <div class="eyebrow">
-                        ANSWER BOARD
-                    </div>
-
-                    <h3>
-                        Reveal Answers
-                    </h3>
-
-                </div>
-
-
-                <div class="roundBankDisplay">
-
-                    <small>
-                        ROUND BANK
-                    </small>
-
-                    <strong>
-                        ${game.bank}
-                    </strong>
-
-                </div>
-
+            <div class="sectionlabel">
+                WHITEBOARD ANSWERS
             </div>
 
 
-            <div class="hostAnswers">
+            <p class="microcopy">
+                Non-competing teams can earn
+                half the current bank for a
+                correct whiteboard answer.
+            </p>
+
+
+            <div class="whiteboardTeams">
 
                 ${
-                    question.answers
+                    otherTeams
                         .map(
-                            (
-                                answer,
+                            ({
+                                team,
                                 index
-                            ) => {
+                            }) => {
 
-                                const revealed =
-                                    game.revealed
-                                        .includes(index);
+                                const awarded =
+                                    game.whiteboardAwards[
+                                        index
+                                    ];
 
 
                                 return `
                                     <button
                                         type="button"
                                         class="
-                                            hostAnswer
+                                            whiteboardAward
                                             ${
-                                                revealed
-                                                    ? 'revealed'
+                                                awarded
+                                                    ? 'awarded'
                                                     : ''
                                             }
                                         "
-                                        data-answer="${index}"
+                                        data-whiteboard="${index}"
                                         ${
-                                            revealed
+                                            awarded ||
+                                            amount <= 0
                                                 ? 'disabled'
                                                 : ''
                                         }
                                     >
 
-                                        <span class="hostAnswerNumber">
-                                            ${index + 1}
+                                        <span>
+                                            ${esc(team.name)}
                                         </span>
 
-                                        <span class="hostAnswerText">
-                                            ${esc(answer[0])}
-                                        </span>
-
-                                        <strong class="hostAnswerPoints">
-                                            ${answer[1]}
+                                        <strong>
+                                            ${
+                                                awarded
+                                                    ? `+${awarded}`
+                                                    : `+${amount}`
+                                            }
                                         </strong>
 
                                     </button>
@@ -2284,36 +2170,60 @@ function answerControlMarkup(
 }
 
 
+/* =============================================================
+   HOST GAME — ANSWER JUDGING
+   ============================================================= */
+
 function revealAnswer(
     answerIndex
 ) {
 
+    const current =
+        normalizeGame(live());
+
+
+    if (!current) {
+        return;
+    }
+
+
+    const question =
+        currentQuestion(current);
+
+
+    if (
+        !question ||
+        !question.answers[
+            answerIndex
+        ]
+    ) {
+        return;
+    }
+
+
+    const alreadyRevealed =
+        current.revealed
+            .includes(answerIndex);
+
+
+    if (alreadyRevealed) {
+        return;
+    }
+
+
+    const points =
+        +question.answers[
+            answerIndex
+        ][1] || 0;
+
+
     mutate(
         game => {
 
-            const question =
-                currentQuestion(game);
-
-            if (!question) {
-                return;
-            }
-
-
             if (
-                game.revealed.includes(
-                    answerIndex
-                )
+                game.revealed
+                    .includes(answerIndex)
             ) {
-                return;
-            }
-
-
-            const answer =
-                question.answers[
-                    answerIndex
-                ];
-
-            if (!answer) {
                 return;
             }
 
@@ -2323,11 +2233,8 @@ function revealAnswer(
             );
 
 
-            const points =
-                +answer[1] || 0;
-
-
-            game.bank += points;
+            game.bank +=
+                points;
 
 
             if (
@@ -2338,10 +2245,24 @@ function revealAnswer(
                     game.controllingTeam
                 ]
             ) {
+
                 game.teams[
                     game.controllingTeam
-                ].score += points;
+                ].score +=
+                    points;
             }
+
+
+            game.attemptLog.push({
+                type: 'correct',
+                answerIndex,
+                team:
+                    game.controllingTeam,
+                points,
+                time:
+                    new Date()
+                        .toISOString()
+            });
 
         },
         {
@@ -2352,11 +2273,7 @@ function revealAnswer(
 }
 
 
-/* =============================================================
-   HOST GAME — STRIKES
-   ============================================================= */
-
-function addStrike() {
+function markIncorrect() {
 
     mutate(
         game => {
@@ -2366,6 +2283,17 @@ function addStrike() {
                     3,
                     (+game.strikes || 0) + 1
                 );
+
+
+            game.attemptLog.push({
+                type: 'incorrect',
+                team:
+                    game.controllingTeam,
+                time:
+                    new Date()
+                        .toISOString()
+            });
+
         },
         {
             type: 'incorrect'
@@ -2374,7 +2302,7 @@ function addStrike() {
 }
 
 
-function removeStrike() {
+function clearStrike() {
 
     mutate(
         game => {
@@ -2399,23 +2327,26 @@ function stealTeamIndex(game) {
         activeMatchupTeams(game);
 
 
-    if (active.length < 2) {
+    if (
+        active.length < 2
+    ) {
         return null;
     }
 
 
     if (
-        Number.isInteger(
-            game.controllingTeam
-        )
+        game.controllingTeam ===
+        active[0]
     ) {
-        return (
-            active.find(
-                index =>
-                    index !==
-                    game.controllingTeam
-            ) ?? null
-        );
+        return active[1];
+    }
+
+
+    if (
+        game.controllingTeam ===
+        active[1]
+    ) {
+        return active[0];
     }
 
 
@@ -2424,89 +2355,90 @@ function stealTeamIndex(game) {
 
 
 function awardSteal(
-    success
+    successful
 ) {
 
     mutate(
         game => {
 
-            if (game.stealAwarded) {
-                return;
-            }
-
-
-            const controller =
-                game.controllingTeam;
-
-
-            const stealing =
-                stealTeamIndex(game);
-
-
             if (
-                !Number.isInteger(
-                    stealing
-                ) ||
-                !game.teams[stealing]
+                game.stealAwarded
             ) {
                 return;
             }
 
 
-            game.stealResults = {
-                team: stealing,
-                success:
-                    Boolean(success)
-            };
+            const stealingTeam =
+                stealTeamIndex(game);
 
 
-            if (success) {
+            if (
+                !Number.isInteger(
+                    stealingTeam
+                ) ||
+                !game.teams[
+                    stealingTeam
+                ]
+            ) {
+                return;
+            }
 
-                const amount =
-                    Math.max(
-                        0,
-                        +game.bank || 0
-                    );
 
+            const bank =
+                +game.bank || 0;
+
+
+            if (successful) {
 
                 if (
                     Number.isInteger(
-                        controller
+                        game.controllingTeam
                     ) &&
                     game.teams[
-                        controller
+                        game.controllingTeam
                     ]
                 ) {
+
                     game.teams[
-                        controller
+                        game.controllingTeam
                     ].score =
                         Math.max(
                             0,
                             game.teams[
-                                controller
-                            ].score -
-                            amount
+                                game.controllingTeam
+                            ].score - bank
                         );
                 }
 
 
                 game.teams[
-                    stealing
+                    stealingTeam
                 ].score +=
-                    amount;
+                    bank;
+
+
+                game.stealResults = {
+                    successful: true,
+                    team:
+                        stealingTeam,
+                    points:
+                        bank
+                };
+
+            } else {
+
+                game.stealResults = {
+                    successful: false,
+                    team:
+                        stealingTeam,
+                    points: 0
+                };
             }
 
 
             game.stealAwarded =
                 true;
-        },
-        success
-            ? {
-                type: 'correct'
-            }
-            : {
-                type: 'incorrect'
-            }
+        }
     );
 }
 
@@ -2515,39 +2447,14 @@ function awardSteal(
    HOST GAME — ROUND NAVIGATION
    ============================================================= */
 
-function nextRound() {
-
-    mutate(
-        game => {
-
-            if (
-                game.current >=
-                game.questions.length - 1
-            ) {
-                return;
-            }
-
-
-            game.current += 1;
-
-            game.round =
-                game.current + 1;
-
-            game.phase =
-                'round';
-
-            resetRoundState(game);
-        }
-    );
-}
-
-
 function previousRound() {
 
     mutate(
         game => {
 
-            if (game.current <= 0) {
+            if (
+                game.current <= 0
+            ) {
                 return;
             }
 
@@ -2566,14 +2473,84 @@ function previousRound() {
 }
 
 
+function nextRound() {
+
+    mutate(
+        game => {
+
+            if (
+                game.current >=
+                game.questions.length - 1
+            ) {
+                game.showScores =
+                    true;
+
+                return;
+            }
+
+
+            game.current += 1;
+
+            game.round =
+                game.current + 1;
+
+            game.phase =
+                'round';
+
+            resetRoundState(game);
+        }
+    );
+}
+
+
+/* =============================================================
+   HOST GAME — PRESENTATION PHASE
+   ============================================================= */
+
+function setPhase(
+    phase
+) {
+
+    mutate(
+        game => {
+
+            game.phase =
+                phase;
+        }
+    );
+}
+
+
+/* =============================================================
+   HOST GAME — SCORE RANKING
+   ============================================================= */
+
+function toggleScores() {
+
+    mutate(
+        game => {
+
+            game.showScores =
+                !game.showScores;
+        }
+    );
+}
+
+
 /* =============================================================
    HOST GAME — RENDER
    ============================================================= */
 
 function renderHostGame() {
 
+    const root =
+        $('#hostApp');
+
+
     const game =
-        normalizeGame(live());
+        normalizeGame(
+            live()
+        );
 
 
     if (!game) {
@@ -2582,10 +2559,6 @@ function renderHostGame() {
 
         return;
     }
-
-
-    const root =
-        $('#hostApp');
 
 
     const question =
@@ -2604,12 +2577,13 @@ function renderHostGame() {
                     </h2>
 
                     <p>
-                        This game does not contain
-                        any playable questions.
+                        Return home and create
+                        a new game with at least
+                        one question pack.
                     </p>
 
                     <button
-                        id="backHome"
+                        id="emptyGameHome"
                     >
                         Home
                     </button>
@@ -2620,7 +2594,7 @@ function renderHostGame() {
         `;
 
 
-        $('#backHome').onclick =
+        $('#emptyGameHome').onclick =
             renderHostHome;
 
 
@@ -2628,80 +2602,74 @@ function renderHostGame() {
     }
 
 
-    const stealingTeam =
+    const active =
+        activeMatchupTeams(game);
+
+
+    const controlling =
+        Number.isInteger(
+            game.controllingTeam
+        )
+            ? game.teams[
+                game.controllingTeam
+            ]
+            : null;
+
+
+    const stealIndex =
         stealTeamIndex(game);
 
 
+    const stealTeam =
+        Number.isInteger(
+            stealIndex
+        )
+            ? game.teams[
+                stealIndex
+            ]
+            : null;
+
+
     root.innerHTML = `
-        <section class="hostGame">
+        <section class="control">
 
-            <header class="hostTopbar">
+            <header class="controltop">
 
-                <div class="hostGameIdentity">
+                <div>
 
                     <div class="eyebrow">
-                        ${esc(game.name)}
+                        CIT FEUD CONTROL ROOM
                     </div>
 
                     <h1>
-                        CIT <b>FEUD</b>
+                        ${esc(game.name)}
                     </h1>
 
-                    <small>
-                        Round
-                        ${game.current + 1}
-                        of
-                        ${game.questions.length}
-                    </small>
+                    <p>
+                        ${esc(game.date)}
+                        ·
+                        Round ${game.round}
+                        of ${game.questions.length}
+                    </p>
 
                 </div>
 
 
-                <div class="hostTopActions">
+                <div class="controlTopActions">
 
-                    <button
-                        type="button"
-                        id="showScores"
-                        class="
-                            iconControl
-                            ${
-                                game.showScores
-                                    ? 'active'
-                                    : ''
-                            }
-                        "
-                        title="Ranked scores"
-                    >
-                        🏆
-                    </button>
-
-
-                    <a
-                        class="iconControl"
-                        href="index.html"
-                        target="_blank"
-                        title="Open projector"
-                    >
-                        ${monitorIcon()}
-                    </a>
+                    <span class="saveok">
+                        AUTO-SAVED
+                    </span>
 
 
                     <button
                         type="button"
+                        class="iconUtility"
                         id="hostFullscreen"
-                        class="iconControl"
                         title="Fullscreen"
+                        aria-label="Fullscreen"
                     >
                         ${fullscreenIcon()}
-                    </button>
-
-
-                    <button
-                        type="button"
-                        id="hostHome"
-                        class="ghost"
-                    >
-                        Home
                     </button>
 
                 </div>
@@ -2709,356 +2677,644 @@ function renderHostGame() {
             </header>
 
 
-            <div class="hostGameGrid">
+            <section
+                class="
+                    panel
+                    presentationControl
+                "
+            >
 
-                <main class="hostMainColumn">
+                <div>
 
-                    <section class="questionControl">
+                    <div class="sectionlabel">
+                        PROJECTOR
+                    </div>
 
-                        <div class="questionMeta">
+                    <strong>
+                        ${phaseLabel(game.phase)}
+                    </strong>
 
-                            <div>
-
-                                <div class="eyebrow">
-                                    ${esc(question.pack || '')}
-                                </div>
-
-                                <h2>
-                                    ${esc(question.title || '')}
-                                </h2>
-
-                            </div>
-
-
-                            ${tags(question.tags)}
-
-                        </div>
+                </div>
 
 
-                        <div class="hostQuestionPrompt">
-                            ${esc(question.prompt)}
-                        </div>
+                <div class="presentationButtons">
+
+                    <button
+                        type="button"
+                        class="
+                            ghost
+                            ${
+                                game.phase ===
+                                'round'
+                                    ? 'active'
+                                    : ''
+                            }
+                        "
+                        data-phase="round"
+                    >
+                        Intro
+                    </button>
 
 
-                        ${
-                            question.objective
-
-                            ? `
-                                <div class="questionObjective">
-
-                                    <strong>
-                                        Objective:
-                                    </strong>
-
-                                    ${esc(question.objective)}
-
-                                </div>
-                            `
-
-                            : ''
-                        }
+                    <button
+                        type="button"
+                        class="
+                            ghost
+                            ${
+                                game.phase ===
+                                'board'
+                                    ? 'active'
+                                    : ''
+                            }
+                        "
+                        data-phase="board"
+                    >
+                        Board
+                    </button>
 
 
-                        ${
-                            question.note
-
-                            ? `
-                                <div class="questionNote">
-                                    ${esc(question.note)}
-                                </div>
-                            `
-
-                            : ''
-                        }
-
-                    </section>
-
-
-                    ${answerControlMarkup(
-                        game,
-                        question
-                    )}
+                    <button
+                        type="button"
+                        class="
+                            ghost
+                            ${
+                                game.phase ===
+                                'question'
+                                    ? 'active'
+                                    : ''
+                            }
+                        "
+                        data-phase="question"
+                    >
+                        Question
+                    </button>
 
 
-                    ${
-                        Array.isArray(
-                            question.talkingPoints
-                        ) &&
-                        question.talkingPoints.length
+                    <button
+                        type="button"
+                        class="
+                            ghost
+                            ${
+                                game.phase ===
+                                'steal'
+                                    ? 'active'
+                                    : ''
+                            }
+                        "
+                        data-phase="steal"
+                    >
+                        Steal
+                    </button>
 
-                        ? `
-                            <section class="talkingPoints">
-
-                                <div class="eyebrow">
-                                    INSTRUCTOR TALKING POINTS
-                                </div>
-
-                                <ul>
-
-                                    ${
-                                        question.talkingPoints
-                                            .map(
-                                                point =>
-                                                    `<li>${esc(point)}</li>`
-                                            )
-                                            .join('')
-                                    }
-
-                                </ul>
-
-                            </section>
-                        `
-
-                        : ''
-                    }
-
-                </main>
+                </div>
 
 
-                <aside class="hostControlColumn">
+                <div class="presentationUtilityButtons">
 
-                    ${teamMatchupMarkup(game)}
+                    <button
+                        type="button"
+                        id="hostScores"
+                        class="ghost scoresButton"
+                        title="Show ranked scores"
+                    >
+                        🏆 Scores
+                    </button>
 
-                    ${whiteboardMarkup(game)}
+
+                    <button
+                        type="button"
+                        id="hostHome"
+                        class="ghost homeButton"
+                        title="Save and return home"
+                    >
+                        ⌂ Home
+                    </button>
+
+                </div>
+
+            </section>
 
 
-                    <section class="presentationControl">
+            <div class="controlgrid">
 
-                        <div class="controlSectionHeading">
+                <main>
 
-                            <div>
+                    <section
+                        class="
+                            panel
+                            boardcontrol
+                        "
+                    >
 
-                                <div class="eyebrow">
-                                    PROJECTOR
-                                </div>
-
-                                <h3>
-                                    Presentation
-                                </h3>
-
-                            </div>
+                        <div class="qmeta">
 
                             <small>
-                                Current:
-                                ${phaseLabel(game.phase)}
+                                ${esc(
+                                    question.pack ||
+                                    ''
+                                )}
+                            </small>
+
+                            <small>
+                                QUESTION
+                                ${game.current + 1}
+                                /
+                                ${game.questions.length}
                             </small>
 
                         </div>
 
 
-                        <div class="presentationButtons">
+                        <h2>
+                            ${esc(question.prompt)}
+                        </h2>
+
+
+                        ${
+                            teamMatchupMarkup(
+                                game
+                            )
+                        }
+
+
+                        <div class="answerlabel sectionlabel">
+                            ANSWERS
+                        </div>
+
+
+                        <div class="answerjudge">
+
+                            ${
+                                question.answers
+                                    .map(
+                                        (
+                                            answer,
+                                            index
+                                        ) => {
+
+                                            const revealed =
+                                                game.revealed
+                                                    .includes(
+                                                        index
+                                                    );
+
+
+                                            return `
+                                                <div
+                                                    class="
+                                                        judgeRow
+                                                        ${
+                                                            revealed
+                                                                ? 'correct'
+                                                                : ''
+                                                        }
+                                                    "
+                                                >
+
+                                                    <span
+                                                        class="answerNum"
+                                                    >
+                                                        ${index + 1}
+                                                    </span>
+
+
+                                                    <strong>
+                                                        ${esc(
+                                                            answer[0]
+                                                        )}
+                                                    </strong>
+
+
+                                                    <em>
+                                                        ${answer[1]}
+                                                    </em>
+
+
+                                                    <button
+                                                        type="button"
+                                                        class="judge yes"
+                                                        data-reveal="${index}"
+                                                        ${
+                                                            revealed
+                                                                ? 'disabled'
+                                                                : ''
+                                                        }
+                                                        title="Correct"
+                                                    >
+                                                        ✓
+                                                    </button>
+
+
+                                                    <button
+                                                        type="button"
+                                                        class="judge no"
+                                                        data-wrong="${index}"
+                                                        title="Incorrect"
+                                                    >
+                                                        ✕
+                                                    </button>
+
+                                                </div>
+                                            `;
+                                        }
+                                    )
+                                    .join('')
+                            }
+
+                        </div>
+
+
+                        <div class="bankline">
+
+                            <span>
+                                ROUND BANK
+                            </span>
+
+                            <strong>
+                                ${game.bank}
+                            </strong>
+
+                        </div>
+
+
+                        ${
+                            whiteboardMarkup(
+                                game
+                            )
+                        }
+
+
+                        ${
+                            game.phase ===
+                            'steal'
+
+                            ? `
+                                <section
+                                    class="stealAwardControl"
+                                >
+
+                                    <div class="sectionlabel">
+                                        STEAL RESULT
+                                    </div>
+
+
+                                    <div
+                                        class="stealAwardSummary"
+                                    >
+
+                                        <div>
+
+                                            <small>
+                                                DEFENDING
+                                            </small>
+
+                                            <strong>
+                                                ${
+                                                    controlling
+                                                        ? esc(
+                                                            controlling.name
+                                                        )
+                                                        : 'Not selected'
+                                                }
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <small>
+                                                STEALING
+                                            </small>
+
+                                            <strong>
+                                                ${
+                                                    stealTeam
+                                                        ? esc(
+                                                            stealTeam.name
+                                                        )
+                                                        : 'Not available'
+                                                }
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <small>
+                                                BANK
+                                            </small>
+
+                                            <strong>
+                                                ${game.bank}
+                                            </strong>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    ${
+                                        game.stealAwarded
+
+                                        ? `
+                                            <p
+                                                class="stealResultMessage"
+                                            >
+                                                ${
+                                                    game.stealResults
+                                                        .successful
+
+                                                        ? `
+                                                            ${
+                                                                esc(
+                                                                    game.teams[
+                                                                        game.stealResults.team
+                                                                    ]?.name ||
+                                                                    'Stealing team'
+                                                                )
+                                                            }
+                                                            won
+                                                            ${game.stealResults.points}
+                                                            points.
+                                                        `
+
+                                                        : `
+                                                            Steal unsuccessful.
+                                                            Scores remain unchanged.
+                                                        `
+                                                }
+                                            </p>
+                                        `
+
+                                        : `
+                                            <div
+                                                class="stealAwardButtons"
+                                            >
+
+                                                <button
+                                                    type="button"
+                                                    id="stealCorrect"
+                                                >
+                                                    ✓ Successful Steal
+                                                </button>
+
+
+                                                <button
+                                                    type="button"
+                                                    id="stealWrong"
+                                                    class="danger"
+                                                >
+                                                    ✕ Failed Steal
+                                                </button>
+
+                                            </div>
+                                        `
+                                    }
+
+                                </section>
+                            `
+
+                            : ''
+                        }
+
+
+                        <div class="roundnav">
 
                             <button
                                 type="button"
-                                id="showRound"
-                                class="${
-                                    game.phase === 'round'
-                                        ? 'active'
+                                id="previousRound"
+                                class="ghost"
+                                ${
+                                    game.current <= 0
+                                        ? 'disabled'
                                         : ''
-                                }"
+                                }
                             >
-                                Round Intro
+                                ← Previous
                             </button>
 
 
                             <button
                                 type="button"
-                                id="showBoard"
-                                class="${
-                                    game.phase === 'board'
-                                        ? 'active'
-                                        : ''
-                                }"
+                                id="nextRound"
                             >
-                                Board
-                            </button>
-
-
-                            <button
-                                type="button"
-                                id="showQuestion"
-                                class="${
-                                    game.phase === 'question'
-                                        ? 'active'
-                                        : ''
-                                }"
-                            >
-                                Question
-                            </button>
-
-
-                            <button
-                                type="button"
-                                id="showSteal"
-                                class="${
-                                    game.phase === 'steal'
-                                        ? 'active'
-                                        : ''
-                                }"
-                            >
-                                Steal
+                                ${
+                                    isFinalRound(game)
+                                        ? 'Final Scores'
+                                        : 'Next Round →'
+                                }
                             </button>
 
                         </div>
 
                     </section>
 
+                </main>
 
-                    <section class="strikeControl">
 
-                        <div class="controlSectionHeading">
+                <aside>
+
+                    <section class="panel">
+
+                        <div class="sectionlabel">
+                            ROUND STATUS
+                        </div>
+
+
+                        <div class="roundStatus">
 
                             <div>
 
-                                <div class="eyebrow">
-                                    STRIKES
-                                </div>
+                                <small>
+                                    CONTROLLING TEAM
+                                </small>
 
-                                <h3>
+                                <strong>
                                     ${
-                                        game.strikes
-                                    } / 3
-                                </h3>
+                                        controlling
+                                            ? esc(
+                                                controlling.name
+                                            )
+                                            : 'Not selected'
+                                    }
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <small>
+                                    STRIKES
+                                </small>
+
+                                <strong>
+                                    ${game.strikes} / 3
+                                </strong>
 
                             </div>
 
                         </div>
 
 
-                        <div class="strikeButtons">
+                        <div class="strikectl">
 
-                            <button
-                                type="button"
-                                id="removeStrike"
-                                class="ghost"
-                            >
-                                − Strike
-                            </button>
+                            <span>
+                                STRIKES
+                            </span>
 
 
-                            <button
-                                type="button"
-                                id="addStrike"
-                                class="danger"
-                            >
-                                + Strike
-                            </button>
+                            <div class="xs">
+
+                                ${
+                                    Array.from(
+                                        {
+                                            length: 3
+                                        },
+                                        (
+                                            _,
+                                            index
+                                        ) =>
+                                            index <
+                                            game.strikes
+                                                ? '✕'
+                                                : '·'
+                                    )
+                                    .join('')
+                                }
+
+                            </div>
+
+
+                            <div class="actions">
+
+                                <button
+                                    type="button"
+                                    id="addStrike"
+                                    class="danger"
+                                >
+                                    + Strike
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    id="removeStrike"
+                                    class="ghost"
+                                    ${
+                                        game.strikes <= 0
+                                            ? 'disabled'
+                                            : ''
+                                    }
+                                >
+                                    − Strike
+                                </button>
+
+                            </div>
 
                         </div>
+
+
+                        ${
+                            game.attemptLog.length
+
+                            ? `
+                                <div class="attempts">
+
+                                    <div class="sectionlabel">
+                                        RECENT CALLS
+                                    </div>
+
+                                    ${
+                                        game.attemptLog
+                                            .slice(-5)
+                                            .reverse()
+                                            .map(
+                                                attempt => {
+
+                                                    const team =
+                                                        Number.isInteger(
+                                                            attempt.team
+                                                        )
+                                                            ? game.teams[
+                                                                attempt.team
+                                                            ]
+                                                            : null;
+
+
+                                                    return `
+                                                        <div>
+
+                                                            <span>
+                                                                ${
+                                                                    attempt.type ===
+                                                                    'correct'
+                                                                        ? '✓'
+                                                                        : '✕'
+                                                                }
+                                                            </span>
+
+                                                            <small>
+                                                                ${
+                                                                    team
+                                                                        ? esc(
+                                                                            team.name
+                                                                        )
+                                                                        : 'No team'
+                                                                }
+                                                            </small>
+
+                                                            <strong>
+                                                                ${
+                                                                    attempt.type ===
+                                                                    'correct'
+                                                                        ? `+${attempt.points}`
+                                                                        : 'Strike'
+                                                                }
+                                                            </strong>
+
+                                                        </div>
+                                                    `;
+                                                }
+                                            )
+                                            .join('')
+                                    }
+
+                                </div>
+                            `
+
+                            : ''
+                        }
 
                     </section>
 
 
-                    ${
-                        game.phase === 'steal'
+                    <section
+                        class="
+                            panel
+                            facilitator
+                        "
+                    >
 
-                        ? `
-                            <section class="stealControl">
+                        <div class="sectionlabel">
+                            FACILITATOR
+                        </div>
 
-                                <div class="controlSectionHeading">
+                        <p>
+                            Correct answers automatically
+                            add their point value to the
+                            controlling team's score and
+                            the round bank.
+                        </p>
 
-                                    <div>
-
-                                        <div class="eyebrow">
-                                            STEAL ATTEMPT
-                                        </div>
-
-                                        <h3>
-                                            ${
-                                                Number.isInteger(
-                                                    stealingTeam
-                                                )
-                                                    ? esc(
-                                                        game.teams[
-                                                            stealingTeam
-                                                        ].name
-                                                    )
-                                                    : 'Select Teams'
-                                            }
-                                        </h3>
-
-                                    </div>
-
-                                </div>
-
-
-                                <div class="stealButtons">
-
-                                    <button
-                                        type="button"
-                                        id="stealWrong"
-                                        class="danger"
-                                        ${
-                                            game.stealAwarded
-                                                ? 'disabled'
-                                                : ''
-                                        }
-                                    >
-                                        ✕ Incorrect
-                                    </button>
-
-
-                                    <button
-                                        type="button"
-                                        id="stealCorrect"
-                                        class="success"
-                                        ${
-                                            game.stealAwarded
-                                                ? 'disabled'
-                                                : ''
-                                        }
-                                    >
-                                        ✓ Stolen Points
-                                    </button>
-
-                                </div>
-
-                            </section>
-                        `
-
-                        : ''
-                    }
-
-
-                    <section class="roundNavigation">
-
-                        <button
-                            type="button"
-                            id="previousRound"
-                            class="ghost"
-                            ${
-                                game.current <= 0
-                                    ? 'disabled'
-                                    : ''
-                            }
-                        >
-                            ← Previous
-                        </button>
-
-
-                        ${
-                            isFinalRound(game)
-
-                            ? `
-                                <button
-                                    type="button"
-                                    id="finalRound"
-                                    class="finalRoundButton"
-                                    disabled
-                                >
-                                    Final Round
-                                </button>
-                            `
-
-                            : `
-                                <button
-                                    type="button"
-                                    id="nextRound"
-                                >
-                                    Next Round →
-                                </button>
-                            `
-                        }
+                        <p>
+                            During a steal, a successful
+                            steal transfers the bank from
+                            the defending team to the
+                            stealing team.
+                        </p>
 
                     </section>
 
@@ -3066,121 +3322,121 @@ function renderHostGame() {
 
             </div>
 
+
+            <footer class="hostfooter">
+
+                <a
+                    class="buttonlike ghost"
+                    href="index.html"
+                    target="_blank"
+                >
+                    Open Projector ↗
+                </a>
+
+            </footer>
+
         </section>
     `;
-
-
-    wireHostGameControls();
-}
-
-
-/* =============================================================
-   HOST GAME — EVENTS
-   ============================================================= */
-
-function wireHostGameControls() {
-
-    wireMatchupControls();
-
-    wireWhiteboardControls();
-
-
-    $$('[data-answer]')
-        .forEach(
-            button => {
-
-                button.onclick =
-                    () => {
-
-                        revealAnswer(
-                            +button.dataset.answer
-                        );
-                    };
-            }
-        );
 
 
     $('#hostFullscreen').onclick =
         fullscreenToggle;
 
 
-    $('#showRound').onclick =
-        () =>
-            mutate(
-                gameState => {
-                    gameState.phase =
-                        'round';
-                }
-            );
+    $$('[data-phase]')
+        .forEach(
+            button => {
+
+                button.onclick =
+                    () =>
+                        setPhase(
+                            button.dataset.phase
+                        );
+            }
+        );
 
 
-    $('#showBoard').onclick =
-        () =>
-            mutate(
-                gameState => {
-                    gameState.phase =
-                        'board';
-                }
-            );
+    $('#hostScores').onclick =
+        toggleScores;
 
 
-    $('#showQuestion').onclick =
-        () =>
-            mutate(
-                gameState => {
-                    gameState.phase =
-                        'question';
-                }
-            );
-
-
-    $('#showScores').onclick =
-        () =>
-            mutate(
-                gameState => {
-                    gameState.showScores =
-                        !gameState.showScores;
-                }
-            );
-
-
-    $('#showSteal').onclick =
+    $('#hostHome').onclick =
         () => {
 
             const current =
-                normalizeGame(
-                    live()
-                );
+                normalizeGame(live());
 
 
-            if (
-                current.controllingTeam === null &&
-                current.activeTeam === null
-            ) {
+            if (current) {
 
-                alert(
-                    'Select which of the two VS teams won the first answer before starting a steal.'
-                );
+                current.showScores =
+                    false;
 
-                return;
+                current.updated =
+                    new Date()
+                        .toISOString();
+
+                save(current);
             }
 
 
-            mutate(
-                gameState => {
-                    gameState.phase =
-                        'steal';
-                }
-            );
+            renderHostHome();
         };
 
 
+    wireMatchupControls();
+
+
+    $$('[data-reveal]')
+        .forEach(
+            button => {
+
+                button.onclick =
+                    () =>
+                        revealAnswer(
+                            +button.dataset.reveal
+                        );
+            }
+        );
+
+
+    $$('[data-wrong]')
+        .forEach(
+            button => {
+
+                button.onclick =
+                    markIncorrect;
+            }
+        );
+
+
+    $$('[data-whiteboard]')
+        .forEach(
+            button => {
+
+                button.onclick =
+                    () =>
+                        awardWhiteboardTeam(
+                            +button.dataset.whiteboard
+                        );
+            }
+        );
+
+
     $('#addStrike').onclick =
-        addStrike;
+        markIncorrect;
 
 
     $('#removeStrike').onclick =
-        removeStrike;
+        clearStrike;
+
+
+    $('#previousRound').onclick =
+        previousRound;
+
+
+    $('#nextRound').onclick =
+        nextRound;
 
 
     const stealCorrect =
@@ -3205,46 +3461,6 @@ function wireHostGameControls() {
             () =>
                 awardSteal(false);
     }
-
-
-    const previous =
-        $('#previousRound');
-
-
-    if (previous) {
-
-        previous.onclick =
-            previousRound;
-    }
-
-
-    const next =
-        $('#nextRound');
-
-
-    if (next) {
-
-        next.onclick =
-            nextRound;
-    }
-
-
-    $('#hostHome').onclick =
-        () => {
-
-            const game =
-                normalizeGame(
-                    live()
-                );
-
-
-            if (game) {
-                save(game);
-            }
-
-
-            renderHostHome();
-        };
 }
 
 
@@ -3267,7 +3483,7 @@ function volumeIndex() {
         Number.isInteger(stored) &&
         stored >= 0 &&
         stored <
-            VOLUME_LEVELS.length
+        VOLUME_LEVELS.length
     ) {
         return stored;
     }
@@ -3279,62 +3495,47 @@ function volumeIndex() {
 
 function setVolumeIndex(index) {
 
-    const safe =
-        (
-            index +
-            VOLUME_LEVELS.length
-        ) %
-        VOLUME_LEVELS.length;
-
-
     localStorage.setItem(
         VOLUME_KEY,
-        String(safe)
+        String(index)
     );
-
-
-    return safe;
 }
 
 
 function playSound(name) {
 
-    const source =
-        SOUNDS[name];
-
-    if (!source) {
-        return;
-    }
-
-
-    const setting =
+    const definition =
         VOLUME_LEVELS[
             volumeIndex()
         ];
 
 
     if (
-        !setting ||
-        setting.volume <= 0
+        !definition ||
+        definition.volume <= 0 ||
+        !SOUNDS[name]
     ) {
         return;
     }
 
 
-    try {
+    const audio =
+        new Audio(
+            SOUNDS[name]
+        );
 
-        const audio =
-            new Audio(source);
 
-        audio.volume =
-            setting.volume;
+    audio.volume =
+        definition.volume;
 
-        audio.play()
-            .catch(() => {});
 
-    } catch {
-        // Audio is non-critical.
-    }
+    audio.play()
+        .catch(
+            () => {
+                // Browser may block audio
+                // until user interaction.
+            }
+        );
 }
 
 
@@ -3344,29 +3545,58 @@ function playSound(name) {
 
 function createProjectorUtilities() {
 
-    const existing =
+    let utilities =
         $('.projectorUtilities');
 
-    if (existing) {
-        existing.remove();
+
+    if (!utilities) {
+
+        utilities =
+            document.createElement(
+                'div'
+            );
+
+
+        utilities.className =
+            'projectorUtilities';
+
+
+        document.body
+            .appendChild(
+                utilities
+            );
     }
 
 
-    const utilities =
-        document.createElement('div');
-
-
-    utilities.className =
-        'projectorUtilities';
-
-
     utilities.innerHTML = `
+        <a
+            class="projectorUtilityButton projectorControlPanelButton"
+            href="host.html"
+            target="_blank"
+            rel="noopener"
+            title="Open Control Panel"
+            aria-label="Open Control Panel"
+        >
+            ${monitorIcon()}
+
+            <span
+                class="utilityGear"
+                aria-hidden="true"
+            >
+                ⚙
+            </span>
+        </a>
+
+
         <button
             type="button"
             id="projectorScores"
-            class="projectorUtilityButton"
+            class="
+                projectorUtilityButton
+                projectorScoresButton
+            "
             title="Ranked scores"
-            aria-label="Show ranked scores"
+            aria-label="Ranked scores"
         >
             🏆
         </button>
@@ -3375,9 +3605,12 @@ function createProjectorUtilities() {
         <button
             type="button"
             id="projectorHome"
-            class="projectorUtilityButton"
-            title="Save and return home"
-            aria-label="Save and return home"
+            class="
+                projectorUtilityButton
+                projectorHomeButton
+            "
+            title="Save and open control room"
+            aria-label="Save and open control room"
         >
             ⌂
         </button>
@@ -3387,10 +3620,9 @@ function createProjectorUtilities() {
             type="button"
             id="projectorVolume"
             class="projectorUtilityButton"
-            title="Volume"
-            aria-label="Change volume"
+            title="Sound volume"
+            aria-label="Sound volume"
         >
-            🔉
         </button>
 
 
@@ -3406,39 +3638,36 @@ function createProjectorUtilities() {
     `;
 
 
-    document.body.appendChild(
-        utilities
-    );
-
-
     const scoresButton =
-        $('#projectorScores', utilities);
+        $('#projectorScores');
+
 
     const homeButton =
-        $('#projectorHome', utilities);
+        $('#projectorHome');
+
 
     const volumeButton =
-        $('#projectorVolume', utilities);
+        $('#projectorVolume');
 
 
     const fullscreenButton =
-        $('#projectorFullscreen', utilities);
+        $('#projectorFullscreen');
 
 
     function updateVolume() {
 
-        const setting =
+        const definition =
             VOLUME_LEVELS[
                 volumeIndex()
             ];
 
 
         volumeButton.textContent =
-            setting.icon;
+            definition.icon;
 
 
         volumeButton.title =
-            `Volume: ${setting.label}`;
+            `Sound: ${definition.label}`;
     }
 
 
@@ -3447,6 +3676,7 @@ function createProjectorUtilities() {
 
             const current =
                 normalizeGame(live());
+
 
             if (!current) {
                 return;
@@ -3538,8 +3768,6 @@ function createProjectorUtilities() {
 
     updateVolume();
 }
-
-
 /* =============================================================
    PROJECTOR — TEAM SCORE STRIP
    ============================================================= */
@@ -3870,6 +4098,8 @@ if (
         }
     );
 }
+
+
 /* =============================================================
    PROJECTOR
    ============================================================= */
@@ -4457,6 +4687,38 @@ if (bc) {
                             live()
                         );
                     },
+                    850
+                );
+
+
+                return;
+            }
+
+
+            if (
+                gameEvent?.type ===
+                'buzzer'
+            ) {
+
+                buzzerTeam =
+                    gameEvent.team;
+
+
+                renderProjector(
+                    game
+                );
+
+
+                setTimeout(
+                    () => {
+
+                        buzzerTeam =
+                            null;
+
+                        renderProjector(
+                            live()
+                        );
+                    },
                     900
                 );
 
@@ -4481,6 +4743,7 @@ window.addEventListener(
     event => {
 
         if (
+            event.key !== LIVE ||
             !document.body.classList
                 .contains('projector')
         ) {
@@ -4488,20 +4751,19 @@ window.addEventListener(
         }
 
 
-        if (
-            event.key !== LIVE
-        ) {
-            return;
-        }
+        const game =
+            normalizeGame(
+                live()
+            );
 
 
-        renderProjector();
+        renderProjector(
+            game
+        );
     }
 );
-
-
 /* =============================================================
-   PROJECTOR KEYBOARD
+   PROJECTOR KEYBOARD CONTROLS
    ============================================================= */
 
 document.addEventListener(
@@ -4516,22 +4778,233 @@ document.addEventListener(
         }
 
 
+        const game =
+            normalizeGame(
+                live()
+            );
+
+
+        if (!game) {
+            return;
+        }
+
+
         if (
-            event.key.toLowerCase() ===
-            'f'
+            event.target &&
+            (
+                event.target.tagName ===
+                    'INPUT' ||
+                event.target.tagName ===
+                    'TEXTAREA' ||
+                event.target.tagName ===
+                    'SELECT'
+            )
+        ) {
+            return;
+        }
+
+
+        if (
+            event.key === 'f' ||
+            event.key === 'F'
         ) {
 
+            event.preventDefault();
+
             fullscreenToggle();
+
+            return;
+        }
+
+
+        if (
+            event.key === 'Escape' &&
+            game.showScores
+        ) {
+
+            event.preventDefault();
+
+            closeProjectorScores();
+
+            return;
         }
     }
 );
 
 
 /* =============================================================
-   STARTUP
+   HOST KEYBOARD SHORTCUTS
    ============================================================= */
 
-async function start() {
+document.addEventListener(
+    'keydown',
+    event => {
+
+        if (
+            !document.body.classList
+                .contains('host')
+        ) {
+            return;
+        }
+
+
+        if (
+            event.target &&
+            (
+                event.target.tagName ===
+                    'INPUT' ||
+                event.target.tagName ===
+                    'TEXTAREA' ||
+                event.target.tagName ===
+                    'SELECT'
+            )
+        ) {
+            return;
+        }
+
+
+        const game =
+            normalizeGame(
+                live()
+            );
+
+
+        if (!game) {
+            return;
+        }
+
+
+        if (
+            event.key === 'f' ||
+            event.key === 'F'
+        ) {
+
+            event.preventDefault();
+
+            fullscreenToggle();
+
+            return;
+        }
+
+
+        if (
+            event.key === '1'
+        ) {
+
+            const active =
+                activeMatchupTeams(
+                    game
+                );
+
+
+            if (
+                Number.isInteger(
+                    active[0]
+                )
+            ) {
+
+                event.preventDefault();
+
+                setControllingTeam(
+                    active[0]
+                );
+            }
+
+
+            return;
+        }
+
+
+        if (
+            event.key === '2'
+        ) {
+
+            const active =
+                activeMatchupTeams(
+                    game
+                );
+
+
+            if (
+                Number.isInteger(
+                    active[1]
+                )
+            ) {
+
+                event.preventDefault();
+
+                setControllingTeam(
+                    active[1]
+                );
+            }
+
+
+            return;
+        }
+
+
+        if (
+            event.key === 'x' ||
+            event.key === 'X'
+        ) {
+
+            event.preventDefault();
+
+            markIncorrect();
+
+            return;
+        }
+
+
+        if (
+            event.key === 'ArrowRight'
+        ) {
+
+            event.preventDefault();
+
+            nextRound();
+
+            return;
+        }
+
+
+        if (
+            event.key === 'ArrowLeft'
+        ) {
+
+            event.preventDefault();
+
+            previousRound();
+
+            return;
+        }
+    }
+);
+
+
+/* =============================================================
+   PROJECTOR UTILITY POSITION SAFETY
+   ============================================================= */
+
+function ensureProjectorUtilities() {
+
+    if (
+        !document.body.classList
+            .contains('projector')
+    ) {
+        return;
+    }
+
+
+    createProjectorUtilities();
+}
+
+
+/* =============================================================
+   PAGE INITIALIZATION
+   ============================================================= */
+
+async function initializeCITFeud() {
 
     try {
 
@@ -4540,7 +5013,7 @@ async function start() {
     } catch (error) {
 
         console.error(
-            'CIT Feud gamepack loading error:',
+            'CIT Feud could not load one or more game packs.',
             error
         );
     }
@@ -4576,9 +5049,33 @@ async function start() {
             .contains('projector')
     ) {
 
-        renderProjector();
+        renderProjector(
+            normalizeGame(
+                live()
+            )
+        );
+
+
+        ensureProjectorUtilities();
     }
 }
 
 
-start();
+/* =============================================================
+   START
+   ============================================================= */
+
+if (
+    document.readyState ===
+    'loading'
+) {
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        initializeCITFeud
+    );
+
+} else {
+
+    initializeCITFeud();
+}
