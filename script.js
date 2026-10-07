@@ -848,6 +848,7 @@ function renderSetup(slot) {
 
                 <h2>
                     Question Packs
+               </h2>
                 <div
                     id="packChoices"
                     class="packchoices"
