@@ -1,42 +1,13 @@
 /* =============================================================
-   CIT FEUD
-   MAIN GAME ENGINE
-
-   Question packs are loaded separately from:
-   GamePacks/*.js
-
-   Game audio originates ONLY from the projector page.
+   CIT FEUD — MAIN GAME ENGINE
    ============================================================= */
 
-
-/* =============================================================
-   GAME PACKS
-   ============================================================= */
-
-const QUESTION_PACKS =
-    Array.isArray(window.CIT_FEUD_PACKS)
-        ? window.CIT_FEUD_PACKS
-        : [];
-
-
-/* =============================================================
-   STORAGE / COMMUNICATION
-   ============================================================= */
+const QUESTION_PACKS = window.CIT_FEUD_PACKS || [];
 
 const KEY = 'citFeudSlotsV4';
 const LIVE = 'citFeudLiveV4';
 const CHANNEL = 'cit-feud-v4';
 const VOLUME_KEY = 'citFeudVolumeV1';
-
-const bc =
-    ('BroadcastChannel' in window)
-        ? new BroadcastChannel(CHANNEL)
-        : null;
-
-
-/* =============================================================
-   SOUND FILES
-   ============================================================= */
 
 const SOUNDS = {
     answer: 'Sounds/Answer.mp3',
@@ -44,113 +15,22 @@ const SOUNDS = {
     incorrect: 'Sounds/Incorrect.mp3'
 };
 
-
-/* =============================================================
-   PROJECTOR VOLUME
-
-   0 = Muted
-   1 = Low
-   2 = Medium
-   3 = High
-   ============================================================= */
-
 const VOLUME_LEVELS = [
-    {
-        label: 'Muted',
-        icon: '🔇',
-        volume: 0
-    },
-    {
-        label: 'Low',
-        icon: '🔈',
-        volume: 0.3
-    },
-    {
-        label: 'Medium',
-        icon: '🔉',
-        volume: 0.65
-    },
-    {
-        label: 'High',
-        icon: '🔊',
-        volume: 1
-    }
+    { label: 'Muted', icon: '🔇', volume: 0 },
+    { label: 'Low', icon: '🔈', volume: 0.3 },
+    { label: 'Medium', icon: '🔉', volume: 0.65 },
+    { label: 'High', icon: '🔊', volume: 1 }
 ];
 
+const bc = ('BroadcastChannel' in window)
+    ? new BroadcastChannel(CHANNEL)
+    : null;
 
-function getVolumeLevel() {
-
-    const stored =
-        Number(
-            localStorage.getItem(VOLUME_KEY)
-        );
-
-    if (
-        Number.isInteger(stored) &&
-        stored >= 0 &&
-        stored < VOLUME_LEVELS.length
-    ) {
-        return stored;
-    }
-
-    return 3;
-}
-
-
-function setVolumeLevel(level) {
-
-    localStorage.setItem(
-        VOLUME_KEY,
-        String(level)
-    );
-}
-
-
-function currentVolume() {
-
-    return VOLUME_LEVELS[
-        getVolumeLevel()
-    ].volume;
-}
-
-
-/* =============================================================
-   PAGE TYPE
-   ============================================================= */
-
-function isHost() {
-
-    return document.body
-        .classList
-        .contains('host');
-}
-
-
-function isProjector() {
-
-    return document.body
-        .classList
-        .contains('projector');
-}
-
-
-/* =============================================================
-   HELPERS
-   ============================================================= */
-
-const $ = (
-    selector,
-    root = document
-) =>
+const $ = (selector, root = document) =>
     root.querySelector(selector);
 
-
-const $$ = (
-    selector,
-    root = document
-) =>
+const $$ = (selector, root = document) =>
     [...root.querySelectorAll(selector)];
-
 
 const esc = value =>
     String(value ?? '').replace(
@@ -164,171 +44,37 @@ const esc = value =>
         }[character])
     );
 
-
-/* =============================================================
-   FULLSCREEN
-   ============================================================= */
-
-function toggleFullscreen() {
-
-    if (!document.fullscreenElement) {
-
-        document.documentElement
-            .requestFullscreen()
-            .catch(() => {});
-
-    } else {
-
-        document.exitFullscreen()
-            .catch(() => {});
-    }
-}
+let flashAnswer = null;
+let buzzerTeam = null;
+let wrongVisible = false;
 
 
 /* =============================================================
-   PROJECTOR AUDIO
-   ============================================================= */
-
-function playProjectorSound(name) {
-
-    if (!isProjector()) {
-        return;
-    }
-
-    const file =
-        SOUNDS[name];
-
-    if (!file) {
-        return;
-    }
-
-    const volume =
-        currentVolume();
-
-    if (volume <= 0) {
-        return;
-    }
-
-    const audio =
-        new Audio(file);
-
-    audio.volume =
-        volume;
-
-    audio.play()
-        .catch(
-            error => {
-
-                console.warn(
-                    'CIT Feud audio was blocked by the browser.',
-                    error
-                );
-            }
-        );
-}
-
-
-/* =============================================================
-   VOLUME TEST
-
-   Used when changing projector volume so you can immediately
-   confirm that sound is working.
-   ============================================================= */
-
-function testProjectorVolume() {
-
-    if (!isProjector()) {
-        return;
-    }
-
-    if (currentVolume() <= 0) {
-        return;
-    }
-
-    playProjectorSound(
-        'answer'
-    );
-}
-
-
-/* =============================================================
-   SAVE SLOTS
+   STORAGE
    ============================================================= */
 
 function slots() {
-
     try {
-
-        const stored =
-            JSON.parse(
-                localStorage.getItem(KEY)
-            );
-
-        if (
-            Array.isArray(stored)
-        ) {
-
-            while (
-                stored.length < 3
-            ) {
-                stored.push(null);
-            }
-
-            return stored.slice(
-                0,
-                3
-            );
-        }
-
-    } catch (error) {
-
-        console.warn(
-            'Unable to read CIT Feud save slots.',
-            error
-        );
+        return JSON.parse(localStorage.getItem(KEY)) ||
+            [null, null, null];
+    } catch {
+        return [null, null, null];
     }
-
-    return [
-        null,
-        null,
-        null
-    ];
 }
-
 
 function writeSlots(value) {
-
-    localStorage.setItem(
-        KEY,
-        JSON.stringify(value)
-    );
+    localStorage.setItem(KEY, JSON.stringify(value));
 }
 
-
-/* =============================================================
-   LIVE GAME STATE
-   ============================================================= */
-
 function live() {
-
     try {
-
-        return JSON.parse(
-            localStorage.getItem(LIVE)
-        );
-
+        return JSON.parse(localStorage.getItem(LIVE));
     } catch {
-
         return null;
     }
 }
 
-
-/* =============================================================
-   BROADCAST STATE
-   ============================================================= */
-
-function broadcast(game) {
+function broadcast(game, event = null) {
 
     localStorage.setItem(
         LIVE,
@@ -336,62 +82,37 @@ function broadcast(game) {
     );
 
     if (bc) {
-
         bc.postMessage({
             type: 'state',
-            game
+            game,
+            event
         });
     }
 }
 
+function save(game, event = null) {
 
-/* =============================================================
-   BROADCAST TRANSIENT EFFECT
-   ============================================================= */
+    const saved = slots();
 
-function broadcastEffect(
-    effect,
-    data = {}
-) {
-
-    if (!bc) {
-        return;
+    if (
+        Number.isInteger(game.slot) &&
+        game.slot >= 0 &&
+        game.slot < 3
+    ) {
+        saved[game.slot] = game;
+        writeSlots(saved);
     }
 
-    bc.postMessage({
-        type: 'effect',
-        effect,
-        data,
-        stamp: Date.now()
-    });
+    broadcast(game, event);
+}
+
+function notify(game) {
+    broadcast(game);
 }
 
 
 /* =============================================================
-   SAVE GAME
-   ============================================================= */
-
-function save(game) {
-
-    const savedSlots =
-        slots();
-
-    savedSlots[
-        game.slot
-    ] = game;
-
-    writeSlots(
-        savedSlots
-    );
-
-    broadcast(
-        game
-    );
-}
-
-
-/* =============================================================
-   CREATE NEW GAME
+   GAME STATE
    ============================================================= */
 
 function fresh(
@@ -402,54 +123,38 @@ function fresh(
     teams
 ) {
 
-    const questions =
-        QUESTION_PACKS
-            .filter(
-                pack =>
-                    packs.includes(
-                        pack.id
-                    )
-            )
-            .flatMap(
-                pack =>
-                    pack.questions.map(
-                        question => ({
-                            ...question,
-                            pack: pack.title,
-                            packId: pack.id
-                        })
-                    )
-            );
+    const questions = QUESTION_PACKS
+        .filter(pack =>
+            packs.includes(pack.id)
+        )
+        .flatMap(pack =>
+            pack.questions.map(question => ({
+                ...question,
+                pack: pack.title
+            }))
+        );
 
     return {
 
         version: 4,
 
         slot,
-
         name,
-
         date,
-
         packs,
 
-        teams:
-            teams.map(
-                (
-                    teamName,
-                    index
-                ) => ({
-                    name:
-                        teamName ||
-                        `Team ${index + 1}`,
-                    score: 0
-                })
-            ),
+        teams: teams.map(
+            (teamName, index) => ({
+                name:
+                    teamName ||
+                    `Team ${index + 1}`,
+                score: 0
+            })
+        ),
 
         questions,
 
         current: 0,
-
         round: 1,
 
         phase: 'round',
@@ -457,29 +162,26 @@ function fresh(
         revealed: [],
 
         strikes: 0,
-
         bank: 0,
 
         activeTeam: null,
 
+        controllingTeam: null,
+
+        stealResults: {},
+
+        stealAwarded: false,
+
         attemptLog: [],
 
         started:
-            new Date()
-                .toISOString(),
+            new Date().toISOString(),
 
         updated:
-            new Date()
-                .toISOString()
+            new Date().toISOString()
     };
 }
 
-
-/* =============================================================
-   NORMALIZE EXISTING GAME
-
-   Old "top" presentation states are converted to the new Intro.
-   ============================================================= */
 
 function normalizeGame(game) {
 
@@ -487,72 +189,91 @@ function normalizeGame(game) {
         return game;
     }
 
-    if (
-        game.activeTeam === undefined
-    ) {
-        game.activeTeam =
-            null;
+    if (!Array.isArray(game.teams)) {
+        game.teams = [];
+    }
+
+    if (!Array.isArray(game.questions)) {
+        game.questions = [];
+    }
+
+    if (!Array.isArray(game.revealed)) {
+        game.revealed = [];
+    }
+
+    if (!Array.isArray(game.attemptLog)) {
+        game.attemptLog = [];
+    }
+
+    if (game.activeTeam === undefined) {
+        game.activeTeam = null;
     }
 
     if (
-        !Array.isArray(
-            game.attemptLog
-        )
+        game.controllingTeam === undefined
     ) {
-        game.attemptLog =
-            [];
+        game.controllingTeam = null;
     }
 
     if (
-        !Array.isArray(
-            game.revealed
-        )
+        !game.stealResults ||
+        typeof game.stealResults !== 'object'
     ) {
-        game.revealed =
-            [];
+        game.stealResults = {};
     }
 
     if (
-        !Array.isArray(
-            game.teams
-        )
+        game.stealAwarded === undefined
     ) {
-        game.teams =
-            [];
-    }
-
-    if (!game.phase) {
-        game.phase =
-            'question';
+        game.stealAwarded = false;
     }
 
     if (
-        game.phase ===
-        'top'
+        !game.phase ||
+        game.phase === 'top'
     ) {
-        game.phase =
-            'round';
+        game.phase = 'round';
     }
 
-    if (!game.round) {
-        game.round =
-            game.current + 1;
+    if (!Number.isInteger(game.current)) {
+        game.current = 0;
+    }
+
+    if (!Number.isInteger(game.round)) {
+        game.round = game.current + 1;
     }
 
     return game;
 }
 
 
-/* =============================================================
-   MUTATE GAME
-   ============================================================= */
+function resetRoundState(game) {
 
-function mutate(callback) {
+    game.revealed = [];
 
-    let game =
-        normalizeGame(
-            live()
-        );
+    game.strikes = 0;
+
+    game.bank = 0;
+
+    game.activeTeam = null;
+
+    game.controllingTeam = null;
+
+    game.stealResults = {};
+
+    game.stealAwarded = false;
+
+    game.attemptLog = [];
+}
+
+
+function mutate(
+    callback,
+    event = null
+) {
+
+    const game =
+        normalizeGame(live());
 
     if (!game) {
         return;
@@ -561,101 +282,102 @@ function mutate(callback) {
     callback(game);
 
     game.updated =
-        new Date()
-            .toISOString();
+        new Date().toISOString();
 
-    save(game);
+    save(game, event);
 
-    if (isHost()) {
+    if (
+        document.body.classList
+            .contains('host')
+    ) {
         renderHostGame();
     }
 }
 
 
+function phaseLabel(phase) {
+
+    return ({
+        round: 'Intro',
+        board: 'Board',
+        question: 'Board + Question',
+        steal: 'Steal'
+    })[phase] || 'Intro';
+}
+
+
 /* =============================================================
-   TAG DISPLAY
+   SHARED UI
    ============================================================= */
 
-function tags(
-    tagArray = []
-) {
+function tags(items = []) {
 
     return `
-
         <div class="tags">
-
-            ${
-                tagArray
-                    .slice(0, 3)
-                    .map(
-                        tag =>
-                            `<span>${esc(tag)}</span>`
-                    )
-                    .join('')
+            ${items
+                .slice(0, 3)
+                .map(
+                    item =>
+                        `<span>${esc(item)}</span>`
+                )
+                .join('')
             }
-
         </div>
-
     `;
 }
 
 
-/* =============================================================
-   CROSS-WINDOW COMMUNICATION
-   ============================================================= */
+function fullscreenToggle() {
 
-if (bc) {
+    if (!document.fullscreenElement) {
 
-    bc.onmessage =
-        event => {
+        document.documentElement
+            .requestFullscreen?.();
 
-            const message =
-                event.data;
+    } else {
 
-            if (!isProjector()) {
-                return;
-            }
-
-            if (
-                message?.type ===
-                'state'
-            ) {
-                renderProjector(
-                    message.game
-                );
-            }
-
-            if (
-                message?.type ===
-                'effect'
-            ) {
-                runProjectorEffect(
-                    message.effect,
-                    message.data
-                );
-            }
-        };
+        document.exitFullscreen?.();
+    }
 }
 
 
-/* =============================================================
-   STORAGE FALLBACK
-   ============================================================= */
+function fullscreenIcon() {
 
-window.addEventListener(
-    'storage',
-    event => {
+    return `
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+            <path d="M8 3H3v5"></path>
+            <path d="M16 3h5v5"></path>
+            <path d="M8 21H3v-5"></path>
+            <path d="M16 21h5v-5"></path>
+        </svg>
+    `;
+}
 
-        if (
-            event.key === LIVE &&
-            isProjector()
-        ) {
-            renderProjector(
-                live()
-            );
-        }
-    }
-);
+
+function monitorIcon() {
+
+    return `
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+            <rect
+                x="3"
+                y="4"
+                width="18"
+                height="13"
+                rx="2"
+            ></rect>
+
+            <path d="M8 21h8"></path>
+
+            <path d="M12 17v4"></path>
+        </svg>
+    `;
+}
 
 
 /* =============================================================
@@ -664,32 +386,12 @@ window.addEventListener(
 
 function renderHostHome() {
 
-    const root =
-        $('#hostApp');
+    const root = $('#hostApp');
 
-    if (!root) {
-        return;
-    }
-
-    const savedSlots =
-        slots();
+    const saved = slots();
 
     root.innerHTML = `
-
         <section class="startup">
-
-            <div class="hostUtilityBar">
-
-                <button
-                    class="iconUtility"
-                    id="hostFullscreen"
-                    title="Fullscreen"
-                >
-                    ⛶
-                </button>
-
-            </div>
-
 
             <div class="brand">
 
@@ -713,135 +415,111 @@ function renderHostHome() {
                 <div class="panel">
 
                     <h2>
-                        Saved Games
+                        New Game
                     </h2>
 
                     <p>
-                        Resume a previous game or start a new one.
+                        Choose an empty slot
+                        or replace an existing save.
                     </p>
 
 
                     <div class="slots">
 
-                        ${
-                            savedSlots.map(
-                                (
-                                    game,
-                                    index
-                                ) => {
+                        ${saved.map(
+                            (game, index) =>
 
-                                    if (game) {
+                                game
 
-                                        return `
+                                ? `
+                                    <article
+                                        class="savecard"
+                                    >
 
-                                            <article class="savecard">
+                                        <div>
 
-                                                <div>
+                                            <small>
+                                                SLOT ${index + 1}
+                                            </small>
 
-                                                    <small>
-                                                        SLOT ${index + 1}
-                                                    </small>
+                                            <h3>
+                                                ${esc(game.name)}
+                                            </h3>
 
-                                                    <h3>
-                                                        ${esc(game.name)}
-                                                    </h3>
+                                            <p>
+                                                ${esc(game.date)}
+                                                ·
+                                                ${game.teams.length}
+                                                teams
+                                                ·
+                                                Round
+                                                ${(game.current || 0) + 1}
+                                                /
+                                                ${game.questions.length}
+                                            </p>
 
-                                                    <p>
-
-                                                        ${esc(game.date)}
-
-                                                        ·
-
-                                                        ${
-                                                            Array.isArray(
-                                                                game.teams
-                                                            )
-                                                                ? game.teams.length
-                                                                : 0
-                                                        }
-                                                        teams
-
-                                                        ·
-
-                                                        Question
-                                                        ${(game.current || 0) + 1}
-                                                        /
-                                                        ${
-                                                            Array.isArray(
-                                                                game.questions
-                                                            )
-                                                                ? game.questions.length
-                                                                : 0
-                                                        }
-
-                                                    </p>
-
-                                                </div>
+                                        </div>
 
 
-                                                <div class="actions">
-
-                                                    <button
-                                                        data-resume="${index}"
-                                                    >
-                                                        Resume
-                                                    </button>
-
-                                                    <button
-                                                        class="ghost"
-                                                        data-new="${index}"
-                                                    >
-                                                        Replace
-                                                    </button>
-
-                                                    <button
-                                                        class="danger ghost"
-                                                        data-delete="${index}"
-                                                    >
-                                                        Delete
-                                                    </button>
-
-                                                </div>
-
-                                            </article>
-
-                                        `;
-
-                                    }
-
-                                    return `
-
-                                        <article class="savecard empty">
-
-                                            <div>
-
-                                                <small>
-                                                    SLOT ${index + 1}
-                                                </small>
-
-                                                <h3>
-                                                    Empty Save
-                                                </h3>
-
-                                                <p>
-                                                    Available for a new game.
-                                                </p>
-
-                                            </div>
-
+                                        <div class="actions">
 
                                             <button
-                                                data-new="${index}"
+                                                data-resume="${index}"
                                             >
-                                                New Game
+                                                Resume
                                             </button>
 
-                                        </article>
+                                            <button
+                                                class="ghost"
+                                                data-new="${index}"
+                                            >
+                                                Replace
+                                            </button>
 
-                                    `;
-                                }
-                            ).join('')
-                        }
+                                            <button
+                                                class="danger ghost"
+                                                data-delete="${index}"
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </div>
+
+                                    </article>
+                                `
+
+                                : `
+                                    <article
+                                        class="savecard empty"
+                                    >
+
+                                        <div>
+
+                                            <small>
+                                                SLOT ${index + 1}
+                                            </small>
+
+                                            <h3>
+                                                Empty Save
+                                            </h3>
+
+                                            <p>
+                                                Available for a new game.
+                                            </p>
+
+                                        </div>
+
+
+                                        <button
+                                            data-new="${index}"
+                                        >
+                                            New Game
+                                        </button>
+
+                                    </article>
+                                `
+
+                        ).join('')}
 
                     </div>
 
@@ -851,29 +529,31 @@ function renderHostHome() {
                 <div class="panel help">
 
                     <h2>
-                        Projector Setup
+                        Two-screen setup
                     </h2>
 
                     <ol>
 
                         <li>
-                            Keep this control room on your laptop.
+                            Keep this
+                            <strong>host.html</strong>
+                            window on your laptop.
                         </li>
 
                         <li>
-                            Open the projector board.
+                            Open
+                            <strong>index.html</strong>
+                            in a second window.
                         </li>
 
                         <li>
-                            Move the projector window to your second display.
+                            Move that window
+                            to the projector.
                         </li>
 
                         <li>
-                            Use the volume control on the projector to set and test game audio.
-                        </li>
-
-                        <li>
-                            Use fullscreen on either screen whenever needed.
+                            Use fullscreen
+                            when ready.
                         </li>
 
                     </ol>
@@ -892,112 +572,76 @@ function renderHostHome() {
             </div>
 
         </section>
-
     `;
 
 
-    $('#hostFullscreen').onclick =
-        toggleFullscreen;
-
-
     $$('[data-resume]')
-        .forEach(
-            button => {
+        .forEach(button => {
 
-                button.onclick =
-                    () => {
+            button.onclick = () => {
 
-                        const game =
-                            normalizeGame(
-                                savedSlots[
-                                    +button.dataset.resume
-                                ]
-                            );
+                const game =
+                    normalizeGame(
+                        saved[
+                            +button.dataset.resume
+                        ]
+                    );
 
-                        broadcast(
-                            game
-                        );
+                broadcast(game);
 
-                        renderHostGame();
-                    };
-            }
-        );
+                renderHostGame();
+            };
+        });
 
 
     $$('[data-new]')
-        .forEach(
-            button => {
+        .forEach(button => {
 
-                button.onclick =
-                    () =>
-                        renderSetup(
-                            +button.dataset.new
-                        );
-            }
-        );
+            button.onclick = () => {
+
+                renderSetup(
+                    +button.dataset.new
+                );
+            };
+        });
 
 
     $$('[data-delete]')
-        .forEach(
-            button => {
+        .forEach(button => {
 
-                button.onclick =
-                    () => {
+            button.onclick = () => {
 
-                        const index =
-                            +button.dataset.delete;
+                const index =
+                    +button.dataset.delete;
 
-                        if (
-                            confirm(
-                                'Delete this saved game?'
-                            )
-                        ) {
+                if (
+                    confirm(
+                        'Delete this saved game?'
+                    )
+                ) {
 
-                            savedSlots[
-                                index
-                            ] = null;
+                    saved[index] = null;
 
-                            writeSlots(
-                                savedSlots
-                            );
+                    writeSlots(saved);
 
-                            renderHostHome();
-                        }
-                    };
-            }
-        );
+                    renderHostHome();
+                }
+            };
+        });
 }
 
 
 /* =============================================================
-   NEW GAME SETUP
+   SETUP
    ============================================================= */
 
 function renderSetup(slot) {
 
-    const root =
-        $('#hostApp');
+    const root = $('#hostApp');
 
-    if (!root) {
-        return;
-    }
 
     root.innerHTML = `
-
         <section class="startup">
-
-            <div class="hostUtilityBar">
-
-                <button
-                    class="iconUtility"
-                    id="setupFullscreen"
-                    title="Fullscreen"
-                >
-                    ⛶
-                </button>
-
-            </div>
-
 
             <div class="brand compact">
 
@@ -1026,7 +670,7 @@ function renderSetup(slot) {
 
                     <label>
 
-                        Game Name
+                        Game name
 
                         <input
                             id="gameName"
@@ -1062,85 +706,54 @@ function renderSetup(slot) {
                 </h2>
 
                 <p>
-                    Select one or multiple question packs.
+                    Select one or multiple packs.
                 </p>
 
 
                 <div class="packgrid">
 
-                    ${
-                        QUESTION_PACKS.length
+                    ${QUESTION_PACKS.map(
+                        (pack, index) => `
+                            <label class="packcard">
 
-                            ? QUESTION_PACKS
-                                .map(
-                                    (
-                                        pack,
-                                        index
-                                    ) => `
+                                <input
+                                    type="checkbox"
+                                    name="pack"
+                                    value="${esc(pack.id)}"
+                                    ${
+                                        index === 0
+                                            ? 'checked'
+                                            : ''
+                                    }
+                                >
 
-                                        <label class="packcard">
-
-                                            <input
-                                                type="checkbox"
-                                                name="pack"
-                                                value="${esc(pack.id)}"
-                                                ${
-                                                    index === 0
-                                                        ? 'checked'
-                                                        : ''
-                                                }
-                                            >
-
-                                            <div>
-
-                                                <h3>
-                                                    ${esc(pack.title)}
-                                                </h3>
-
-                                                <p>
-                                                    ${esc(pack.description)}
-                                                </p>
-
-                                                ${tags(pack.tags)}
-
-                                                <small>
-
-                                                    ${
-                                                        Array.isArray(
-                                                            pack.questions
-                                                        )
-                                                            ? pack.questions.length
-                                                            : 0
-                                                    }
-
-                                                    questions
-
-                                                </small>
-
-                                            </div>
-
-                                        </label>
-
-                                    `
-                                )
-                                .join('')
-
-                            : `
-
-                                <div class="packcard">
+                                <div>
 
                                     <h3>
-                                        No Game Packs Found
+                                        ${esc(pack.title)}
                                     </h3>
 
                                     <p>
-                                        Check that the GamePacks files are loaded before script.js.
+                                        ${
+                                            esc(
+                                                pack.description ||
+                                                ''
+                                            )
+                                        }
                                     </p>
+
+                                    ${tags(pack.tags)}
+
+                                    <small>
+                                        ${pack.questions.length}
+                                        questions
+                                    </small>
 
                                 </div>
 
-                            `
-                    }
+                            </label>
+                        `
+                    ).join('')}
 
                 </div>
 
@@ -1154,30 +767,27 @@ function renderSetup(slot) {
 
                     <label>
 
-                        Number of Teams
+                        Number of teams
 
                         <select id="teamCount">
 
-                            <option value="2">
+                            <option>
                                 2
                             </option>
 
-                            <option value="3">
+                            <option>
                                 3
                             </option>
 
-                            <option
-                                value="4"
-                                selected
-                            >
+                            <option selected>
                                 4
                             </option>
 
-                            <option value="5">
+                            <option>
                                 5
                             </option>
 
-                            <option value="6">
+                            <option>
                                 6
                             </option>
 
@@ -1210,12 +820,7 @@ function renderSetup(slot) {
             </form>
 
         </section>
-
     `;
-
-
-    $('#setupFullscreen').onclick =
-        toggleFullscreen;
 
 
     const teamCount =
@@ -1224,53 +829,30 @@ function renderSetup(slot) {
 
     function renderTeamNames() {
 
-        const count =
-            +teamCount.value;
-
-        const existing =
-            $$(
-                'input[name=teamName]'
-            )
-            .map(
-                input =>
-                    input.value
-            );
-
         $('#teamNames').innerHTML = `
-
             <div class="teaminputs">
 
-                ${
-                    Array.from(
-                        {
-                            length: count
-                        },
-                        (
-                            _,
-                            index
-                        ) => `
+                ${Array.from(
+                    {
+                        length:
+                            +teamCount.value
+                    },
+                    (_, index) => `
+                        <label>
 
-                            <label>
+                            Team ${index + 1} name
 
-                                Team ${index + 1} Name
+                            <input
+                                name="teamName"
+                                value="Team ${index + 1}"
+                                maxlength="24"
+                            >
 
-                                <input
-                                    name="teamName"
-                                    value="${esc(
-                                        existing[index] ||
-                                        `Team ${index + 1}`
-                                    )}"
-                                    maxlength="24"
-                                >
-
-                            </label>
-
-                        `
-                    ).join('')
-                }
+                        </label>
+                    `
+                ).join('')}
 
             </div>
-
         `;
     }
 
@@ -1294,7 +876,7 @@ function renderSetup(slot) {
 
             const packs =
                 $$(
-                    'input[name=pack]:checked'
+                    'input[name="pack"]:checked'
                 )
                 .map(
                     input =>
@@ -1304,7 +886,7 @@ function renderSetup(slot) {
 
             const teamNames =
                 $$(
-                    'input[name=teamName]'
+                    'input[name="teamName"]'
                 )
                 .map(
                     input =>
@@ -1330,17 +912,14 @@ function renderSetup(slot) {
             ) {
 
                 alert(
-                    'Select at least one question pack that contains questions.'
+                    'Select at least one pack that contains questions.'
                 );
 
                 return;
             }
 
 
-            save(
-                game
-            );
-
+            save(game);
 
             renderHostGame();
         };
@@ -1348,84 +927,116 @@ function renderSetup(slot) {
 
 
 /* =============================================================
-   PRESENTATION PHASE LABEL
+   STEAL HELPERS
    ============================================================= */
 
-function phaseLabel(phase) {
+function eligibleStealTeams(game) {
 
-    switch (phase) {
-
-        case 'round':
-            return 'Intro';
-
-        case 'board':
-            return 'Board';
-
-        case 'question':
-            return 'Board + Question';
-
-        default:
-            return 'Intro';
+    if (
+        game.controllingTeam === null
+    ) {
+        return [];
     }
+
+
+    return game.teams
+        .map(
+            (_, index) =>
+                index
+        )
+        .filter(
+            index =>
+                index !==
+                game.controllingTeam
+        );
 }
 
 
-/* =============================================================
-   ADVANCE TO NEXT ROUND
-   ============================================================= */
+function stealWinners(game) {
 
-function nextRound() {
-
-    const game =
-        normalizeGame(
-            live()
+    return eligibleStealTeams(game)
+        .filter(
+            index =>
+                game.stealResults[
+                    String(index)
+                ] === true
         );
+}
 
-    if (!game) {
+
+function awardSteal(game) {
+
+    if (
+        game.stealAwarded
+    ) {
         return;
     }
+
+
+    const winners =
+        stealWinners(game);
 
 
     if (
-        game.current >=
-        game.questions.length - 1
+        !winners.length
     ) {
-
-        alert(
-            'This is the final round.'
-        );
-
         return;
     }
 
 
-    mutate(
-        game => {
+    const base =
+        Math.floor(
+            game.bank /
+            winners.length
+        );
 
-            game.current++;
 
-            game.round =
-                game.current + 1;
+    const remainder =
+        game.bank %
+        winners.length;
 
-            game.phase =
-                'round';
 
-            game.revealed =
-                [];
+    winners.forEach(
+        (
+            teamIndex,
+            winnerIndex
+        ) => {
 
-            game.strikes =
-                0;
-
-            game.bank =
-                0;
-
-            game.activeTeam =
-                null;
-
-            game.attemptLog =
-                [];
+            game.teams[
+                teamIndex
+            ].score +=
+                base +
+                (
+                    winnerIndex <
+                    remainder
+                        ? 1
+                        : 0
+                );
         }
     );
+
+
+    game.stealAwarded = true;
+
+
+    game.attemptLog.push({
+
+        ok: true,
+
+        team:
+            winners
+                .map(
+                    index =>
+                        game.teams[index].name
+                )
+                .join(', '),
+
+        answer:
+            `Split ${game.bank} point bank`,
+
+        time:
+            Date.now()
+    });
 }
 
 
@@ -1449,55 +1060,51 @@ function renderHostGame() {
     }
 
 
-    if (
-        !Array.isArray(
-            game.questions
-        ) ||
-        !game.questions.length
-    ) {
-
-        alert(
-            'This saved game does not contain any questions.'
-        );
-
-        renderHostHome();
-
-        return;
-    }
-
-
     const question =
         game.questions[
             game.current
         ];
 
 
-    if (!question) {
-
-        renderHostHome();
-
-        return;
-    }
-
-
     const root =
         $('#hostApp');
 
 
-    if (!root) {
-        return;
-    }
+    const stealMode =
+        game.phase === 'steal';
 
 
-    const isFinalRound =
-        game.current >=
+    const eligible =
+        eligibleStealTeams(game);
+
+
+    const winners =
+        stealWinners(game);
+
+
+    const baseShare =
+        winners.length
+            ? Math.floor(
+                game.bank /
+                winners.length
+            )
+            : 0;
+
+
+    const remainder =
+        winners.length
+            ? game.bank %
+              winners.length
+            : 0;
+
+
+    const finalRound =
+        game.current ===
         game.questions.length - 1;
 
 
     root.innerHTML = `
-
         <section class="control">
-
 
             <header class="controltop">
 
@@ -1512,22 +1119,13 @@ function renderHostGame() {
                     </h1>
 
                     <p>
-
-                        Round ${game.round}
-
+                        ${esc(game.date)}
                         ·
-
-                        Question
-                        ${game.current + 1}
+                        Round ${game.round}
                         of
                         ${game.questions.length}
-
                         ·
-
-                        ${esc(
-                            question.pack || ''
-                        )}
-
+                        ${esc(question.pack || '')}
                     </p>
 
                 </div>
@@ -1539,12 +1137,13 @@ function renderHostGame() {
                         ✓ Autosaved
                     </div>
 
+
                     <button
+                        id="hostFullscreen"
                         class="iconUtility"
-                        id="gameFullscreen"
                         title="Fullscreen"
                     >
-                        ⛶
+                        ${fullscreenIcon()}
                     </button>
 
                 </div>
@@ -1552,7 +1151,9 @@ function renderHostGame() {
             </header>
 
 
-            <div class="presentationControl panel">
+            <section
+                class="presentationControl panel"
+            >
 
                 <div>
 
@@ -1564,16 +1165,27 @@ function renderHostGame() {
                         Round ${game.round}
                     </strong>
 
+                    <small
+                        class="presentationStatus"
+                    >
+                        ${
+                            phaseLabel(
+                                game.phase
+                            )
+                        }
+                    </small>
+
                 </div>
 
 
-                <div class="presentationButtons">
+                <div
+                    class="presentationButtons"
+                >
 
                     <button
                         id="showRound"
                         class="${
-                            game.phase ===
-                            'round'
+                            game.phase === 'round'
                                 ? ''
                                 : 'ghost'
                         }"
@@ -1585,8 +1197,7 @@ function renderHostGame() {
                     <button
                         id="showBoard"
                         class="${
-                            game.phase ===
-                            'board'
+                            game.phase === 'board'
                                 ? ''
                                 : 'ghost'
                         }"
@@ -1598,8 +1209,7 @@ function renderHostGame() {
                     <button
                         id="showQuestion"
                         class="${
-                            game.phase ===
-                            'question'
+                            game.phase === 'question'
                                 ? ''
                                 : 'ghost'
                         }"
@@ -1609,16 +1219,31 @@ function renderHostGame() {
 
 
                     <button
+                        id="showSteal"
+                        class="
+                            stealPresentation
+                            ${
+                                game.phase === 'steal'
+                                    ? 'active'
+                                    : 'ghost'
+                            }
+                        "
+                    >
+                        Steal
+                    </button>
+
+
+                    <button
                         id="nextRound"
                         class="presentationNext"
                         ${
-                            isFinalRound
+                            finalRound
                                 ? 'disabled'
                                 : ''
                         }
                     >
                         ${
-                            isFinalRound
+                            finalRound
                                 ? 'Final Round'
                                 : 'Next Round →'
                         }
@@ -1626,157 +1251,416 @@ function renderHostGame() {
 
                 </div>
 
-            </div>
+            </section>
 
 
             <div class="controlgrid">
 
-
-                <section class="panel boardcontrol">
-
+                <section
+                    class="panel boardcontrol"
+                >
 
                     <div class="qmeta">
 
-                        ${tags(
-                            question.tags
-                        )}
+                        ${tags(question.tags)}
 
                         <small>
-                            ${esc(
-                                question.title
-                            )}
+                            ${esc(question.title)}
                         </small>
 
                     </div>
 
 
                     <h2>
-                        ${esc(
-                            question.prompt
-                        )}
+                        ${esc(question.prompt)}
                     </h2>
 
 
-                    <div class="buzzsection">
+                    ${
+                        stealMode
 
-                        <div class="sectionlabel">
-                            WHO IS ANSWERING?
-                        </div>
+                        ? `
+                            <div
+                                class="stealHostPanel"
+                            >
+
+                                <div
+                                    class="stealHostHeading"
+                                >
+
+                                    <div>
+
+                                        <div
+                                            class="sectionlabel"
+                                        >
+                                            STEAL ROUND
+                                        </div>
+
+                                        <h3>
+                                            Mark every team
+                                            that gets the
+                                            steal answer right.
+                                        </h3>
+
+                                    </div>
 
 
-                        <div
-                            class="buzzteams"
-                            style="
-                                grid-template-columns:
-                                repeat(
-                                    ${Math.min(
-                                        game.teams.length,
-                                        3
-                                    )},
-                                    minmax(0,1fr)
-                                );
-                            "
-                        >
+                                    <div
+                                        class="stealBankCallout"
+                                    >
 
-                            ${
-                                game.teams.map(
-                                    (
-                                        team,
-                                        index
-                                    ) => `
+                                        <span>
+                                            AVAILABLE
+                                        </span>
 
-                                        <button
-                                            class="
-                                                buzzbtn
-                                                ${
-                                                    game.activeTeam === index
-                                                        ? 'active'
-                                                        : ''
-                                                }
-                                            "
-                                            data-buzz="${index}"
+                                        <strong>
+                                            ${game.bank}
+                                        </strong>
+
+                                    </div>
+
+                                </div>
+
+
+                                ${
+                                    game.controllingTeam === null
+
+                                    ? `
+                                        <div
+                                            class="stealNeedsControl"
+                                        >
+                                            Choose the
+                                            defending team
+                                            in Game Control,
+                                            then enter
+                                            Steal again.
+                                        </div>
+                                    `
+
+                                    : `
+                                        <div
+                                            class="defendingTeamHost"
                                         >
 
                                             <span>
-                                                ${index + 1}
+                                                DEFENDING BANK
                                             </span>
 
-                                            ${esc(
-                                                team.name
-                                            )}
+                                            <strong>
+                                                ${
+                                                    esc(
+                                                        game
+                                                        .teams[
+                                                            game
+                                                            .controllingTeam
+                                                        ]
+                                                        .name
+                                                    )
+                                                }
+                                            </strong>
 
-                                        </button>
+                                        </div>
 
+
+                                        <div
+                                            class="stealTeamList"
+                                        >
+
+                                            ${
+                                                eligible
+                                                .map(
+                                                    index => {
+
+                                                        const result =
+                                                            game
+                                                            .stealResults[
+                                                                String(index)
+                                                            ];
+
+                                                        return `
+                                                            <div
+                                                                class="
+                                                                    stealTeamRow
+                                                                    ${
+                                                                        result === true
+                                                                            ? 'stealCorrect'
+                                                                            : ''
+                                                                    }
+                                                                    ${
+                                                                        result === false
+                                                                            ? 'stealWrong'
+                                                                            : ''
+                                                                    }
+                                                                "
+                                                            >
+
+                                                                <div>
+
+                                                                    <small>
+                                                                        TEAM
+                                                                        ${index + 1}
+                                                                    </small>
+
+                                                                    <strong>
+                                                                        ${
+                                                                            esc(
+                                                                                game
+                                                                                .teams[
+                                                                                    index
+                                                                                ]
+                                                                                .name
+                                                                            )
+                                                                        }
+                                                                    </strong>
+
+                                                                </div>
+
+
+                                                                <div
+                                                                    class="stealJudgeButtons"
+                                                                >
+
+                                                                    <button
+                                                                        class="judge yes"
+                                                                        data-steal="${index}"
+                                                                        data-result="true"
+                                                                    >
+                                                                        ✓
+                                                                    </button>
+
+
+                                                                    <button
+                                                                        class="judge no"
+                                                                        data-steal="${index}"
+                                                                        data-result="false"
+                                                                    >
+                                                                        ✕
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+                                                        `;
+                                                    }
+                                                )
+                                                .join('')
+                                            }
+
+                                        </div>
+
+
+                                        <div
+                                            class="stealAwardSummary"
+                                        >
+
+                                            <div>
+
+                                                <span>
+                                                    CORRECT TEAMS
+                                                </span>
+
+                                                <strong>
+                                                    ${winners.length}
+                                                </strong>
+
+                                            </div>
+
+
+                                            <div>
+
+                                                <span>
+                                                    POINTS EACH
+                                                </span>
+
+                                                <strong>
+                                                    ${
+                                                        winners.length
+
+                                                        ? `
+                                                            ${baseShare}
+                                                            ${
+                                                                remainder
+                                                                    ? ' + remainder'
+                                                                    : ''
+                                                            }
+                                                        `
+
+                                                        : '—'
+                                                    }
+                                                </strong>
+
+                                            </div>
+
+
+                                            <button
+                                                id="awardSteal"
+                                                ${
+                                                    !winners.length ||
+                                                    game.stealAwarded
+
+                                                    ? 'disabled'
+                                                    : ''
+                                                }
+                                            >
+                                                ${
+                                                    game.stealAwarded
+
+                                                    ? 'Steal Awarded ✓'
+
+                                                    : 'Award Steal'
+                                                }
+                                            </button>
+
+                                        </div>
+
+
+                                        <p
+                                            class="microcopy"
+                                        >
+                                            Any remainder is
+                                            distributed one point
+                                            at a time so the entire
+                                            bank is awarded.
+                                        </p>
                                     `
-                                ).join('')
-                            }
+                                }
 
-                        </div>
+                            </div>
+                        `
 
-                    </div>
+                        : `
+                            <div
+                                class="buzzsection"
+                            >
+
+                                <div
+                                    class="sectionlabel"
+                                >
+                                    WHO IS ANSWERING?
+                                </div>
 
 
-                    <div class="sectionlabel answerlabel">
+                                <div
+                                    class="buzzteams"
+                                >
+
+                                    ${
+                                        game.teams
+                                        .map(
+                                            (team, index) => `
+                                                <button
+                                                    class="
+                                                        buzzbtn
+                                                        ${
+                                                            game.activeTeam === index
+                                                                ? 'active'
+                                                                : ''
+                                                        }
+                                                    "
+                                                    data-buzz="${index}"
+                                                >
+
+                                                    <span>
+                                                        ${index + 1}
+                                                    </span>
+
+                                                    ${
+                                                        esc(
+                                                            team.name
+                                                        )
+                                                    }
+
+                                                </button>
+                                            `
+                                        )
+                                        .join('')
+                                    }
+
+                                </div>
+
+
+                                <p
+                                    class="microcopy"
+                                >
+                                    Select the team answering.
+                                    The first selected team
+                                    becomes the defending team
+                                    for a later steal.
+                                </p>
+
+                            </div>
+                        `
+                    }
+
+
+                    <div
+                        class="sectionlabel answerlabel"
+                    >
                         ANSWER BOARD · HOST VIEW
                     </div>
 
 
-                    <div class="answerjudge">
+                    <div
+                        class="answerjudge"
+                    >
 
                         ${
-                            question.answers.map(
-                                (
-                                    answer,
-                                    index
-                                ) => `
-
+                            question.answers
+                            .map(
+                                (answer, index) => `
                                     <div
                                         class="
                                             judgeRow
                                             ${
-                                                game.revealed.includes(
-                                                    index
-                                                )
+                                                game.revealed
+                                                .includes(index)
                                                     ? 'correct'
                                                     : ''
                                             }
                                         "
                                     >
 
-                                        <span class="answerNum">
+                                        <span
+                                            class="answerNum"
+                                        >
                                             ${index + 1}
                                         </span>
 
+
                                         <b>
-                                            ${esc(
-                                                answer[0]
-                                            )}
+                                            ${esc(answer[0])}
                                         </b>
+
 
                                         <em>
                                             ${answer[1]} pts
                                         </em>
 
+
                                         <button
                                             class="judge yes"
                                             data-correct="${index}"
-                                            title="Correct"
                                         >
                                             ✓
                                         </button>
 
+
                                         <button
                                             class="judge no"
                                             data-wrong="${index}"
-                                            title="Incorrect"
+                                            ${
+                                                stealMode
+                                                    ? 'disabled'
+                                                    : ''
+                                            }
                                         >
                                             ✕
                                         </button>
 
                                     </div>
-
                                 `
-                            ).join('')
+                            )
+                            .join('')
                         }
 
                     </div>
@@ -1820,8 +1704,7 @@ function renderHostGame() {
                         <button
                             id="nextQ"
                             ${
-                                game.current ===
-                                game.questions.length - 1
+                                finalRound
                                     ? 'disabled'
                                     : ''
                             }
@@ -1834,22 +1717,23 @@ function renderHostGame() {
                 </section>
 
 
-                <aside class="panel scorepanel">
+                <aside
+                    class="panel scorepanel"
+                >
 
                     <h2>
-                        Teams
+                        Game Control
                     </h2>
 
 
-                    <div class="teamscorelist">
+                    <div
+                        class="teamscorelist"
+                    >
 
                         ${
-                            game.teams.map(
-                                (
-                                    team,
-                                    index
-                                ) => `
-
+                            game.teams
+                            .map(
+                                (team, index) => `
                                     <div
                                         class="
                                             teamctl
@@ -1858,15 +1742,24 @@ function renderHostGame() {
                                                     ? 'answering'
                                                     : ''
                                             }
+                                            ${
+                                                game.controllingTeam === index
+                                                    ? 'controlling'
+                                                    : ''
+                                            }
                                         "
                                     >
 
-                                        <div class="hostTeamHeader">
+                                        <div
+                                            class="hostTeamHeader"
+                                        >
 
                                             <input
-                                                value="${esc(
-                                                    team.name
-                                                )}"
+                                                value="${
+                                                    esc(
+                                                        team.name
+                                                    )
+                                                }"
                                                 data-teamname="${index}"
                                                 maxlength="24"
                                             >
@@ -1878,7 +1771,36 @@ function renderHostGame() {
                                         </div>
 
 
-                                        <div class="teamScoreButtons">
+                                        <div
+                                            class="teamRoleLine"
+                                        >
+
+                                            ${
+                                                game.controllingTeam === index
+
+                                                ? `
+                                                    <span>
+                                                        DEFENDING TEAM
+                                                    </span>
+                                                `
+
+                                                : stealMode
+
+                                                ? `
+                                                    <span>
+                                                        STEAL ELIGIBLE
+                                                    </span>
+                                                `
+
+                                                : ''
+                                            }
+
+                                        </div>
+
+
+                                        <div
+                                            class="teamScoreButtons"
+                                        >
 
                                             <button
                                                 data-award="${index}"
@@ -1905,43 +1827,86 @@ function renderHostGame() {
                                         </div>
 
                                     </div>
-
                                 `
-                            ).join('')
+                            )
+                            .join('')
                         }
 
                     </div>
 
 
-                    <div class="strikectl">
+                    <div
+                        class="strikectl"
+                    >
 
                         <span>
-                            Strikes
+                            Strike Board
                         </span>
 
 
                         <div class="xs">
-
                             ${
                                 '✕'.repeat(
                                     game.strikes
                                 )
                             }
-
                             ${
                                 '○'.repeat(
-                                    Math.max(
-                                        0,
-                                        3 - game.strikes
-                                    )
+                                    3 -
+                                    game.strikes
                                 )
                             }
-
                         </div>
+
+
+                        <p>
+
+                            ${
+                                game.controllingTeam !== null
+
+                                ? `
+                                    ${
+                                        esc(
+                                            game
+                                            .teams[
+                                                game
+                                                .controllingTeam
+                                            ]
+                                            .name
+                                        )
+                                    }
+                                    controls this round
+                                `
+
+                                : game.activeTeam !== null
+
+                                ? `
+                                    ${
+                                        esc(
+                                            game
+                                            .teams[
+                                                game
+                                                .activeTeam
+                                            ]
+                                            .name
+                                        )
+                                    }
+                                    is answering
+                                `
+
+                                : 'Select an answering team'
+                            }
+
+                        </p>
 
 
                         <button
                             id="addStrike"
+                            ${
+                                stealMode
+                                    ? 'disabled'
+                                    : ''
+                            }
                         >
                             Manual Strike
                         </button>
@@ -1951,7 +1916,15 @@ function renderHostGame() {
                             id="clearStrike"
                             class="ghost"
                         >
-                            Clear
+                            Clear Strikes
+                        </button>
+
+
+                        <button
+                            id="clearControl"
+                            class="ghost"
+                        >
+                            Clear Defending Team
                         </button>
 
                     </div>
@@ -1967,74 +1940,78 @@ function renderHostGame() {
                         ${
                             game.attemptLog.length
 
-                                ? game.attemptLog
-                                    .slice(-5)
-                                    .reverse()
-                                    .map(
-                                        attempt => `
+                            ? game.attemptLog
+                                .slice(-5)
+                                .reverse()
+                                .map(
+                                    attempt => `
+                                        <div>
 
-                                            <div>
+                                            <span>
+                                                ${
+                                                    attempt.ok
+                                                        ? '✓'
+                                                        : '✕'
+                                                }
+                                            </span>
 
-                                                <span>
-                                                    ${
-                                                        attempt.ok
-                                                            ? '✓'
-                                                            : '✕'
-                                                    }
-                                                </span>
-
-                                                <b>
-                                                    ${esc(
+                                            <b>
+                                                ${
+                                                    esc(
                                                         attempt.team
-                                                    )}
-                                                </b>
+                                                    )
+                                                }
+                                            </b>
 
-                                                <small>
+                                            <small>
+                                                ${
+                                                    esc(
+                                                        attempt.answer ||
+                                                        (
+                                                            attempt.ok
+                                                                ? 'Correct'
+                                                                : 'Strike'
+                                                        )
+                                                    )
+                                                }
+                                            </small>
 
-                                                    ${
-                                                        attempt.ok
-                                                            ? esc(
-                                                                attempt.answer
-                                                            )
-                                                            : 'Strike'
-                                                    }
+                                        </div>
+                                    `
+                                )
+                                .join('')
 
-                                                </small>
-
-                                            </div>
-
-                                        `
-                                    )
-                                    .join('')
-
-                                : `
-
-                                    <p class="microcopy">
-                                        Correct answers and strikes will appear here.
-                                    </p>
-
-                                `
+                            : `
+                                <p
+                                    class="microcopy"
+                                >
+                                    Correct answers and
+                                    strikes will appear here.
+                                </p>
+                            `
                         }
 
                     </div>
 
 
-                    <div class="facilitator">
+                    <div
+                        class="facilitator"
+                    >
 
                         <h3>
                             Facilitator Note
                         </h3>
 
                         <p>
-                            ${esc(
-                                question.note || ''
-                            )}
+                            ${esc(question.note || '')}
                         </p>
 
                     </div>
 
 
-                    <div class="hostfooter">
+                    <div
+                        class="hostfooter"
+                    >
 
                         <button
                             id="openProjector"
@@ -2056,27 +2033,22 @@ function renderHostGame() {
             </div>
 
         </section>
-
     `;
 
 
-    /* =========================================================
-       FULLSCREEN
-       ========================================================= */
+/* =============================================================
+   HOST EVENT HANDLERS
+   ============================================================= */
 
-    $('#gameFullscreen').onclick =
-        toggleFullscreen;
+    $('#hostFullscreen').onclick =
+        fullscreenToggle;
 
-
-    /* =========================================================
-       PROJECTOR PRESENTATION CONTROLS
-       ========================================================= */
 
     $('#showRound').onclick =
         () =>
             mutate(
-                game => {
-                    game.phase =
+                gameState => {
+                    gameState.phase =
                         'round';
                 }
             );
@@ -2085,8 +2057,8 @@ function renderHostGame() {
     $('#showBoard').onclick =
         () =>
             mutate(
-                game => {
-                    game.phase =
+                gameState => {
+                    gameState.phase =
                         'board';
                 }
             );
@@ -2095,20 +2067,96 @@ function renderHostGame() {
     $('#showQuestion').onclick =
         () =>
             mutate(
-                game => {
-                    game.phase =
+                gameState => {
+                    gameState.phase =
                         'question';
                 }
             );
 
 
+    $('#showSteal').onclick =
+        () => {
+
+            const current =
+                normalizeGame(
+                    live()
+                );
+
+
+            if (
+                current.controllingTeam === null &&
+                current.activeTeam === null
+            ) {
+
+                alert(
+                    'Select the team that controlled the round first, then press Steal again.'
+                );
+
+                return;
+            }
+
+
+            mutate(
+                gameState => {
+
+                    if (
+                        gameState.controllingTeam === null
+                    ) {
+
+                        gameState.controllingTeam =
+                            gameState.activeTeam;
+                    }
+
+
+                    gameState.phase =
+                        'steal';
+
+
+                    gameState.activeTeam =
+                        null;
+
+
+                    gameState.stealResults =
+                        {};
+
+
+                    gameState.stealAwarded =
+                        false;
+                }
+            );
+        };
+
+
     $('#nextRound').onclick =
-        nextRound;
+        () =>
+            mutate(
+                gameState => {
+
+                    if (
+                        gameState.current >=
+                        gameState.questions.length - 1
+                    ) {
+                        return;
+                    }
 
 
-    /* =========================================================
-       ANSWERING TEAM / BUZZER
-       ========================================================= */
+                    gameState.current++;
+
+
+                    gameState.round =
+                        gameState.current + 1;
+
+
+                    resetRoundState(
+                        gameState
+                    );
+
+
+                    gameState.phase =
+                        'round';
+                }
+            );
+
 
     $$('[data-buzz]')
         .forEach(
@@ -2120,43 +2168,36 @@ function renderHostGame() {
                         const index =
                             +button.dataset.buzz;
 
-                        const currentGame =
-                            live();
-
-                        const selectingTeam =
-                            currentGame?.activeTeam !==
-                            index;
 
                         mutate(
-                            game => {
+                            gameState => {
 
-                                game.activeTeam =
-                                    game.activeTeam ===
-                                    index
+                                gameState.activeTeam =
+                                    gameState.activeTeam === index
                                         ? null
                                         : index;
+
+
+                                if (
+                                    gameState.activeTeam !== null &&
+                                    gameState.controllingTeam === null
+                                ) {
+
+                                    gameState.controllingTeam =
+                                        gameState.activeTeam;
+                                }
+
+                            },
+
+                            {
+                                type: 'buzzer',
+                                team: index
                             }
                         );
-
-                        if (
-                            selectingTeam
-                        ) {
-
-                            broadcastEffect(
-                                'buzzer',
-                                {
-                                    team: index
-                                }
-                            );
-                        }
                     };
             }
         );
 
-
-    /* =========================================================
-       CORRECT ANSWER
-       ========================================================= */
 
     $$('[data-correct]')
         .forEach(
@@ -2168,132 +2209,176 @@ function renderHostGame() {
                         const index =
                             +button.dataset.correct;
 
-                        const currentGame =
-                            live();
 
-                        if (
-                            currentGame?.revealed?.includes(
-                                index
-                            )
-                        ) {
-                            return;
-                        }
+                        const alreadyRevealed =
+                            game.revealed
+                                .includes(index);
+
 
                         mutate(
-                            game => {
+                            gameState => {
 
-                                const question =
-                                    game.questions[
-                                        game.current
+                                const currentQuestion =
+                                    gameState.questions[
+                                        gameState.current
                                     ];
 
-                                game.revealed.push(
-                                    index
-                                );
 
-                                game.bank =
-                                    game.revealed.reduce(
-                                        (
-                                            total,
-                                            answerIndex
-                                        ) =>
-                                            total +
-                                            (
-                                                question.answers[
+                                if (
+                                    !gameState.revealed
+                                        .includes(index)
+                                ) {
+
+                                    gameState.revealed
+                                        .push(index);
+
+
+                                    gameState.bank =
+                                        gameState.revealed
+                                            .reduce(
+                                                (
+                                                    total,
                                                     answerIndex
-                                                ]?.[1] ||
+                                                ) =>
+                                                    total +
+                                                    (
+                                                        currentQuestion
+                                                        .answers[
+                                                            answerIndex
+                                                        ]?.[1] ||
+                                                        0
+                                                    ),
                                                 0
-                                            ),
-                                        0
-                                    );
+                                            );
+                                }
 
-                                game.attemptLog.push({
 
-                                    ok: true,
+                                gameState.attemptLog
+                                    .push({
 
-                                    team:
-                                        game.activeTeam !==
-                                        null
+                                        ok: true,
 
-                                            ? game.teams[
-                                                game.activeTeam
-                                            ].name
+                                        team:
+                                            gameState.activeTeam !== null
+                                                ? gameState
+                                                    .teams[
+                                                        gameState
+                                                        .activeTeam
+                                                    ]
+                                                    .name
+                                                : 'Unassigned',
 
-                                            : 'Unassigned',
+                                        answer:
+                                            currentQuestion
+                                            .answers[
+                                                index
+                                            ][0],
 
-                                    answer:
-                                        question.answers[
-                                            index
-                                        ][0],
+                                        time:
+                                            Date.now()
+                                    });
 
-                                    time:
-                                        Date.now()
-                                });
-                            }
-                        );
+                            },
 
-                        broadcastEffect(
-                            'correct',
-                            {
-                                answerIndex: index
-                            }
+                            alreadyRevealed
+
+                                ? null
+
+                                : {
+                                    type: 'correct',
+                                    answerIndex: index
+                                }
                         );
                     };
             }
         );
 
-
-    /* =========================================================
-       WRONG ANSWER
-       ========================================================= */
 
     $$('[data-wrong]')
         .forEach(
             button => {
 
                 button.onclick =
-                    () => {
-
+                    () =>
                         mutate(
-                            game => {
+                            gameState => {
 
-                                game.strikes =
+                                if (
+                                    gameState.phase ===
+                                    'steal'
+                                ) {
+                                    return;
+                                }
+
+
+                                gameState.strikes =
                                     Math.min(
                                         3,
-                                        game.strikes + 1
+                                        gameState.strikes + 1
                                     );
 
-                                game.attemptLog.push({
 
-                                    ok: false,
+                                gameState.attemptLog
+                                    .push({
 
-                                    team:
-                                        game.activeTeam !==
-                                        null
+                                        ok: false,
 
-                                            ? game.teams[
-                                                game.activeTeam
-                                            ].name
+                                        team:
+                                            gameState.activeTeam !== null
+                                                ? gameState
+                                                    .teams[
+                                                        gameState
+                                                        .activeTeam
+                                                    ]
+                                                    .name
+                                                : 'Unassigned',
 
-                                            : 'Unassigned',
+                                        time:
+                                            Date.now()
+                                    });
+                            },
 
-                                    time:
-                                        Date.now()
-                                });
+                            {
+                                type: 'wrong'
                             }
                         );
-
-                        broadcastEffect(
-                            'wrong'
-                        );
-                    };
             }
         );
 
 
-    /* =========================================================
-       AWARD BANK
-       ========================================================= */
+    $$('[data-steal]')
+        .forEach(
+            button => {
+
+                button.onclick =
+                    () =>
+                        mutate(
+                            gameState => {
+
+                                gameState.stealResults[
+                                    String(
+                                        +button.dataset.steal
+                                    )
+                                ] =
+                                    button.dataset.result ===
+                                    'true';
+                            }
+                        );
+            }
+        );
+
+
+    if (
+        $('#awardSteal')
+    ) {
+
+        $('#awardSteal').onclick =
+            () =>
+                mutate(
+                    awardSteal
+                );
+    }
+
 
     $$('[data-award]')
         .forEach(
@@ -2302,21 +2387,19 @@ function renderHostGame() {
                 button.onclick =
                     () =>
                         mutate(
-                            game => {
+                            gameState => {
 
-                                game.teams[
-                                    +button.dataset.award
-                                ].score +=
-                                    game.bank;
+                                gameState
+                                    .teams[
+                                        +button.dataset.award
+                                    ]
+                                    .score +=
+                                    gameState.bank;
                             }
                         );
             }
         );
 
-
-    /* =========================================================
-       MANUAL SCORE ADJUSTMENTS
-       ========================================================= */
 
     $$('[data-adjust]')
         .forEach(
@@ -2325,17 +2408,20 @@ function renderHostGame() {
                 button.onclick =
                     () =>
                         mutate(
-                            game => {
+                            gameState => {
 
-                                const team =
-                                    game.teams[
-                                        +button.dataset.adjust
-                                    ];
+                                const index =
+                                    +button.dataset.adjust;
 
-                                team.score =
+
+                                gameState
+                                    .teams[index]
+                                    .score =
                                     Math.max(
                                         0,
-                                        team.score +
+                                        gameState
+                                            .teams[index]
+                                            .score +
                                         (
                                             +button.dataset.delta
                                         )
@@ -2346,10 +2432,6 @@ function renderHostGame() {
         );
 
 
-    /* =========================================================
-       TEAM NAMES
-       ========================================================= */
-
     $$('[data-teamname]')
         .forEach(
             input => {
@@ -2357,14 +2439,15 @@ function renderHostGame() {
                 input.onchange =
                     () =>
                         mutate(
-                            game => {
+                            gameState => {
 
                                 const index =
                                     +input.dataset.teamname;
 
-                                game.teams[
-                                    index
-                                ].name =
+
+                                gameState
+                                    .teams[index]
+                                    .name =
                                     input.value.trim() ||
                                     `Team ${index + 1}`;
                             }
@@ -2373,155 +2456,165 @@ function renderHostGame() {
         );
 
 
-    /* =========================================================
-       MANUAL STRIKE
-       ========================================================= */
-
     $('#addStrike').onclick =
-        () => {
-
-            mutate(
-                game => {
-
-                    game.strikes =
-                        Math.min(
-                            3,
-                            game.strikes + 1
-                        );
-
-                    game.attemptLog.push({
-
-                        ok: false,
-
-                        team:
-                            game.activeTeam !==
-                            null
-
-                                ? game.teams[
-                                    game.activeTeam
-                                ].name
-
-                                : 'Unassigned',
-
-                        time:
-                            Date.now()
-                    });
-                }
-            );
-
-            broadcastEffect(
-                'wrong'
-            );
-        };
-
-
-    /* =========================================================
-       CLEAR STRIKES
-       ========================================================= */
-
-    $('#clearStrike').onclick =
         () =>
             mutate(
-                game => {
-                    game.strikes =
-                        0;
-                }
-            );
-
-
-    /* =========================================================
-       RESET QUESTION
-       ========================================================= */
-
-    $('#resetRound').onclick =
-        () => {
-
-            if (
-                !confirm(
-                    'Reset this question? Revealed answers, strikes and the round presentation will reset.'
-                )
-            ) {
-                return;
-            }
-
-            mutate(
-                game => {
-
-                    game.phase =
-                        'round';
-
-                    game.revealed =
-                        [];
-
-                    game.strikes =
-                        0;
-
-                    game.bank =
-                        0;
-
-                    game.activeTeam =
-                        null;
-
-                    game.attemptLog =
-                        [];
-                }
-            );
-        };
-
-
-    /* =========================================================
-       PREVIOUS QUESTION
-       ========================================================= */
-
-    $('#prevQ').onclick =
-        () =>
-            mutate(
-                game => {
+                gameState => {
 
                     if (
-                        game.current <=
-                        0
+                        gameState.phase ===
+                        'steal'
                     ) {
                         return;
                     }
 
-                    game.current--;
 
-                    game.round =
-                        game.current + 1;
+                    gameState.strikes =
+                        Math.min(
+                            3,
+                            gameState.strikes + 1
+                        );
 
-                    game.phase =
-                        'round';
 
-                    game.revealed =
-                        [];
+                    gameState.attemptLog
+                        .push({
 
-                    game.strikes =
-                        0;
+                            ok: false,
 
-                    game.bank =
-                        0;
+                            team:
+                                gameState.activeTeam !== null
+                                    ? gameState
+                                        .teams[
+                                            gameState
+                                            .activeTeam
+                                        ]
+                                        .name
+                                    : 'Unassigned',
 
-                    game.activeTeam =
-                        null;
+                            time:
+                                Date.now()
+                        });
+                },
 
-                    game.attemptLog =
-                        [];
+                {
+                    type: 'wrong'
                 }
             );
 
 
-    /* =========================================================
-       NEXT QUESTION
-       ========================================================= */
+    $('#clearStrike').onclick =
+        () =>
+            mutate(
+                gameState => {
+                    gameState.strikes = 0;
+                }
+            );
+
+
+    $('#clearControl').onclick =
+        () =>
+            mutate(
+                gameState => {
+
+                    gameState.controllingTeam =
+                        null;
+
+                    gameState.activeTeam =
+                        null;
+
+                    gameState.stealResults =
+                        {};
+
+                    gameState.stealAwarded =
+                        false;
+
+
+                    if (
+                        gameState.phase ===
+                        'steal'
+                    ) {
+                        gameState.phase =
+                            'question';
+                    }
+                }
+            );
+
+
+    $('#resetRound').onclick =
+        () =>
+            mutate(
+                gameState => {
+
+                    resetRoundState(
+                        gameState
+                    );
+
+                    gameState.phase =
+                        'round';
+                }
+            );
+
+
+    $('#prevQ').onclick =
+        () =>
+            mutate(
+                gameState => {
+
+                    if (
+                        gameState.current <= 0
+                    ) {
+                        return;
+                    }
+
+
+                    gameState.current--;
+
+
+                    gameState.round =
+                        gameState.current + 1;
+
+
+                    resetRoundState(
+                        gameState
+                    );
+
+
+                    gameState.phase =
+                        'round';
+                }
+            );
+
 
     $('#nextQ').onclick =
-        nextRound;
+        () =>
+            mutate(
+                gameState => {
+
+                    if (
+                        gameState.current >=
+                        gameState.questions.length - 1
+                    ) {
+                        return;
+                    }
 
 
-    /* =========================================================
-       OPEN PROJECTOR
-       ========================================================= */
+                    gameState.current++;
+
+
+                    gameState.round =
+                        gameState.current + 1;
+
+
+                    resetRoundState(
+                        gameState
+                    );
+
+
+                    gameState.phase =
+                        'round';
+                }
+            );
+
 
     $('#openProjector').onclick =
         () =>
@@ -2531,169 +2624,343 @@ function renderHostGame() {
             );
 
 
-    /* =========================================================
-       SAVED GAMES
-       ========================================================= */
-
     $('#homeBtn').onclick =
         renderHostHome;
 
 
-    broadcast(
-        game
+    notify(game);
+}
+
+
+/* =============================================================
+   PROJECTOR AUDIO
+   ============================================================= */
+
+function volumeIndex() {
+
+    const index =
+        Number(
+            localStorage.getItem(
+                VOLUME_KEY
+            )
+        );
+
+
+    return (
+        Number.isInteger(index) &&
+        index >= 0 &&
+        index < VOLUME_LEVELS.length
+    )
+        ? index
+        : 2;
+}
+
+
+function playSound(name) {
+
+    if (
+        !document.body.classList
+            .contains('projector')
+    ) {
+        return;
+    }
+
+
+    const setting =
+        VOLUME_LEVELS[
+            volumeIndex()
+        ];
+
+
+    if (
+        !setting.volume
+    ) {
+        return;
+    }
+
+
+    const audio =
+        new Audio(
+            SOUNDS[name]
+        );
+
+
+    audio.volume =
+        setting.volume;
+
+
+    audio.play()
+        .catch(
+            () => {}
+        );
+}
+
+
+function prepareProjectorAudio() {
+
+    const prime =
+        () => {
+
+            const audio =
+                new Audio(
+                    SOUNDS.answer
+                );
+
+
+            audio.volume = 0;
+
+
+            audio.play()
+                .then(
+                    () =>
+                        audio.pause()
+                )
+                .catch(
+                    () => {}
+                );
+        };
+
+
+    window.addEventListener(
+        'pointerdown',
+        prime,
+        {
+            once: true
+        }
+    );
+
+
+    window.addEventListener(
+        'keydown',
+        prime,
+        {
+            once: true
+        }
     );
 }
 
 
 /* =============================================================
-   PROJECTOR EFFECTS
-
-   THIS IS THE ONLY SECTION THAT PLAYS GAME AUDIO.
+   PROJECTOR UTILITIES
    ============================================================= */
 
-function runProjectorEffect(
-    effect,
-    data = {}
-) {
+function createProjectorUtilities() {
 
-    if (!isProjector()) {
-        return;
-    }
+    let utilities =
+        $('.projectorUtilities');
 
 
-    /* =========================================================
-       WRONG
-       ========================================================= */
+    if (!utilities) {
 
-    if (
-        effect ===
-        'wrong'
-    ) {
-
-        playProjectorSound(
-            'incorrect'
-        );
-
-
-        const existing =
-            document.querySelector(
-                '.wrongOverlay'
-            );
-
-        if (existing) {
-            existing.remove();
-        }
-
-
-        const overlay =
+        utilities =
             document.createElement(
                 'div'
             );
 
-        overlay.className =
-            'wrongOverlay';
 
-        overlay.innerHTML = `
+        utilities.className =
+            'projectorUtilities';
 
-            <div class="giantX">
-                ✕
-            </div>
 
+        utilities.innerHTML = `
+
+            <a
+                class="projectorUtilityButton"
+                href="host.html"
+                target="_blank"
+                title="Host / Admin"
+            >
+
+                ${monitorIcon()}
+
+                <span
+                    class="utilityGear"
+                >
+                    ⚙
+                </span>
+
+            </a>
+
+
+            <button
+                id="projectorVolume"
+                class="projectorUtilityButton"
+            ></button>
+
+
+            <button
+                id="projectorFullscreen"
+                class="projectorUtilityButton"
+            >
+                ${fullscreenIcon()}
+            </button>
         `;
 
-        document.body.appendChild(
-            overlay
-        );
+
+        document.body
+            .appendChild(
+                utilities
+            );
+    }
+
+
+    const volumeButton =
+        $('#projectorVolume', utilities);
+
+
+    const fullscreenButton =
+        $('#projectorFullscreen', utilities);
+
+
+    function updateVolume() {
+
+        const setting =
+            VOLUME_LEVELS[
+                volumeIndex()
+            ];
+
+
+        volumeButton.textContent =
+            setting.icon;
+
+
+        volumeButton.title =
+            `Volume: ${setting.label}`;
+    }
+
+
+    volumeButton.onclick =
+        () => {
+
+            const next =
+                (
+                    volumeIndex() + 1
+                ) %
+                VOLUME_LEVELS.length;
+
+
+            localStorage.setItem(
+                VOLUME_KEY,
+                String(next)
+            );
+
+
+            updateVolume();
+
+
+            if (
+                VOLUME_LEVELS[next]
+                    .volume > 0
+            ) {
+                playSound('answer');
+            }
+        };
+
+
+    fullscreenButton.onclick =
+        fullscreenToggle;
+
+
+    updateVolume();
+}
+
+
+/* =============================================================
+   PROJECTOR EVENTS
+   ============================================================= */
+
+function handleProjectorEvent(event) {
+
+    if (!event) {
+        return;
+    }
+
+
+    if (
+        event.type === 'buzzer'
+    ) {
+
+        buzzerTeam =
+            event.team;
+
+
+        playSound('answer');
+
 
         setTimeout(
-            () =>
-                overlay.remove(),
+            () => {
+
+                buzzerTeam =
+                    null;
+
+                renderProjector(
+                    live()
+                );
+            },
+
+            650
+        );
+    }
+
+
+    if (
+        event.type === 'correct'
+    ) {
+
+        flashAnswer =
+            event.answerIndex;
+
+
+        playSound('correct');
+
+
+        setTimeout(
+            () => {
+
+                flashAnswer =
+                    null;
+
+                renderProjector(
+                    live()
+                );
+            },
+
             900
         );
     }
 
 
-    /* =========================================================
-       CORRECT
-       ========================================================= */
-
     if (
-        effect ===
-        'correct'
+        event.type === 'wrong'
     ) {
 
-        playProjectorSound(
-            'correct'
+        wrongVisible =
+            true;
+
+
+        playSound(
+            'incorrect'
         );
 
 
-        const tile =
-            document.querySelector(
-                `[data-projector-answer="${data.answerIndex}"]`
-            );
-
-        if (tile) {
-
-            tile.classList.remove(
-                'correctFlash'
-            );
-
-            void tile.offsetWidth;
-
-            tile.classList.add(
-                'correctFlash'
-            );
-
-            setTimeout(
-                () =>
-                    tile.classList.remove(
-                        'correctFlash'
-                    ),
-                1000
-            );
-        }
-    }
-
-
-    /* =========================================================
-       BUZZER / ANSWERING TEAM
-       ========================================================= */
-
-    if (
-        effect ===
-        'buzzer'
-    ) {
-
-        playProjectorSound(
-            'answer'
+        renderProjector(
+            live()
         );
 
 
-        const team =
-            document.querySelector(
-                `[data-projector-team="${data.team}"]`
-            );
+        setTimeout(
+            () => {
 
-        if (team) {
+                wrongVisible =
+                    false;
 
-            team.classList.remove(
-                'buzzerFlash'
-            );
+                renderProjector(
+                    live()
+                );
+            },
 
-            void team.offsetWidth;
-
-            team.classList.add(
-                'buzzerFlash'
-            );
-
-            setTimeout(
-                () =>
-                    team.classList.remove(
-                        'buzzerFlash'
-                    ),
-                650
-            );
-        }
+            900
+        );
     }
 }
 
@@ -2709,10 +2976,6 @@ function renderProjector(
     const root =
         $('#projectorApp');
 
-    if (!root) {
-        return;
-    }
-
 
     game =
         normalizeGame(
@@ -2720,17 +2983,16 @@ function renderProjector(
         );
 
 
-    /* =========================================================
-       WAITING SCREEN
-       ========================================================= */
-
     if (!game) {
 
         root.innerHTML = `
+            <section
+                class="waiting"
+            >
 
-            <section class="waiting">
-
-                <div class="eyebrow">
+                <div
+                    class="eyebrow"
+                >
                     CRISIS INTERVENTION TRAINING
                 </div>
 
@@ -2739,43 +3001,15 @@ function renderProjector(
                 </h1>
 
                 <p>
-                    Waiting for the host to start or resume a game…
+                    Waiting for the host
+                    to start or resume a game…
                 </p>
 
             </section>
-
         `;
 
-        return;
-    }
 
-
-    if (
-        !Array.isArray(
-            game.questions
-        ) ||
-        !game.questions.length
-    ) {
-
-        root.innerHTML = `
-
-            <section class="waiting">
-
-                <div class="eyebrow">
-                    CRISIS INTERVENTION TRAINING
-                </div>
-
-                <h1>
-                    CIT <b>FEUD</b>
-                </h1>
-
-                <p>
-                    This game does not contain any questions.
-                </p>
-
-            </section>
-
-        `;
+        createProjectorUtilities();
 
         return;
     }
@@ -2787,78 +3021,167 @@ function renderProjector(
         ];
 
 
-    if (!question) {
-        return;
-    }
-
-
-    /* =========================================================
-       ROUND INTRO
-
-       The old "Top Answers" screen has been removed.
-
-       Intro now shows:
-       ROUND #
-       TOP # ANSWERS ON THE BOARD
-       ========================================================= */
-
     if (
-        game.phase ===
-        'round'
+        game.phase === 'round'
     ) {
 
         root.innerHTML = `
+            <section
+                class="roundIntro"
+            >
 
-            <section class="roundIntro">
-
-                <div class="eyebrow">
+                <div
+                    class="eyebrow"
+                >
                     CRISIS INTERVENTION TRAINING
                 </div>
 
-                <div class="roundWord">
+
+                <div
+                    class="roundWord"
+                >
                     ROUND
                 </div>
 
-                <div class="roundNumber">
+
+                <div
+                    class="roundNumber"
+                >
                     ${game.round}
                 </div>
 
-                <div class="roundPack">
-                    TOP ${question.answers.length} ANSWERS ON THE BOARD
+
+                <div
+                    class="roundPack"
+                >
+                    TOP
+                    ${question.answers.length}
+                    ANSWERS ON THE BOARD
                 </div>
 
             </section>
-
         `;
+
+
+        createProjectorUtilities();
 
         return;
     }
 
 
-    /* =========================================================
-       BOARD / BOARD + QUESTION
-       ========================================================= */
+    const stealMode =
+        game.phase === 'steal';
+
 
     const showQuestion =
-        game.phase ===
-        'question';
+        game.phase === 'question' ||
+        stealMode;
+
+
+    const centerHeader =
+        stealMode
+
+        ? `
+            <div
+                class="stealHeader"
+            >
+
+                <span>
+                    ⚡
+                </span>
+
+                <strong>
+                    STEAL THE BOARD
+                </strong>
+
+                <span>
+                    ⚡
+                </span>
+
+                <small>
+                    EVERY OTHER TEAM CAN STEAL
+                </small>
+
+            </div>
+        `
+
+        : `
+            <div
+                class="topStrikeArea"
+            >
+
+                <span
+                    class="strikeLabel"
+                >
+                    STRIKES
+                </span>
+
+
+                <div
+                    class="topStrikes"
+                >
+
+                    ${
+                        Array.from(
+                            {
+                                length: 3
+                            },
+                            (_, index) => `
+                                <span
+                                    class="${
+                                        index <
+                                        game.strikes
+                                            ? 'hot'
+                                            : ''
+                                    }"
+                                >
+                                    ✕
+                                </span>
+                            `
+                        )
+                        .join('')
+                    }
+
+                </div>
+
+            </div>
+        `;
 
 
     root.innerHTML = `
+        <section
+            class="
+                stage
+                ${
+                    stealMode
+                        ? 'stealStage'
+                        : ''
+                }
+            "
+        >
 
-        <section class="stage">
+            ${
+                stealMode
+                    ? `
+                        <div
+                            class="stealEdge"
+                        ></div>
+                    `
+                    : ''
+            }
 
 
-            <!-- ===============================================
-                 TOP BAR
-                 =============================================== -->
+            <header
+                class="gameTopBar"
+            >
 
-            <header class="gameTopBar">
+                <div
+                    class="miniBrand"
+                >
 
-
-                <div class="miniBrand">
-
-                    <div class="eyebrow">
+                    <div
+                        class="eyebrow"
+                    >
                         CRISIS INTERVENTION TRAINING
                     </div>
 
@@ -2869,59 +3192,17 @@ function renderProjector(
                 </div>
 
 
-                <!-- ===========================================
-                     STRIKES
-                     =========================================== -->
-
-                <div class="topStrikeArea">
-
-                    <span class="strikeLabel">
-                        STRIKES
-                    </span>
+                ${centerHeader}
 
 
-                    <div class="topStrikes">
-
-                        ${
-                            Array.from(
-                                {
-                                    length: 3
-                                },
-                                (
-                                    _,
-                                    index
-                                ) => `
-
-                                    <span
-                                        class="
-                                            ${
-                                                index <
-                                                game.strikes
-                                                    ? 'hot'
-                                                    : ''
-                                            }
-                                        "
-                                    >
-                                        ✕
-                                    </span>
-
-                                `
-                            ).join('')
-                        }
-
-                    </div>
-
-                </div>
-
-
-                <div class="roundbadge">
+                <div
+                    class="roundbadge"
+                >
 
                     ROUND ${game.round}
 
                     <small>
-                        ${esc(
-                            question.title
-                        )}
+                        ${esc(question.title)}
                     </small>
 
                 </div>
@@ -2929,124 +3210,112 @@ function renderProjector(
             </header>
 
 
-            <!-- ===============================================
-                 QUESTION
-                 =============================================== -->
-
-            <div
-                class="
-                    prompt
-                    ${
-                        showQuestion
-                            ? 'questionVisible'
-                            : 'questionHidden'
-                    }
-                "
+            <main
+                class="projectorGameArea"
             >
 
-                ${
-                    showQuestion
+                <div
+                    class="
+                        prompt
+                        ${
+                            showQuestion
+                                ? 'questionVisible'
+                                : 'questionHidden'
+                        }
+                    "
+                >
 
-                        ? esc(
-                            question.prompt
+                    ${
+                        showQuestion
+                            ? esc(question.prompt)
+                            : '&nbsp;'
+                    }
+
+                </div>
+
+
+                <div
+                    class="projectorAnswers"
+                >
+
+                    ${
+                        question.answers
+                        .map(
+                            (
+                                answer,
+                                index
+                            ) => {
+
+                                const revealed =
+                                    game.revealed
+                                        .includes(index);
+
+
+                                return `
+                                    <div
+                                        class="
+                                            tile
+                                            ${
+                                                revealed
+                                                    ? 'revealed'
+                                                    : ''
+                                            }
+                                            ${
+                                                flashAnswer === index
+                                                    ? 'correctFlash'
+                                                    : ''
+                                            }
+                                        "
+                                    >
+
+                                        <span>
+                                            ${index + 1}
+                                        </span>
+
+
+                                        <b>
+                                            ${
+                                                revealed
+                                                    ? esc(answer[0])
+                                                    : ''
+                                            }
+                                        </b>
+
+
+                                        <em>
+                                            ${
+                                                revealed
+                                                    ? answer[1]
+                                                    : ''
+                                            }
+                                        </em>
+
+                                    </div>
+                                `;
+                            }
                         )
+                        .join('')
+                    }
 
-                        : '&nbsp;'
-                }
-
-            </div>
-
-
-            <!-- ===============================================
-                 ANSWER BOARD
-                 =============================================== -->
-
-            <div class="projectorAnswers">
-
-                ${
-                    question.answers.map(
-                        (
-                            answer,
-                            index
-                        ) => `
-
-                            <div
-                                data-projector-answer="${index}"
-                                class="
-                                    tile
-                                    ${
-                                        game.revealed.includes(
-                                            index
-                                        )
-                                            ? 'revealed'
-                                            : ''
-                                    }
-                                "
-                            >
-
-                                <span>
-                                    ${index + 1}
-                                </span>
-
-                                <b>
-
-                                    ${
-                                        game.revealed.includes(
-                                            index
-                                        )
-
-                                            ? esc(
-                                                answer[0]
-                                            )
-
-                                            : ''
-                                    }
-
-                                </b>
-
-                                <em>
-
-                                    ${
-                                        game.revealed.includes(
-                                            index
-                                        )
-
-                                            ? answer[1]
-
-                                            : ''
-                                    }
-
-                                </em>
-
-                            </div>
-
-                        `
-                    ).join('')
-                }
-
-            </div>
+                </div>
 
 
-            <!-- ===============================================
-                 ROUND BANK
-                 =============================================== -->
+                <div
+                    class="projectorBank"
+                >
 
-            <div class="projectorBank">
+                    <span>
+                        ROUND BANK
+                    </span>
 
-                <span>
-                    ROUND
-                </span>
+                    <strong>
+                        ${game.bank}
+                    </strong>
 
-                <strong>
-                    ${game.bank}
-                </strong>
+                </div>
 
-            </div>
+            </main>
 
-
-            <!-- ===============================================
-                 TEAMS
-                 =============================================== -->
 
             <footer
                 class="projectorScores"
@@ -3060,342 +3329,216 @@ function renderProjector(
             >
 
                 ${
-                    game.teams.map(
+                    game.teams
+                    .map(
                         (
                             team,
                             index
-                        ) => `
+                        ) => {
 
-                            <div
-                                data-projector-team="${index}"
-                                class="
-                                    projectorTeam
-                                    ${
-                                        game.activeTeam ===
-                                        index
-                                            ? 'activeAnswerer'
-                                            : ''
-                                    }
-                                "
-                            >
+                            const defending =
+                                stealMode &&
+                                game.controllingTeam ===
+                                index;
 
-                                <span>
-                                    ${esc(
-                                        team.name
-                                    )}
-                                </span>
 
-                                <strong>
-                                    ${team.score}
-                                </strong>
+                            const eligible =
+                                stealMode &&
+                                game.controllingTeam !==
+                                index;
 
-                            </div>
 
-                        `
-                    ).join('')
+                            return `
+                                <div
+                                    class="
+                                        projectorTeam
+
+                                        ${
+                                            game.activeTeam === index
+                                                ? 'activeAnswerer'
+                                                : ''
+                                        }
+
+                                        ${
+                                            buzzerTeam === index
+                                                ? 'buzzerFlash'
+                                                : ''
+                                        }
+
+                                        ${
+                                            defending
+                                                ? 'defendingTeam'
+                                                : ''
+                                        }
+
+                                        ${
+                                            eligible
+                                                ? 'stealEligible'
+                                                : ''
+                                        }
+                                    "
+                                >
+
+                                    <div
+                                        class="projectorTeamIdentity"
+                                    >
+
+                                        <span>
+                                            ${esc(team.name)}
+                                        </span>
+
+
+                                        ${
+                                            stealMode
+
+                                            ? defending
+
+                                                ? `
+                                                    <small>
+                                                        DEFENDING
+                                                    </small>
+                                                `
+
+                                                : `
+                                                    <small>
+                                                        STEAL ELIGIBLE
+                                                    </small>
+                                                `
+
+                                            : game.activeTeam === index
+
+                                                ? `
+                                                    <small>
+                                                        ANSWERING
+                                                    </small>
+                                                `
+
+                                                : ''
+                                        }
+
+                                    </div>
+
+
+                                    <strong>
+                                        ${team.score}
+                                    </strong>
+
+                                </div>
+                            `;
+                        }
+                    )
+                    .join('')
                 }
 
             </footer>
 
         </section>
 
-    `;
-}
 
+        ${
+            wrongVisible
 
-/* =============================================================
-   PROJECTOR UTILITY CONTROLS
+            ? `
+                <div
+                    class="wrongOverlay"
+                >
 
-   Bottom-left:
-   Host/Admin
-   Volume
-   Fullscreen
-   ============================================================= */
+                    <div
+                        class="giantX"
+                    >
+                        ✕
+                    </div>
 
-function createProjectorUtilities() {
+                </div>
+            `
 
-    if (!isProjector()) {
-        return;
-    }
-
-
-    if (
-        document.querySelector(
-            '.projectorUtilities'
-        )
-    ) {
-        return;
-    }
-
-
-    const utilities =
-        document.createElement(
-            'div'
-        );
-
-
-    utilities.className =
-        'projectorUtilities';
-
-
-    utilities.innerHTML = `
-
-        <a
-            href="host.html"
-            target="_blank"
-            rel="noopener"
-            class="projectorUtilityButton"
-            title="Open Host Controls"
-            aria-label="Open Host Controls"
-        >
-
-            <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-            >
-
-                <circle
-                    cx="12"
-                    cy="8"
-                    r="4"
-                ></circle>
-
-                <path
-                    d="M4.5 20c.7-4.2 3.2-6.3 7.5-6.3s6.8 2.1 7.5 6.3"
-                ></path>
-
-            </svg>
-
-            <span class="utilityGear">
-                ⚙
-            </span>
-
-        </a>
-
-
-        <button
-            class="projectorUtilityButton"
-            id="projectorVolume"
-            title="Change Volume"
-            aria-label="Change Volume"
-        >
-            ${VOLUME_LEVELS[getVolumeLevel()].icon}
-        </button>
-
-
-        <button
-            class="projectorUtilityButton"
-            id="projectorFullscreen"
-            title="Fullscreen"
-            aria-label="Fullscreen"
-        >
-            ⛶
-        </button>
-
+            : ''
+        }
     `;
 
 
-    document.body.appendChild(
-        utilities
-    );
-
-
-    $('#projectorFullscreen').onclick =
-        toggleFullscreen;
-
-
-    updateVolumeButton();
-
-
-    $('#projectorVolume').onclick =
-        cycleProjectorVolume;
+    createProjectorUtilities();
 }
 
 
 /* =============================================================
-   UPDATE VOLUME BUTTON
+   LIVE SYNC
    ============================================================= */
 
-function updateVolumeButton() {
+if (bc) {
 
-    const button =
-        $('#projectorVolume');
+    bc.onmessage =
+        event => {
 
-    if (!button) {
-        return;
-    }
-
-
-    const level =
-        VOLUME_LEVELS[
-            getVolumeLevel()
-        ];
-
-
-    button.textContent =
-        level.icon;
-
-
-    button.title =
-        `Volume: ${level.label} · Click to change`;
-
-
-    button.setAttribute(
-        'aria-label',
-        `Volume: ${level.label}. Click to change.`
-    );
-}
-
-
-/* =============================================================
-   CYCLE PROJECTOR VOLUME
-
-   Muted → Low → Medium → High → Muted
-
-   Clicking this button also creates a direct browser interaction,
-   which helps browsers permit projector audio.
-
-   When a non-muted level is selected, Answer.mp3 plays once as
-   the volume test.
-   ============================================================= */
-
-function cycleProjectorVolume() {
-
-    const current =
-        getVolumeLevel();
-
-
-    const next =
-        (
-            current + 1
-        ) % VOLUME_LEVELS.length;
-
-
-    setVolumeLevel(
-        next
-    );
-
-
-    updateVolumeButton();
-
-
-    if (
-        VOLUME_LEVELS[
-            next
-        ].volume > 0
-    ) {
-
-        testProjectorVolume();
-    }
-}
-
-
-/* =============================================================
-   PROJECTOR AUDIO PREPARATION
-
-   Any interaction with the projector helps unlock browser audio.
-   The dedicated volume button is the preferred way to test it.
-   ============================================================= */
-
-function prepareProjectorAudio() {
-
-    if (!isProjector()) {
-        return;
-    }
-
-
-    let prepared =
-        false;
-
-
-    const prepare =
-        () => {
-
-            if (prepared) {
+            if (
+                !document.body.classList
+                    .contains('projector')
+            ) {
                 return;
             }
 
 
-            prepared =
-                true;
+            const payload =
+                event.data;
 
 
-            Object.values(
-                SOUNDS
-            )
-            .forEach(
-                file => {
+            if (
+                payload &&
+                payload.type === 'state' &&
+                payload.game
+            ) {
 
-                    const audio =
-                        new Audio(file);
-
-
-                    audio.volume =
-                        0;
+                renderProjector(
+                    payload.game
+                );
 
 
-                    audio.play()
-                        .then(
-                            () => {
+                handleProjectorEvent(
+                    payload.event
+                );
 
-                                audio.pause();
+            } else {
 
-                                audio.currentTime =
-                                    0;
-                            }
-                        )
-                        .catch(
-                            () => {}
-                        );
-                }
-            );
-
-
-            window.removeEventListener(
-                'pointerdown',
-                prepare
-            );
-
-
-            window.removeEventListener(
-                'keydown',
-                prepare
-            );
+                renderProjector(
+                    payload
+                );
+            }
         };
-
-
-    window.addEventListener(
-        'pointerdown',
-        prepare,
-        {
-            once: true
-        }
-    );
-
-
-    window.addEventListener(
-        'keydown',
-        prepare,
-        {
-            once: true
-        }
-    );
 }
 
 
+window.addEventListener(
+    'storage',
+    event => {
+
+        if (
+            event.key === LIVE &&
+            document.body.classList
+                .contains('projector')
+        ) {
+
+            renderProjector(
+                live()
+            );
+        }
+    }
+);
+
+
 /* =============================================================
-   STARTUP
+   START
    ============================================================= */
 
-if (isHost()) {
+if (
+    document.body.classList
+        .contains('host')
+) {
 
     renderHostHome();
 
-} else if (isProjector()) {
-
-    renderProjector();
-
-    createProjectorUtilities();
+} else {
 
     prepareProjectorAudio();
+
+    renderProjector();
 }
