@@ -1,119 +1,96 @@
-    .projectorAnswers {
-        grid-template-columns:
-            1fr;
-    }
+:root {
+    --navy: #071426;
+    --navy-2: #0c213d;
+    --navy-3: #12345b;
+    --blue: #174a7e;
 
+    --gold: #f3bd3f;
+    --gold-light: #ffd96a;
 
-    .gameTopBar {
-        grid-template-columns:
-            1fr auto;
-    }
+    --white: #ffffff;
 
+    --red: #d7373f;
+    --green: #18884b;
 
-    .topStrikeArea {
-        grid-row:
-            2;
+    --line: rgba(255,255,255,.14);
+    --panel: rgba(255,255,255,.055);
 
-        grid-column:
-            1 / -1;
-
-        justify-self:
-            center;
-    }
-
-
-    .savecard {
-        flex-direction:
-            column;
-
-        align-items:
-            flex-start;
-    }
-
+    --shadow: 0 18px 50px rgba(0,0,0,.35);
 }
+
 
 /* =========================================================
-   CIT FEUD V4 — STEAL + PROJECTOR REBALANCE OVERRIDES
+   GLOBAL
    ========================================================= */
 
-.presentationStatus{display:block;margin-top:4px;opacity:.5;font-size:.68rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
-.presentationButtons .stealPresentation{border:1px solid rgba(155,115,255,.45)}
-.presentationButtons .stealPresentation.active{color:#fff;background:linear-gradient(135deg,#6c4ed9,#287cc1,#1a9b86);box-shadow:0 0 22px rgba(108,78,217,.25)}
-.teamctl.controlling{border-color:rgba(243,189,63,.55);background:rgba(243,189,63,.08)}
-.teamRoleLine{min-height:17px;margin-top:5px}
-.teamRoleLine span{color:var(--gold-light);font-size:.62rem;font-weight:900;letter-spacing:.12em}
-
-.stealHostPanel{margin:18px 0 22px;padding:18px;border-radius:16px;border:1px solid rgba(155,115,255,.35);background:linear-gradient(135deg,rgba(108,78,217,.12),rgba(23,74,126,.12))}
-.stealHostHeading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:14px}
-.stealHostHeading h3{margin:0}
-.stealBankCallout{flex:0 0 auto;min-width:95px;padding:9px 13px;text-align:center;border-radius:12px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.1)}
-.stealBankCallout span,.defendingTeamHost span,.stealAwardSummary span{display:block;opacity:.55;font-size:.58rem;font-weight:900;letter-spacing:.13em}
-.stealBankCallout strong{color:var(--gold-light);font-size:1.65rem}
-.stealNeedsControl{padding:14px;border-radius:12px;background:rgba(255,255,255,.06);line-height:1.5}
-.defendingTeamHost{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:11px 13px;margin-bottom:10px;border-radius:11px;background:rgba(243,189,63,.08);border:1px solid rgba(243,189,63,.22)}
-.defendingTeamHost strong{color:var(--gold-light)}
-.stealTeamList{display:grid;gap:8px}
-.stealTeamRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:11px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09)}
-.stealTeamRow small{display:block;margin-bottom:2px;opacity:.45;font-size:.58rem;font-weight:900;letter-spacing:.12em}
-.stealTeamRow.stealCorrect{background:rgba(56,189,120,.13);border-color:rgba(56,189,120,.5)}
-.stealTeamRow.stealWrong{background:rgba(215,55,63,.1);border-color:rgba(215,55,63,.4)}
-.stealJudgeButtons{display:flex;gap:7px}
-.stealAwardSummary{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1)}
-.stealAwardSummary>div{min-width:88px}
-.stealAwardSummary strong{display:block;margin-top:3px;color:var(--gold-light);font-size:1.35rem}
-.stealAwardSummary button{justify-self:end}
-
-/* Fill the projector instead of leaving the board floating in dead space. */
-.stage{position:relative;isolation:isolate;height:100vh;min-height:100vh;display:grid;grid-template-rows:minmax(58px,8vh) minmax(0,1fr) minmax(74px,10vh);gap:clamp(8px,1.2vh,14px);padding:clamp(14px,2vh,22px) clamp(24px,3vw,52px) clamp(16px,2vh,24px)}
-.gameTopBar{display:grid;grid-template-columns:minmax(190px,1fr) auto minmax(190px,1fr);align-items:center;gap:20px;min-width:0}
-.miniBrand .eyebrow{font-size:clamp(.48rem,.55vw,.7rem)}
-.miniBrand strong{font-size:clamp(1.25rem,1.6vw,1.8rem)}
-.roundbadge{min-width:clamp(130px,10vw,175px);padding:8px 14px;font-size:clamp(.62rem,.72vw,.82rem)}
-.topStrikeArea{padding:8px 19px;gap:13px}
-.topStrikes span{font-size:clamp(1.7rem,2vw,2.25rem)}
-
-.projectorGameArea{min-height:0;width:min(1380px,94vw);justify-self:center;align-self:stretch;display:grid;grid-template-rows:minmax(82px,auto) minmax(0,1fr) auto;align-items:center;gap:clamp(10px,1.5vh,18px)}
-.prompt{width:min(1320px,100%);min-height:clamp(74px,10vh,110px);margin:0 auto;padding:4px clamp(10px,2vw,30px);font-size:clamp(1.65rem,2.6vw,3rem);line-height:1.12;text-wrap:balance}
-.projectorAnswers{width:min(1320px,100%);margin:auto;grid-template-columns:1fr 1fr;grid-auto-rows:minmax(clamp(76px,9vh,104px),1fr);gap:clamp(10px,1.4vh,16px) clamp(12px,1.2vw,20px);align-content:center}
-.tile{min-height:clamp(76px,9vh,104px);grid-template-columns:clamp(58px,4.5vw,76px) minmax(0,1fr) clamp(62px,4.5vw,78px);border-radius:13px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.05),0 10px 22px rgba(0,0,0,.28)}
-.tile>span,.tile em{font-size:clamp(1.35rem,1.8vw,2rem)}
-.tile b{padding:0 clamp(12px,1.2vw,20px);font-size:clamp(1.05rem,1.45vw,1.65rem);line-height:1.08}
-.projectorBank{gap:13px;padding:7px 22px}
-.projectorBank strong{font-size:clamp(1.45rem,1.8vw,2rem)}
-
-.projectorScores{gap:clamp(7px,.7vw,12px);align-self:end}
-.projectorTeam{min-height:clamp(64px,8vh,86px);padding:clamp(10px,1.3vh,15px) clamp(12px,1.1vw,18px);border-radius:13px}
-.projectorTeamIdentity{min-width:0}
-.projectorTeam span{display:block;font-size:clamp(.72rem,1vw,1rem)}
-.projectorTeam small{display:block;margin-top:4px;color:var(--gold-light);font-size:clamp(.48rem,.55vw,.62rem);font-weight:900;letter-spacing:.12em;opacity:.78}
-.projectorTeam>strong{font-size:clamp(1.45rem,2.1vw,2.2rem)}
-
-.stealStage{background:radial-gradient(circle at 50% 22%,rgba(91,75,180,.18),transparent 38%)}
-.stealEdge{position:fixed;inset:0;z-index:9990;pointer-events:none;padding:6px;background:linear-gradient(115deg,#ff5d8f,#ffbf4b,#65d98a,#4ab7ff,#9a72ff,#ff5d8f);background-size:300% 300%;animation:stealGradient 9s ease-in-out infinite;opacity:.82;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;-webkit-mask-composite:xor}
-@keyframes stealGradient{0%{background-position:0% 50%;opacity:.5}50%{background-position:100% 50%;opacity:.95}100%{background-position:0% 50%;opacity:.5}}
-.stealHeader{min-width:clamp(320px,34vw,560px);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:8px 20px;text-align:center;border-radius:100px;border:1px solid rgba(175,150,255,.42);background:linear-gradient(135deg,rgba(104,72,200,.3),rgba(24,136,148,.22));box-shadow:0 0 28px rgba(105,82,200,.18)}
-.stealHeader>span{font-size:clamp(1rem,1.3vw,1.45rem)}
-.stealHeader strong{font-size:clamp(.9rem,1.15vw,1.25rem);letter-spacing:.12em}
-.stealHeader small{grid-column:1/-1;margin-top:-4px;font-size:clamp(.45rem,.52vw,.58rem);font-weight:900;letter-spacing:.16em;opacity:.62}
-.projectorTeam.defendingTeam{background:rgba(243,189,63,.08);border-color:rgba(243,189,63,.4);opacity:.72}
-.projectorTeam.stealEligible{border-color:rgba(135,175,255,.28);background:linear-gradient(135deg,rgba(95,70,180,.12),rgba(20,115,140,.1))}
-
-/* Keep projector utility controls above the larger score footer. */
-.projectorUtilities{bottom:18px;z-index:99999}
-
-/* Smaller screens */
-@media(max-width:1000px){
-    .presentationButtons{justify-content:flex-start}
+* {
+    box-sizing: border-box;
 }
-@media(max-width:760px){
-    .stealAwardSummary{grid-template-columns:1fr 1fr}
-    .stealAwardSummary button{grid-column:1/-1;justify-self:stretch}
-    .stage{height:auto;overflow-y:auto;grid-template-rows:auto auto auto}
-    .projectorAnswers{grid-template-columns:1fr;grid-auto-rows:minmax(58px,auto)}
-    .gameTopBar{grid-template-columns:1fr auto}
-    .topStrikeArea,.stealHeader{grid-row:2;grid-column:1/-1;justify-self:center}
-    .projectorScores{grid-template-columns:1fr 1fr!important}
+
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
 }
-@media(prefers-reduced-motion:reduce){
-    .stealEdge{animation:none!important}
+
+
+body {
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background:
+        radial-gradient(
+            circle at top,
+            #17375c 0%,
+            #08192e 45%,
+            #040b15 100%
+        );
+
+    color: var(--white);
 }
+
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+
+button,
+.buttonlike {
+    border: 0;
+
+    border-radius: 10px;
+
+    padding: 11px 16px;
+
+    background:
+        linear-gradient(
+            180deg,
+            var(--gold-light),
+            var(--gold)
+        );
+
+    color: #1c1a12;
+
+    font-weight: 900;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 4px 12px
+        rgba(0,0,0,.25);
+
+    transition:
+        transform .12s ease,
+        opacity .12s ease,
+        box-shadow .12s ease;
+}
+
+
+button:hover,
+.buttonlike:hover {
