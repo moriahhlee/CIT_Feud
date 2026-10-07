@@ -2,7 +2,8 @@
    CIT FEUD — MAIN GAME ENGINE
    ============================================================= */
 
-const QUESTION_PACKS = window.CIT_FEUD_PACKS || [];
+window.CIT_FEUD_PACKS = window.CIT_FEUD_PACKS || [];
+const QUESTION_PACKS = window.CIT_FEUD_PACKS;
 
 
 /* =============================================================
