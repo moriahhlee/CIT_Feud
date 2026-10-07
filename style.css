@@ -3996,3 +3996,57 @@ body.projector::after{
     }
 }
 
+/* =============================================================
+   FINAL LAYOUT CORRECTIONS — CURRENT JS
+   Prevent projector bank stretching and preserve desktop matchup
+   layout at narrower host/control-panel widths.
+   ============================================================= */
+
+/* The bank is always a compact pill. Do not allow CSS Grid to
+   stretch it into the flexible board row when no steal banner exists. */
+.projectorBoardArea {
+    grid-template-rows: none;
+    grid-auto-rows: auto;
+    align-content: center;
+}
+
+.projectorBoardArea .answerBoard {
+    align-self: center;
+}
+
+.projectorBoardArea .projectorBank {
+    width: max-content;
+    height: max-content;
+    min-height: 0;
+    align-self: center;
+    justify-self: center;
+}
+
+/* The host is primarily a desktop control surface. Keep the two
+   active teams side-by-side instead of collapsing them into a
+   single vertical column at ordinary browser/window widths. */
+@media (max-width: 900px) {
+    .matchupControlHeader {
+        align-items: flex-end;
+        flex-direction: row;
+    }
+
+    .matchupControlHeader small {
+        max-width: 260px;
+        text-align: right;
+    }
+
+    .matchupBench {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 650px) {
+    .matchupPrimary {
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    }
+
+    .matchupVs {
+        min-height: unset;
+    }
+}
