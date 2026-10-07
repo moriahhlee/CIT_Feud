@@ -24,11 +24,9 @@ const QUESTION_PACKS =
    ============================================================= */
 
 const KEY = 'citFeudSlotsV4';
-
 const LIVE = 'citFeudLiveV4';
-
 const CHANNEL = 'cit-feud-v4';
-
+const VOLUME_KEY = 'citFeudVolumeV1';
 
 const bc =
     ('BroadcastChannel' in window)
@@ -38,30 +36,82 @@ const bc =
 
 /* =============================================================
    SOUND FILES
-
-   These files live in:
-
-   Sounds/
-       Answer.mp3
-       Correct.mp3
-       Incorrect.mp3
-
-   IMPORTANT:
-   Only the PROJECTOR plays audio.
    ============================================================= */
 
 const SOUNDS = {
-
-    answer:
-        'Sounds/Answer.mp3',
-
-    correct:
-        'Sounds/Correct.mp3',
-
-    incorrect:
-        'Sounds/Incorrect.mp3'
-
+    answer: 'Sounds/Answer.mp3',
+    correct: 'Sounds/Correct.mp3',
+    incorrect: 'Sounds/Incorrect.mp3'
 };
+
+
+/* =============================================================
+   PROJECTOR VOLUME
+
+   0 = Muted
+   1 = Low
+   2 = Medium
+   3 = High
+   ============================================================= */
+
+const VOLUME_LEVELS = [
+    {
+        label: 'Muted',
+        icon: '🔇',
+        volume: 0
+    },
+    {
+        label: 'Low',
+        icon: '🔈',
+        volume: 0.3
+    },
+    {
+        label: 'Medium',
+        icon: '🔉',
+        volume: 0.65
+    },
+    {
+        label: 'High',
+        icon: '🔊',
+        volume: 1
+    }
+];
+
+
+function getVolumeLevel() {
+
+    const stored =
+        Number(
+            localStorage.getItem(VOLUME_KEY)
+        );
+
+    if (
+        Number.isInteger(stored) &&
+        stored >= 0 &&
+        stored < VOLUME_LEVELS.length
+    ) {
+        return stored;
+    }
+
+    return 3;
+}
+
+
+function setVolumeLevel(level) {
+
+    localStorage.setItem(
+        VOLUME_KEY,
+        String(level)
+    );
+}
+
+
+function currentVolume() {
+
+    return VOLUME_LEVELS[
+        getVolumeLevel()
+    ].volume;
+}
 
 
 /* =============================================================
@@ -73,7 +123,6 @@ function isHost() {
     return document.body
         .classList
         .contains('host');
-
 }
 
 
@@ -82,7 +131,6 @@ function isProjector() {
     return document.body
         .classList
         .contains('projector');
-
 }
 
 
@@ -133,17 +181,12 @@ function toggleFullscreen() {
 
         document.exitFullscreen()
             .catch(() => {});
-
     }
-
 }
 
 
 /* =============================================================
    PROJECTOR AUDIO
-
-   This function intentionally refuses to play audio
-   from the host page.
    ============================================================= */
 
 function playProjectorSound(name) {
@@ -152,23 +195,25 @@ function playProjectorSound(name) {
         return;
     }
 
-
     const file =
         SOUNDS[name];
-
 
     if (!file) {
         return;
     }
 
+    const volume =
+        currentVolume();
+
+    if (volume <= 0) {
+        return;
+    }
 
     const audio =
         new Audio(file);
 
-
     audio.volume =
-        1;
-
+        volume;
 
     audio.play()
         .catch(
@@ -178,10 +223,31 @@ function playProjectorSound(name) {
                     'CIT Feud audio was blocked by the browser.',
                     error
                 );
-
             }
         );
+}
 
+
+/* =============================================================
+   VOLUME TEST
+
+   Used when changing projector volume so you can immediately
+   confirm that sound is working.
+   ============================================================= */
+
+function testProjectorVolume() {
+
+    if (!isProjector()) {
+        return;
+    }
+
+    if (currentVolume() <= 0) {
+        return;
+    }
+
+    playProjectorSound(
+        'answer'
+    );
 }
 
 
@@ -198,7 +264,6 @@ function slots() {
                 localStorage.getItem(KEY)
             );
 
-
         if (
             Array.isArray(stored)
         ) {
@@ -206,17 +271,13 @@ function slots() {
             while (
                 stored.length < 3
             ) {
-
                 stored.push(null);
-
             }
-
 
             return stored.slice(
                 0,
                 3
             );
-
         }
 
     } catch (error) {
@@ -225,16 +286,13 @@ function slots() {
             'Unable to read CIT Feud save slots.',
             error
         );
-
     }
-
 
     return [
         null,
         null,
         null
     ];
-
 }
 
 
@@ -244,7 +302,6 @@ function writeSlots(value) {
         KEY,
         JSON.stringify(value)
     );
-
 }
 
 
@@ -263,9 +320,7 @@ function live() {
     } catch {
 
         return null;
-
     }
-
 }
 
 
@@ -280,34 +335,18 @@ function broadcast(game) {
         JSON.stringify(game)
     );
 
-
     if (bc) {
 
         bc.postMessage({
-
-            type:
-                'state',
-
+            type: 'state',
             game
-
         });
-
     }
-
 }
 
 
 /* =============================================================
    BROADCAST TRANSIENT EFFECT
-
-   Effects are sent separately from persistent game state.
-
-   Examples:
-   buzzer
-   correct
-   wrong
-
-   The PROJECTOR receives these and handles animation + audio.
    ============================================================= */
 
 function broadcastEffect(
@@ -319,21 +358,12 @@ function broadcastEffect(
         return;
     }
 
-
     bc.postMessage({
-
-        type:
-            'effect',
-
+        type: 'effect',
         effect,
-
         data,
-
-        stamp:
-            Date.now()
-
+        stamp: Date.now()
     });
-
 }
 
 
@@ -346,21 +376,17 @@ function save(game) {
     const savedSlots =
         slots();
 
-
     savedSlots[
         game.slot
     ] = game;
-
 
     writeSlots(
         savedSlots
     );
 
-
     broadcast(
         game
     );
-
 }
 
 
@@ -378,36 +404,26 @@ function fresh(
 
     const questions =
         QUESTION_PACKS
-
             .filter(
                 pack =>
                     packs.includes(
                         pack.id
                     )
             )
-
             .flatMap(
                 pack =>
                     pack.questions.map(
                         question => ({
-
                             ...question,
-
-                            pack:
-                                pack.title,
-
-                            packId:
-                                pack.id
-
+                            pack: pack.title,
+                            packId: pack.id
                         })
                     )
             );
 
-
     return {
 
-        version:
-            4,
+        version: 4,
 
         slot,
 
@@ -423,43 +439,30 @@ function fresh(
                     teamName,
                     index
                 ) => ({
-
                     name:
-                        teamName
-                        ||
+                        teamName ||
                         `Team ${index + 1}`,
-
-                    score:
-                        0
-
+                    score: 0
                 })
             ),
 
         questions,
 
-        current:
-            0,
+        current: 0,
 
-        round:
-            1,
+        round: 1,
 
-        phase:
-            'round',
+        phase: 'round',
 
-        revealed:
-            [],
+        revealed: [],
 
-        strikes:
-            0,
+        strikes: 0,
 
-        bank:
-            0,
+        bank: 0,
 
-        activeTeam:
-            null,
+        activeTeam: null,
 
-        attemptLog:
-            [],
+        attemptLog: [],
 
         started:
             new Date()
@@ -468,16 +471,14 @@ function fresh(
         updated:
             new Date()
                 .toISOString()
-
     };
-
 }
 
 
 /* =============================================================
    NORMALIZE EXISTING GAME
 
-   Helps older save data continue to work.
+   Old "top" presentation states are converted to the new Intro.
    ============================================================= */
 
 function normalizeGame(game) {
@@ -486,71 +487,59 @@ function normalizeGame(game) {
         return game;
     }
 
-
     if (
         game.activeTeam === undefined
     ) {
-
         game.activeTeam =
             null;
-
     }
-
 
     if (
         !Array.isArray(
             game.attemptLog
         )
     ) {
-
         game.attemptLog =
             [];
-
     }
-
 
     if (
         !Array.isArray(
             game.revealed
         )
     ) {
-
         game.revealed =
             [];
-
     }
-
 
     if (
         !Array.isArray(
             game.teams
         )
     ) {
-
         game.teams =
             [];
-
     }
-
 
     if (!game.phase) {
-
         game.phase =
             'question';
-
     }
 
+    if (
+        game.phase ===
+        'top'
+    ) {
+        game.phase =
+            'round';
+    }
 
     if (!game.round) {
-
         game.round =
             game.current + 1;
-
     }
 
-
     return game;
-
 }
 
 
@@ -565,29 +554,21 @@ function mutate(callback) {
             live()
         );
 
-
     if (!game) {
         return;
     }
 
-
     callback(game);
-
 
     game.updated =
         new Date()
             .toISOString();
 
-
     save(game);
 
-
     if (isHost()) {
-
         renderHostGame();
-
     }
-
 }
 
 
@@ -616,7 +597,6 @@ function tags(
         </div>
 
     `;
-
 }
 
 
@@ -632,46 +612,34 @@ if (bc) {
             const message =
                 event.data;
 
-
             if (!isProjector()) {
                 return;
             }
-
 
             if (
                 message?.type ===
                 'state'
             ) {
-
                 renderProjector(
                     message.game
                 );
-
             }
-
 
             if (
                 message?.type ===
                 'effect'
             ) {
-
                 runProjectorEffect(
                     message.effect,
                     message.data
                 );
-
             }
-
         };
-
 }
 
 
 /* =============================================================
    STORAGE FALLBACK
-
-   This keeps persistent state synchronized even if
-   BroadcastChannel is unavailable.
    ============================================================= */
 
 window.addEventListener(
@@ -679,17 +647,13 @@ window.addEventListener(
     event => {
 
         if (
-            event.key === LIVE
-            &&
+            event.key === LIVE &&
             isProjector()
         ) {
-
             renderProjector(
                 live()
             );
-
         }
-
     }
 );
 
@@ -703,20 +667,16 @@ function renderHostHome() {
     const root =
         $('#hostApp');
 
-
     if (!root) {
         return;
     }
 
-
     const savedSlots =
         slots();
-
 
     root.innerHTML = `
 
         <section class="startup">
-
 
             <div class="hostUtilityBar">
 
@@ -749,7 +709,6 @@ function renderHostHome() {
 
 
             <div class="homegrid">
-
 
                 <div class="panel">
 
@@ -850,7 +809,6 @@ function renderHostHome() {
 
                                     }
 
-
                                     return `
 
                                         <article class="savecard empty">
@@ -881,7 +839,6 @@ function renderHostHome() {
                                         </article>
 
                                     `;
-
                                 }
                             ).join('')
                         }
@@ -912,7 +869,7 @@ function renderHostHome() {
                         </li>
 
                         <li>
-                            Click once on the projector page so the browser can allow game audio.
+                            Use the volume control on the projector to set and test game audio.
                         </li>
 
                         <li>
@@ -957,16 +914,12 @@ function renderHostHome() {
                                 ]
                             );
 
-
                         broadcast(
                             game
                         );
 
-
                         renderHostGame();
-
                     };
-
             }
         );
 
@@ -980,7 +933,6 @@ function renderHostHome() {
                         renderSetup(
                             +button.dataset.new
                         );
-
             }
         );
 
@@ -995,7 +947,6 @@ function renderHostHome() {
                         const index =
                             +button.dataset.delete;
 
-
                         if (
                             confirm(
                                 'Delete this saved game?'
@@ -1006,21 +957,15 @@ function renderHostHome() {
                                 index
                             ] = null;
 
-
                             writeSlots(
                                 savedSlots
                             );
 
-
                             renderHostHome();
-
                         }
-
                     };
-
             }
         );
-
 }
 
 
@@ -1033,16 +978,13 @@ function renderSetup(slot) {
     const root =
         $('#hostApp');
 
-
     if (!root) {
         return;
     }
 
-
     root.innerHTML = `
 
         <section class="startup">
-
 
             <div class="hostUtilityBar">
 
@@ -1285,7 +1227,6 @@ function renderSetup(slot) {
         const count =
             +teamCount.value;
 
-
         const existing =
             $$(
                 'input[name=teamName]'
@@ -1295,7 +1236,6 @@ function renderSetup(slot) {
                     input.value
             );
 
-
         $('#teamNames').innerHTML = `
 
             <div class="teaminputs">
@@ -1303,8 +1243,7 @@ function renderSetup(slot) {
                 ${
                     Array.from(
                         {
-                            length:
-                                count
+                            length: count
                         },
                         (
                             _,
@@ -1318,8 +1257,7 @@ function renderSetup(slot) {
                                 <input
                                     name="teamName"
                                     value="${esc(
-                                        existing[index]
-                                        ||
+                                        existing[index] ||
                                         `Team ${index + 1}`
                                     )}"
                                     maxlength="24"
@@ -1334,7 +1272,6 @@ function renderSetup(slot) {
             </div>
 
         `;
-
     }
 
 
@@ -1397,7 +1334,6 @@ function renderSetup(slot) {
                 );
 
                 return;
-
             }
 
 
@@ -1407,9 +1343,7 @@ function renderSetup(slot) {
 
 
             renderHostGame();
-
         };
-
 }
 
 
@@ -1422,82 +1356,76 @@ function phaseLabel(phase) {
     switch (phase) {
 
         case 'round':
-
-            return 'Round Intro';
-
-
-        case 'top':
-
-            return 'Top Answers';
-
+            return 'Intro';
 
         case 'board':
-
-            return 'Hidden Board';
-
+            return 'Board';
 
         case 'question':
-
-            return 'Question Revealed';
-
+            return 'Board + Question';
 
         default:
-
-            return 'Gameplay';
-
+            return 'Intro';
     }
-
 }
 
 
 /* =============================================================
-   NEXT PRESENTATION PHASE
-
-   Sequence:
-
-   ROUND
-   ↓
-   TOP _ ANSWERS ON THE BOARD
-   ↓
-   HIDDEN ANSWER BOARD
-   ↓
-   QUESTION REVEALED
+   ADVANCE TO NEXT ROUND
    ============================================================= */
 
-function nextPresentationPhase() {
+function nextRound() {
+
+    const game =
+        normalizeGame(
+            live()
+        );
+
+    if (!game) {
+        return;
+    }
+
+
+    if (
+        game.current >=
+        game.questions.length - 1
+    ) {
+
+        alert(
+            'This is the final round.'
+        );
+
+        return;
+    }
+
 
     mutate(
         game => {
 
-            if (
-                game.phase ===
-                'round'
-            ) {
+            game.current++;
 
-                game.phase =
-                    'top';
+            game.round =
+                game.current + 1;
 
-            } else if (
-                game.phase ===
-                'top'
-            ) {
+            game.phase =
+                'round';
 
-                game.phase =
-                    'board';
+            game.revealed =
+                [];
 
-            } else if (
-                game.phase ===
-                'board'
-            ) {
+            game.strikes =
+                0;
 
-                game.phase =
-                    'question';
+            game.bank =
+                0;
 
-            }
+            game.activeTeam =
+                null;
 
+            game.attemptLog =
+                [];
         }
     );
-
 }
 
 
@@ -1518,15 +1446,13 @@ function renderHostGame() {
         renderHostHome();
 
         return;
-
     }
 
 
     if (
         !Array.isArray(
             game.questions
-        )
-        ||
+        ) ||
         !game.questions.length
     ) {
 
@@ -1534,11 +1460,9 @@ function renderHostGame() {
             'This saved game does not contain any questions.'
         );
 
-
         renderHostHome();
 
         return;
-
     }
 
 
@@ -1553,7 +1477,6 @@ function renderHostGame() {
         renderHostHome();
 
         return;
-
     }
 
 
@@ -1564,6 +1487,11 @@ function renderHostGame() {
     if (!root) {
         return;
     }
+
+
+    const isFinalRound =
+        game.current >=
+        game.questions.length - 1;
 
 
     root.innerHTML = `
@@ -1633,7 +1561,7 @@ function renderHostGame() {
                     </div>
 
                     <strong>
-                        ${phaseLabel(game.phase)}
+                        Round ${game.round}
                     </strong>
 
                 </div>
@@ -1650,20 +1578,7 @@ function renderHostGame() {
                                 : 'ghost'
                         }"
                     >
-                        Round
-                    </button>
-
-
-                    <button
-                        id="showTop"
-                        class="${
-                            game.phase ===
-                            'top'
-                                ? ''
-                                : 'ghost'
-                        }"
-                    >
-                        Top ${question.answers.length}
+                        Intro
                     </button>
 
 
@@ -1689,27 +1604,25 @@ function renderHostGame() {
                                 : 'ghost'
                         }"
                     >
-                        Question
+                        Board + Question
                     </button>
 
 
-                    ${
-                        game.phase !==
-                        'question'
-
-                            ? `
-
-                                <button
-                                    id="nextPhase"
-                                    class="presentationNext"
-                                >
-                                    Next Reveal →
-                                </button>
-
-                            `
-
-                            : ''
-                    }
+                    <button
+                        id="nextRound"
+                        class="presentationNext"
+                        ${
+                            isFinalRound
+                                ? 'disabled'
+                                : ''
+                        }
+                    >
+                        ${
+                            isFinalRound
+                                ? 'Final Round'
+                                : 'Next Round →'
+                        }
+                    </button>
 
                 </div>
 
@@ -2156,29 +2069,15 @@ function renderHostGame() {
 
 
     /* =========================================================
-       PRESENTATION CONTROLS
+       PROJECTOR PRESENTATION CONTROLS
        ========================================================= */
 
     $('#showRound').onclick =
         () =>
             mutate(
                 game => {
-
                     game.phase =
                         'round';
-
-                }
-            );
-
-
-    $('#showTop').onclick =
-        () =>
-            mutate(
-                game => {
-
-                    game.phase =
-                        'top';
-
                 }
             );
 
@@ -2187,10 +2086,8 @@ function renderHostGame() {
         () =>
             mutate(
                 game => {
-
                     game.phase =
                         'board';
-
                 }
             );
 
@@ -2199,31 +2096,18 @@ function renderHostGame() {
         () =>
             mutate(
                 game => {
-
                     game.phase =
                         'question';
-
                 }
             );
 
 
-    const nextPhase =
-        $('#nextPhase');
-
-
-    if (nextPhase) {
-
-        nextPhase.onclick =
-            nextPresentationPhase;
-
-    }
+    $('#nextRound').onclick =
+        nextRound;
 
 
     /* =========================================================
        ANSWERING TEAM / BUZZER
-
-       Host sends an effect.
-       Host DOES NOT play audio.
        ========================================================= */
 
     $$('[data-buzz]')
@@ -2236,15 +2120,12 @@ function renderHostGame() {
                         const index =
                             +button.dataset.buzz;
 
-
                         const currentGame =
                             live();
-
 
                         const selectingTeam =
                             currentGame?.activeTeam !==
                             index;
-
 
                         mutate(
                             game => {
@@ -2254,10 +2135,8 @@ function renderHostGame() {
                                     index
                                         ? null
                                         : index;
-
                             }
                         );
-
 
                         if (
                             selectingTeam
@@ -2266,23 +2145,17 @@ function renderHostGame() {
                             broadcastEffect(
                                 'buzzer',
                                 {
-                                    team:
-                                        index
+                                    team: index
                                 }
                             );
-
                         }
-
                     };
-
             }
         );
 
 
     /* =========================================================
        CORRECT ANSWER
-
-       Host updates state and broadcasts the visual/audio effect.
        ========================================================= */
 
     $$('[data-correct]')
@@ -2295,21 +2168,16 @@ function renderHostGame() {
                         const index =
                             +button.dataset.correct;
 
-
                         const currentGame =
                             live();
-
 
                         if (
                             currentGame?.revealed?.includes(
                                 index
                             )
                         ) {
-
                             return;
-
                         }
-
 
                         mutate(
                             game => {
@@ -2319,11 +2187,9 @@ function renderHostGame() {
                                         game.current
                                     ];
 
-
                                 game.revealed.push(
                                     index
                                 );
-
 
                                 game.bank =
                                     game.revealed.reduce(
@@ -2335,18 +2201,15 @@ function renderHostGame() {
                                             (
                                                 question.answers[
                                                     answerIndex
-                                                ]?.[1]
-                                                ||
+                                                ]?.[1] ||
                                                 0
                                             ),
                                         0
                                     );
 
-
                                 game.attemptLog.push({
 
-                                    ok:
-                                        true,
+                                    ok: true,
 
                                     team:
                                         game.activeTeam !==
@@ -2365,32 +2228,23 @@ function renderHostGame() {
 
                                     time:
                                         Date.now()
-
                                 });
-
                             }
                         );
-
 
                         broadcastEffect(
                             'correct',
                             {
-                                answerIndex:
-                                    index
+                                answerIndex: index
                             }
                         );
-
                     };
-
             }
         );
 
 
     /* =========================================================
        WRONG ANSWER
-
-       Host updates strike state.
-       Projector handles X animation + Incorrect.mp3.
        ========================================================= */
 
     $$('[data-wrong]')
@@ -2409,11 +2263,9 @@ function renderHostGame() {
                                         game.strikes + 1
                                     );
 
-
                                 game.attemptLog.push({
 
-                                    ok:
-                                        false,
+                                    ok: false,
 
                                     team:
                                         game.activeTeam !==
@@ -2427,19 +2279,14 @@ function renderHostGame() {
 
                                     time:
                                         Date.now()
-
                                 });
-
                             }
                         );
-
 
                         broadcastEffect(
                             'wrong'
                         );
-
                     };
-
             }
         );
 
@@ -2461,10 +2308,8 @@ function renderHostGame() {
                                     +button.dataset.award
                                 ].score +=
                                     game.bank;
-
                             }
                         );
-
             }
         );
 
@@ -2487,7 +2332,6 @@ function renderHostGame() {
                                         +button.dataset.adjust
                                     ];
 
-
                                 team.score =
                                     Math.max(
                                         0,
@@ -2496,10 +2340,8 @@ function renderHostGame() {
                                             +button.dataset.delta
                                         )
                                     );
-
                             }
                         );
-
             }
         );
 
@@ -2520,17 +2362,13 @@ function renderHostGame() {
                                 const index =
                                     +input.dataset.teamname;
 
-
                                 game.teams[
                                     index
                                 ].name =
-                                    input.value.trim()
-                                    ||
+                                    input.value.trim() ||
                                     `Team ${index + 1}`;
-
                             }
                         );
-
             }
         );
 
@@ -2551,11 +2389,9 @@ function renderHostGame() {
                             game.strikes + 1
                         );
 
-
                     game.attemptLog.push({
 
-                        ok:
-                            false,
+                        ok: false,
 
                         team:
                             game.activeTeam !==
@@ -2569,17 +2405,13 @@ function renderHostGame() {
 
                         time:
                             Date.now()
-
                     });
-
                 }
             );
-
 
             broadcastEffect(
                 'wrong'
             );
-
         };
 
 
@@ -2591,10 +2423,8 @@ function renderHostGame() {
         () =>
             mutate(
                 game => {
-
                     game.strikes =
                         0;
-
                 }
             );
 
@@ -2611,11 +2441,8 @@ function renderHostGame() {
                     'Reset this question? Revealed answers, strikes and the round presentation will reset.'
                 )
             ) {
-
                 return;
-
             }
-
 
             mutate(
                 game => {
@@ -2637,10 +2464,8 @@ function renderHostGame() {
 
                     game.attemptLog =
                         [];
-
                 }
             );
-
         };
 
 
@@ -2657,42 +2482,31 @@ function renderHostGame() {
                         game.current <=
                         0
                     ) {
-
                         return;
-
                     }
 
-
                     game.current--;
-
 
                     game.round =
                         game.current + 1;
 
-
                     game.phase =
                         'round';
-
 
                     game.revealed =
                         [];
 
-
                     game.strikes =
                         0;
-
 
                     game.bank =
                         0;
 
-
                     game.activeTeam =
                         null;
 
-
                     game.attemptLog =
                         [];
-
                 }
             );
 
@@ -2702,52 +2516,7 @@ function renderHostGame() {
        ========================================================= */
 
     $('#nextQ').onclick =
-        () =>
-            mutate(
-                game => {
-
-                    if (
-                        game.current >=
-                        game.questions.length - 1
-                    ) {
-
-                        return;
-
-                    }
-
-
-                    game.current++;
-
-
-                    game.round =
-                        game.current + 1;
-
-
-                    game.phase =
-                        'round';
-
-
-                    game.revealed =
-                        [];
-
-
-                    game.strikes =
-                        0;
-
-
-                    game.bank =
-                        0;
-
-
-                    game.activeTeam =
-                        null;
-
-
-                    game.attemptLog =
-                        [];
-
-                }
-            );
+        nextRound;
 
 
     /* =========================================================
@@ -2773,7 +2542,6 @@ function renderHostGame() {
     broadcast(
         game
     );
-
 }
 
 
@@ -2812,11 +2580,8 @@ function runProjectorEffect(
                 '.wrongOverlay'
             );
 
-
         if (existing) {
-
             existing.remove();
-
         }
 
 
@@ -2825,10 +2590,8 @@ function runProjectorEffect(
                 'div'
             );
 
-
         overlay.className =
             'wrongOverlay';
-
 
         overlay.innerHTML = `
 
@@ -2838,18 +2601,15 @@ function runProjectorEffect(
 
         `;
 
-
         document.body.appendChild(
             overlay
         );
-
 
         setTimeout(
             () =>
                 overlay.remove(),
             900
         );
-
     }
 
 
@@ -2872,21 +2632,17 @@ function runProjectorEffect(
                 `[data-projector-answer="${data.answerIndex}"]`
             );
 
-
         if (tile) {
 
             tile.classList.remove(
                 'correctFlash'
             );
 
-
             void tile.offsetWidth;
-
 
             tile.classList.add(
                 'correctFlash'
             );
-
 
             setTimeout(
                 () =>
@@ -2895,9 +2651,7 @@ function runProjectorEffect(
                     ),
                 1000
             );
-
         }
-
     }
 
 
@@ -2920,21 +2674,17 @@ function runProjectorEffect(
                 `[data-projector-team="${data.team}"]`
             );
 
-
         if (team) {
 
             team.classList.remove(
                 'buzzerFlash'
             );
 
-
             void team.offsetWidth;
-
 
             team.classList.add(
                 'buzzerFlash'
             );
-
 
             setTimeout(
                 () =>
@@ -2943,11 +2693,8 @@ function runProjectorEffect(
                     ),
                 650
             );
-
         }
-
     }
-
 }
 
 
@@ -2961,7 +2708,6 @@ function renderProjector(
 
     const root =
         $('#projectorApp');
-
 
     if (!root) {
         return;
@@ -3000,17 +2746,14 @@ function renderProjector(
 
         `;
 
-
         return;
-
     }
 
 
     if (
         !Array.isArray(
             game.questions
-        )
-        ||
+        ) ||
         !game.questions.length
     ) {
 
@@ -3034,9 +2777,7 @@ function renderProjector(
 
         `;
 
-
         return;
-
     }
 
 
@@ -3053,6 +2794,12 @@ function renderProjector(
 
     /* =========================================================
        ROUND INTRO
+
+       The old "Top Answers" screen has been removed.
+
+       Intro now shows:
+       ROUND #
+       TOP # ANSWERS ON THE BOARD
        ========================================================= */
 
     if (
@@ -3077,64 +2824,19 @@ function renderProjector(
                 </div>
 
                 <div class="roundPack">
-                    ${esc(
-                        question.pack || ''
-                    )}
+                    TOP ${question.answers.length} ANSWERS ON THE BOARD
                 </div>
 
             </section>
 
         `;
 
-
         return;
-
     }
 
 
     /* =========================================================
-       TOP ANSWERS INTRO
-       ========================================================= */
-
-    if (
-        game.phase ===
-        'top'
-    ) {
-
-        root.innerHTML = `
-
-            <section class="topAnswersIntro">
-
-                <div class="eyebrow">
-                    ROUND ${game.round}
-                </div>
-
-                <div class="topCount">
-
-                    TOP
-
-                    <strong>
-                        ${question.answers.length}
-                    </strong>
-
-                </div>
-
-                <div class="topAnswersText">
-                    ANSWERS ON THE BOARD
-                </div>
-
-            </section>
-
-        `;
-
-
-        return;
-
-    }
-
-
-    /* =========================================================
-       BOARD / QUESTION
+       BOARD / BOARD + QUESTION
        ========================================================= */
 
     const showQuestion =
@@ -3168,7 +2870,7 @@ function renderProjector(
 
 
                 <!-- ===========================================
-                     STRIKES AT TOP OF PROJECTOR
+                     STRIKES
                      =========================================== -->
 
                 <div class="topStrikeArea">
@@ -3183,8 +2885,7 @@ function renderProjector(
                         ${
                             Array.from(
                                 {
-                                    length:
-                                        3
+                                    length: 3
                                 },
                                 (
                                     _,
@@ -3344,9 +3045,7 @@ function renderProjector(
 
 
             <!-- ===============================================
-                 DYNAMIC TEAM LIST
-                 2–6 TEAMS
-                 NAME LEFT / SCORE RIGHT
+                 TEAMS
                  =============================================== -->
 
             <footer
@@ -3401,7 +3100,6 @@ function renderProjector(
         </section>
 
     `;
-
 }
 
 
@@ -3409,11 +3107,9 @@ function renderProjector(
    PROJECTOR UTILITY CONTROLS
 
    Bottom-left:
-   Admin button
-   Fullscreen button
-
-   These stay available on the waiting screen,
-   round screen, board, and gameplay.
+   Host/Admin
+   Volume
+   Fullscreen
    ============================================================= */
 
 function createProjectorUtilities() {
@@ -3428,9 +3124,7 @@ function createProjectorUtilities() {
             '.projectorUtilities'
         )
     ) {
-
         return;
-
     }
 
 
@@ -3481,6 +3175,16 @@ function createProjectorUtilities() {
 
         <button
             class="projectorUtilityButton"
+            id="projectorVolume"
+            title="Change Volume"
+            aria-label="Change Volume"
+        >
+            ${VOLUME_LEVELS[getVolumeLevel()].icon}
+        </button>
+
+
+        <button
+            class="projectorUtilityButton"
             id="projectorFullscreen"
             title="Fullscreen"
             aria-label="Fullscreen"
@@ -3499,19 +3203,98 @@ function createProjectorUtilities() {
     $('#projectorFullscreen').onclick =
         toggleFullscreen;
 
+
+    updateVolumeButton();
+
+
+    $('#projectorVolume').onclick =
+        cycleProjectorVolume;
 }
 
 
 /* =============================================================
-   PROJECTOR AUDIO UNLOCK
+   UPDATE VOLUME BUTTON
+   ============================================================= */
 
-   Modern browsers can block sound until the user has interacted
-   with the page.
+function updateVolumeButton() {
 
-   The projector listens for the first click/touch/key press and
-   silently primes each audio file.
+    const button =
+        $('#projectorVolume');
 
-   No game sound is intentionally heard during this process.
+    if (!button) {
+        return;
+    }
+
+
+    const level =
+        VOLUME_LEVELS[
+            getVolumeLevel()
+        ];
+
+
+    button.textContent =
+        level.icon;
+
+
+    button.title =
+        `Volume: ${level.label} · Click to change`;
+
+
+    button.setAttribute(
+        'aria-label',
+        `Volume: ${level.label}. Click to change.`
+    );
+}
+
+
+/* =============================================================
+   CYCLE PROJECTOR VOLUME
+
+   Muted → Low → Medium → High → Muted
+
+   Clicking this button also creates a direct browser interaction,
+   which helps browsers permit projector audio.
+
+   When a non-muted level is selected, Answer.mp3 plays once as
+   the volume test.
+   ============================================================= */
+
+function cycleProjectorVolume() {
+
+    const current =
+        getVolumeLevel();
+
+
+    const next =
+        (
+            current + 1
+        ) % VOLUME_LEVELS.length;
+
+
+    setVolumeLevel(
+        next
+    );
+
+
+    updateVolumeButton();
+
+
+    if (
+        VOLUME_LEVELS[
+            next
+        ].volume > 0
+    ) {
+
+        testProjectorVolume();
+    }
+}
+
+
+/* =============================================================
+   PROJECTOR AUDIO PREPARATION
+
+   Any interaction with the projector helps unlock browser audio.
+   The dedicated volume button is the preferred way to test it.
    ============================================================= */
 
 function prepareProjectorAudio() {
@@ -3559,13 +3342,11 @@ function prepareProjectorAudio() {
 
                                 audio.currentTime =
                                     0;
-
                             }
                         )
                         .catch(
                             () => {}
                         );
-
                 }
             );
 
@@ -3580,7 +3361,6 @@ function prepareProjectorAudio() {
                 'keydown',
                 prepare
             );
-
         };
 
 
@@ -3588,8 +3368,7 @@ function prepareProjectorAudio() {
         'pointerdown',
         prepare,
         {
-            once:
-                true
+            once: true
         }
     );
 
@@ -3598,11 +3377,9 @@ function prepareProjectorAudio() {
         'keydown',
         prepare,
         {
-            once:
-                true
+            once: true
         }
     );
-
 }
 
 
@@ -3621,5 +3398,4 @@ if (isHost()) {
     createProjectorUtilities();
 
     prepareProjectorAudio();
-
 }
