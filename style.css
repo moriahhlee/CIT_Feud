@@ -4052,115 +4052,446 @@ body.projector::after{
 }
 
 /* =============================================================
-   HOST CONTROL ROOM — COMPACT DESKTOP CONSOLE
-   Host-only overrides. Projector presentation styling untouched.
+   HOST CONTROL ROOM — EXACT CURRENT JS MARKUP
+   These rules intentionally target the class names emitted by the
+   current script.js. Projector rules are not changed here.
    ============================================================= */
 
-@media (min-width: 651px) {
-    body.host .projectorControl { padding: 14px 16px; margin-bottom: 12px; }
-    body.host .projectorControl .sectionlabel { margin-bottom: 5px; }
-    body.host .projectorControl h2,
-    body.host .projectorControl h3 { margin: 0 0 10px; }
-    body.host .projectorControl .buttonRow,
-    body.host .projectorControl .projectorButtons,
-    body.host .projectorControl .phaseControls {
-        display: flex; flex-wrap: wrap; align-items: center; gap: 7px;
+@media (min-width: 760px) {
+
+    /* Use the available width for the controls that are actually operated. */
+    body.host .controlgrid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 12px !important;
     }
-    body.host .projectorControl button,
-    body.host .projectorControl a { min-height: 38px; padding: 8px 13px; }
 
-    body.host .questionControl,
-    body.host .questionCard,
-    body.host .hostQuestion { padding-top: 14px; padding-bottom: 14px; }
-    body.host .questionControl h2,
-    body.host .questionCard h2,
-    body.host .hostQuestion h2 { margin-top: 4px; margin-bottom: 8px; line-height: 1.15; }
+    /* Turn the old right rail into a compact horizontal status area. */
+    body.host .controlgrid > aside {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
 
-    body.host .matchupControl { margin-top: 12px; padding-top: 14px; }
-    body.host .matchupControlHeader { align-items: center; margin-bottom: 9px; }
+    body.host .controlgrid > aside > .panel {
+        padding: 12px 16px;
+    }
+
+    body.host .roundStatus {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        flex-wrap: wrap;
+    }
+
+    body.host .strikectl {
+        margin-top: 10px;
+        padding-top: 10px;
+    }
+
+    body.host .strikectl .xs {
+        margin: 5px 0 8px;
+        font-size: 1.45rem;
+    }
+
+    body.host .strikectl .actions {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+    }
+
+    body.host .strikectl .actions button {
+        min-height: 36px;
+        padding: 7px 11px;
+    }
+
+    body.host .attempts {
+        margin-top: 10px;
+    }
+
+    /* Compact projector controls. */
+    body.host .presentationControl {
+        gap: 12px;
+        margin-bottom: 12px;
+        padding: 11px 14px;
+    }
+
+    body.host .presentationButtons,
+    body.host .presentationUtilityButtons {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    body.host .presentationButtons button,
+    body.host .presentationUtilityButtons button {
+        min-height: 36px;
+        padding: 7px 11px;
+    }
+
+    body.host .boardcontrol {
+        padding: 16px;
+    }
+
+    body.host .boardcontrol > h2 {
+        margin-top: 5px;
+        margin-bottom: 10px;
+        line-height: 1.15;
+    }
+
+    /* ---------------------------------------------------------
+       WHO IS ANSWERING
+       Actual structure:
+       .matchupVersus
+           .matchupTeam.matchupPrimary
+           .versusBadge
+           .matchupTeam.matchupPrimary
+       --------------------------------------------------------- */
+
+    body.host .matchupControl {
+        margin-top: 12px;
+        padding-top: 12px;
+    }
+
+    body.host .matchupControlHeader {
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    body.host .matchupControlHeader h3 {
+        margin: 1px 0 0;
+    }
+
     body.host .matchupControlHeader small {
-        max-width: 310px; font-size: .64rem; line-height: 1.25;
+        max-width: 320px;
+        font-size: .62rem;
+        line-height: 1.25;
     }
-    body.host .matchupPrimary {
+
+    body.host .matchupVersus {
         display: grid !important;
-        grid-template-columns: minmax(0,1fr) 44px minmax(0,1fr) !important;
-        align-items: stretch;
-        gap: 9px;
-    }
-    body.host .matchupVs {
-        display: grid; place-items: center; min-width: 44px; min-height: 0; font-size: .72rem;
-    }
-    body.host .matchupTeam { min-height: 72px; padding: 9px 12px; }
-    body.host .matchupTeam,
-    body.host .matchupBenchTeam { box-sizing: border-box; }
-    body.host .matchupTeamScore,
-    body.host .teamScoreControl,
-    body.host .scoreStepper { gap: 5px; }
-    body.host .matchupTeam button,
-    body.host .matchupBenchTeam button {
-        min-width: 40px; min-height: 40px; padding: 7px 10px;
+        grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr) !important;
+        align-items: stretch !important;
+        gap: 9px !important;
     }
 
-    body.host .matchupBench {
+    body.host .versusBadge {
         display: grid !important;
-        grid-template-columns: repeat(2,minmax(0,1fr)) !important;
-        gap: 8px;
-        margin-top: 8px;
-    }
-    body.host .matchupBenchTeam { min-height: 58px; padding: 8px 11px; }
-    body.host .matchupBenchTeam button {
-        min-width: 36px; min-height: 36px; padding: 6px 9px;
+        place-items: center !important;
+        min-width: 46px;
+        margin: 0 !important;
+        padding: 0 !important;
+        color: var(--gold-light);
+        font-size: .78rem;
+        font-weight: 1000;
+        letter-spacing: .12em;
     }
 
-    body.host .hostAnswers,
-    body.host .answerControls,
-    body.host .answersControl { gap: 7px; }
-    body.host .hostAnswer,
-    body.host .answerControlRow,
-    body.host .answerJudgeRow {
-        min-height: 48px; padding-top: 6px; padding-bottom: 6px;
+    /* Each primary team card is a compact two-column card:
+       identity on the left, score controller on the right. */
+    body.host .matchupTeam.matchupPrimary {
+        min-width: 0;
+        min-height: 72px;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 14px !important;
+        padding: 10px 12px !important;
+        text-align: left !important;
     }
-    body.host .hostAnswer button,
-    body.host .answerControlRow button,
-    body.host .answerJudgeRow button { min-width: 44px; min-height: 38px; }
 
-    body.host .roundBank,
-    body.host .hostRoundBank,
-    body.host .bankControl {
-        min-height: 0; padding: 9px 14px; margin-top: 9px; margin-bottom: 9px;
+    body.host .matchupTeamIdentity {
+        min-width: 0;
+        display: flex !important;
+        align-items: center !important;
+        gap: 9px !important;
     }
-    body.host .roundBank strong,
-    body.host .hostRoundBank strong,
-    body.host .bankControl strong { font-size: 1.35rem; }
 
-    body.host .whiteboardAwards,
-    body.host .whiteboardTeams,
-    body.host .whiteboardButtons {
-        display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px;
+    body.host .matchupDragHandle {
+        flex: 0 0 auto;
+        color: rgba(255,255,255,.52);
+        font-size: 1rem;
+        line-height: 1;
+        cursor: grab;
     }
-    body.host .whiteboardAwards button,
-    body.host .whiteboardTeams button,
-    body.host .whiteboardButtons button { min-height: 38px; padding: 7px 10px; }
 
-    body.host .roundNavigation,
-    body.host .roundNav,
-    body.host .hostNavigation { margin-top: 10px; padding-top: 10px; }
-    body.host .roundNavigation button,
-    body.host .roundNav button,
-    body.host .hostNavigation button { min-height: 42px; padding: 9px 15px; }
+    body.host .matchupTeamIdentity strong {
+        min-width: 0;
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 1000;
+        line-height: 1.1;
+    }
+
+    /* This is the score controller already emitted by JS. */
+    body.host .matchupTeamScore {
+        display: grid !important;
+        grid-template-columns: 38px minmax(34px, auto) 38px !important;
+        align-items: center !important;
+        justify-content: end !important;
+        gap: 6px !important;
+        white-space: nowrap;
+    }
+
+    body.host .matchupTeamScore .scoreStep {
+        width: 38px !important;
+        min-width: 38px !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        padding: 0 !important;
+        display: grid !important;
+        place-items: center !important;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 1000;
+        line-height: 1;
+    }
+
+    body.host .matchupTeamScore .scoreMinus {
+        background: linear-gradient(180deg, #d34a52, #a72d35) !important;
+        border-color: rgba(255,130,136,.3) !important;
+        color: #fff !important;
+    }
+
+    body.host .matchupTeamScore .scorePlus {
+        background: linear-gradient(180deg, #35b66f, #1d884f) !important;
+        border-color: rgba(125,239,171,.3) !important;
+        color: #fff !important;
+    }
+
+    body.host .editableTeamScore {
+        min-width: 34px;
+        display: inline-block;
+        text-align: center;
+        color: var(--gold-light);
+        font-size: 1.28rem;
+        font-weight: 1000;
+        line-height: 1;
+        cursor: text;
+        border-radius: 7px;
+        padding: 5px 3px;
+    }
+
+    body.host .editableTeamScore:hover {
+        background: rgba(243,189,63,.08);
+        outline: 1px dashed rgba(243,189,63,.38);
+    }
+
+    /* Current JS marks the controlling team with .isController. */
+    body.host .matchupTeam.isController {
+        border-color: rgba(73,218,132,.82) !important;
+        background:
+            linear-gradient(
+                180deg,
+                rgba(40,170,98,.34),
+                rgba(24,136,75,.18)
+            ) !important;
+        box-shadow:
+            0 0 0 2px rgba(73,218,132,.12),
+            0 0 22px rgba(73,218,132,.18) !important;
+    }
+
+    body.host .matchupTeam.isController::before {
+        content: "✓";
+        position: absolute;
+        top: 7px;
+        right: 7px;
+        width: 20px;
+        height: 20px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #39c878;
+        color: #fff;
+        font-size: .7rem;
+        font-weight: 1000;
+    }
+
+    /* ---------------------------------------------------------
+       OTHER TEAMS
+       Actual structure:
+       .waitingTeams > .waitingTeamsGrid
+       --------------------------------------------------------- */
+
+    body.host .waitingTeams {
+        margin-top: 9px;
+    }
+
+    body.host .waitingTeamsLabel {
+        margin-bottom: 6px;
+        color: rgba(255,255,255,.62);
+        font-size: .65rem;
+        font-weight: 900;
+        letter-spacing: .11em;
+        text-transform: uppercase;
+    }
+
+    body.host .waitingTeamsGrid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+
+    body.host .matchupTeam.matchupWaiting {
+        min-width: 0;
+        min-height: 52px;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding: 8px 10px !important;
+        text-align: left !important;
+    }
+
+    body.host .matchupWaiting .matchupTeamIdentity strong {
+        font-size: .88rem;
+    }
+
+    body.host .matchupWaiting .matchupTeamScore {
+        grid-template-columns: 32px minmax(28px, auto) 32px !important;
+        gap: 5px !important;
+    }
+
+    body.host .matchupWaiting .matchupTeamScore .scoreStep {
+        width: 32px !important;
+        min-width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        border-radius: 8px;
+        font-size: .95rem;
+    }
+
+    body.host .matchupWaiting .editableTeamScore {
+        min-width: 28px;
+        font-size: 1rem;
+    }
+
+    /* Answer rows stay quick to scan and click. */
+    body.host .answerlabel {
+        margin-top: 12px;
+    }
+
+    body.host .answerjudge {
+        gap: 6px;
+    }
+
+    body.host .judgeRow {
+        min-height: 46px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+
+    body.host .judgeRow .judge {
+        min-width: 42px;
+        min-height: 36px;
+    }
+
+    /* Bank is status, not a large content card. */
+    body.host .bankline {
+        margin-top: 10px;
+        padding: 8px 12px;
+        border-radius: 9px;
+    }
+
+    body.host .bankline strong {
+        font-size: 1.3rem;
+    }
+
+    /* Whiteboard awards use the full width efficiently. */
+    body.host .whiteboardSection {
+        margin-top: 10px;
+    }
+
+    body.host .whiteboardSection .microcopy {
+        margin: 4px 0 7px;
+    }
+
+    body.host .whiteboardTeams {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 7px !important;
+    }
+
+    body.host .whiteboardAward {
+        min-height: 36px;
+        padding: 7px 10px;
+    }
+
+    body.host .roundnav {
+        margin-top: 10px;
+    }
+
+    body.host .roundnav button {
+        min-height: 40px;
+        padding: 8px 14px;
+    }
 }
 
-@media (min-width: 651px) and (max-width: 900px) {
-    body.host .matchupControlHeader { flex-direction: row; align-items: center; }
-    body.host .matchupControlHeader small { max-width: 280px; text-align: right; }
-    body.host .matchupBench {
-        grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+/* Medium desktop/laptop: retain the actual two-team matchup instead
+   of triggering the old stacked-card behavior. */
+@media (min-width: 760px) and (max-width: 1050px) {
+    body.host .matchupVersus {
+        grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr) !important;
+        gap: 7px !important;
+    }
+
+    body.host .versusBadge {
+        min-width: 38px;
+    }
+
+    body.host .matchupTeam.matchupPrimary {
+        gap: 8px !important;
+        padding: 9px !important;
+    }
+
+    body.host .matchupTeamScore {
+        grid-template-columns: 34px minmax(30px, auto) 34px !important;
+        gap: 4px !important;
+    }
+
+    body.host .matchupTeamScore .scoreStep {
+        width: 34px !important;
+        min-width: 34px !important;
+        height: 34px !important;
+        min-height: 34px !important;
     }
 }
 
-@media (max-width: 650px) {
-    body.host .matchupPrimary { grid-template-columns: 1fr !important; }
-    body.host .matchupVs { min-height: 24px; }
-    body.host .matchupBench { grid-template-columns: 1fr !important; }
+/* True narrow-screen fallback only. */
+@media (max-width: 759px) {
+    body.host .matchupVersus {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 6px !important;
+    }
+
+    body.host .versusBadge {
+        min-height: 24px;
+    }
+
+    body.host .matchupTeam.matchupPrimary,
+    body.host .matchupTeam.matchupWaiting {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 8px !important;
+        text-align: left !important;
+    }
+
+    body.host .matchupTeamScore {
+        display: grid !important;
+        grid-template-columns: 34px minmax(30px, auto) 34px !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+
+    body.host .waitingTeamsGrid,
+    body.host .whiteboardTeams {
+        grid-template-columns: 1fr !important;
+    }
 }
 
