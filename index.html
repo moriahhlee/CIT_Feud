@@ -1,61 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <title>CIT Feud | Crisis Intervention Training</title>
+    <title>
+        CIT Feud | Crisis Intervention Training
+    </title>
 
-    <link rel="stylesheet" href="style.css">
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
 </head>
+
 
 <body class="projector">
 
-    <!--
-        ============================================================
-        CIT FEUD — PROJECTOR DISPLAY
-        ============================================================
-
-        This is the PUBLIC game board shown on the projector.
-
-        Do not add questions or answers here.
-
-        Questions, answers, points, tags, and facilitator notes
-        are stored in script.js.
-
-        The host/moderator controls the game from:
-
-        host.html
-        ============================================================
-    -->
 
     <main id="projectorApp">
 
-        <!--
-            script.js automatically builds the game board here.
-        -->
 
         <section class="waiting">
+
 
             <div class="eyebrow">
                 CRISIS INTERVENTION TRAINING
             </div>
 
+
             <h1>
                 CIT <b>FEUD</b>
             </h1>
+
 
             <p>
                 Waiting for the host to start or resume a game...
             </p>
 
+
         </section>
+
 
     </main>
 
-    <!-- CIT Feud game engine -->
+
+    <!-- ============================================
+         ADMIN / HOST CONTROL ACCESS
+
+         Always available in bottom-left corner.
+         Opens the private moderator control panel.
+         ============================================ -->
+
+    <a
+        href="host.html"
+        target="_blank"
+        class="admin-corner"
+        title="Open Host Controls"
+        aria-label="Open Host Controls"
+    >
+
+        <span class="admin-user">
+            👤
+        </span>
+
+        <span class="admin-gear">
+            ⚙
+        </span>
+
+    </a>
+
+
     <script src="script.js"></script>
 
+
 </body>
+
 </html>
